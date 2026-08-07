@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LGU Norzagaray Portal - Analytics & Reports</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Chart.js Library for Data Visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --primary-blue: #2563eb;
+      --primary-dark: #1d4ed8;
+      --header-bg: #0b1329;
+      --green-btn: #10b981;
+      --green-btn-hover: #059669;
+      --bg-light: #f8fafc;
+      --text-dark: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --success: #16a34a;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg-light);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+
+    /* TOP NAVBAR */
+    .navbar {
+      background: var(--header-bg);
+      color: white;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      color: #fbbf24;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      color: white;
+    }
+
+    .nav-link.active {
+      background: var(--primary-blue);
+      color: white;
+    }
+
+    /* GREEN POST NEWS BUTTON IN NAVBAR */
+    .btn-post-news-nav {
+      background: var(--green-btn);
+      color: white;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-post-news-nav:hover {
+      background: var(--green-btn-hover);
+    }
+
+    /* USER PROFILE */
+    .user-pill {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 5px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* SUB HEADER WITH LOGO & TIME */
+    .sub-header {
+      background: white;
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-section img {
+      width: 48px;
+      height: 48px;
+    }
+
+    .brand-text h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .brand-text p {
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: #d97706;
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    .time-box {
+      background: #f1f5f9;
+      padding: 8px 14px;
+      border-radius: 6px;
+      text-align: right;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    .time-box strong {
+      display: block;
+      color: var(--primary-blue);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    /* MAIN CONTAINER */
+    .container {
+      max-width: 1400px;
+      margin: 24px auto;
+      padding: 0 24px;
+    }
+
+    .page-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .page-title-row h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .page-title-row p {
+      margin: 4px 0 0 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-action {
+      background: white;
+      color: var(--text-dark);
+      border: 1px solid var(--border-color);
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action:hover {
+      background: #f1f5f9;
+    }
+
+    .btn-primary-action {
+      background: var(--primary-blue);
+      color: white;
+      border: none;
+    }
+
+    .btn-primary-action:hover {
+      background: var(--primary-dark);
+    }
+
+    /* STATS CARDS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stat-card p {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card h2 {
+      margin: 6px 0 0 0;
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    .stat-subtext {
+      font-size: 12px;
+      color: var(--success);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    .stat-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .ic-blue { background: #eff6ff; color: #2563eb; }
+    .ic-green { background: #f0fdf4; color: #16a34a; }
+    .ic-amber { background: #fffbeb; color: #d97706; }
+    .ic-purple { background: #faf5ff; color: #9333ea; }
+
+    /* FILTERS TOOLBAR */
+    .filter-panel {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .filter-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    select, textarea, input {
+      padding: 10px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      background: white;
+      width: 100%;
+    }
+
+    select { cursor: pointer; }
+
+    /* CHARTS LAYOUT */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .charts-grid-equal {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .chart-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 24px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .chart-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+      width: 100%;
+    }
+
+    /* EXACT MODAL STYLES BASED ON IMAGE */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: white;
+      border-radius: 12px;
+      width: 520px;
+      max-width: 90%;
+      padding: 28px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h3 { 
+      margin: 0; 
+      font-size: 20px; 
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .modal-header .close-btn {
+      cursor: pointer;
+      font-size: 18px;
+      color: #0f172a;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: #94a3b8;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn-modal {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-cancel { 
+      background: #f1f5f9; 
+      color: #0f172a; 
+    }
+
+    .btn-submit-news { 
+      background: #10b981; 
+      color: white; 
+    }
+
+    .btn-submit-news:hover { 
+      background: #059669; 
+    }
+
+    /* TOAST NOTIFICATION */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 2000;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    @media(max-width: 1024px) {
+      .charts-grid, .charts-grid-equal { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media print {
+      .navbar, .sub-header, .header-actions, .filter-panel { display: none !important; }
+      .container { margin: 0; padding: 0; max-width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <i class="fa-solid fa-landmark"></i>
+      <span>LGU Norzagaray Portal</span>
+    </div>
+
+    <div class="nav-menu">
+      <a href="admin-dashboard.html" class="nav-link"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+      <a href="admin-document-request.html" class="nav-link"><i class="fa-solid fa-file-signature"></i> Document Requests</a>
+      <a href="admin-appointments.html" class="nav-link"><i class="fa-solid fa-calendar-check"></i> Appointments</a>
+      <a href="admin-departments.html" class="nav-link"><i class="fa-solid fa-building"></i> 27 Departments</a>
+      <a href="admin-reports.html" class="nav-link active"><i class="fa-solid fa-chart-line"></i> Analytics</a>
+
+      <!-- FUNCTIONAL POST NEWS BUTTON -->
+      <button class="btn-post-news-nav" onclick="openNewsModal()">
+        <i class="fa-solid fa-bullhorn"></i>
+        <span>Post News</span>
+      </button>
+    </div>
+
+    <div class="user-pill">
+      <i class="fa-solid fa-circle-user"></i>
+      <span>System Admin</span>
+    </div>
+  </nav>
+
+  <!-- SUB HEADER -->
+  <header class="sub-header">
+    <div class="brand-section">
+      <img src="norzagaray-bulacan-official-logo-png_seeklogo-638527.png" alt="LGU Logo" onerror="this.src='https://via.placeholder.com/48'">
+      <div class="brand-text">
+        <span style="font-size: 10px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">REPUBLIC OF THE PHILIPPINES</span>
+        <h2>Municipality of Norzagaray</h2>
+        <p>May katuwanG ka!</p>
+      </div>
+    </div>
+
+    <div class="time-box">
+      <span style="font-size: 10px; font-weight: 700; color: var(--text-muted);"><i class="fa-regular fa-clock"></i> PHILIPPINE STANDARD TIME</span>
+      <strong id="pstTime">Loading...</strong>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="container">
+
+    <!-- PAGE TITLE ROW -->
+    <div class="page-title-row">
+      <div>
+        <h1>Analytics & Service Reports</h1>
+        <p>Insights on document requests, desk appointments, and public response metrics.</p>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn-action" onclick="window.print()"><i class="fa-solid fa-print"></i> Print Report</button>
+        <button class="btn-action btn-primary-action" onclick="exportData()"><i class="fa-solid fa-download"></i> Export Data (CSV)</button>
+      </div>
+    </div>
+
+    <!-- FILTER TOOLBAR -->
+    <section class="filter-panel">
+      <div class="filter-group">
+        <label><i class="fa-solid fa-filter"></i> Time Range:</label>
+        <select id="timeRangeSelect" style="width: auto;" onchange="updateAnalyticsData()">
+          <option value="this_month">This Month (August 2026)</option>
+          <option value="q1">Quarter 1 (Jan - Mar)</option>
+          <option value="q2">Quarter 2 (Apr - Jun)</option>
+          <option value="year_to_date" selected>Year to Date (2026)</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Department:</label>
+        <select id="deptFilter" style="width: auto;" onchange="updateAnalyticsData()">
+          <option value="all">All 27 Departments</option>
+          <option value="BPLO">BPLO</option>
+          <option value="LCR">Local Civil Registrar</option>
+          <option value="MSWDO">MSWDO</option>
+          <option value="CEO">Engineering Office</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- STATS CARDS -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div>
+          <p>Processed Requests</p>
+          <h2 id="metric-total">2,845</h2>
+          <div class="stat-subtext"><i class="fa-solid fa-arrow-up"></i> +14.2% vs last period</div>
+        </div>
+        <div class="stat-icon ic-blue"><i class="fa-solid fa-file-circle-check"></i></div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <p>Avg. Turnaround Time</p>
+          <h2 id="metric-time">1.8 Days</h2>
+          <div class="stat-subtext"><i class="fa-solid fa-circle-check"></i> 0.5 days faster</div>
+        </div>
+        <div class="stat-icon ic-green"><i class="fa-solid fa-clock-rotate-left"></i></div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <p>Satisfaction Rating</p>
+          <h2 id="metric-rating">96.4%</h2>
+          <div class="stat-subtext"><i class="fa-solid fa-face-smile"></i> Highly Satisfied</div>
+        </div>
+        <div class="stat-icon ic-amber"><i class="fa-solid fa-star"></i></div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <p>Digital Portal Usage</p>
+          <h2 id="metric-digital">82.1%</h2>
+          <div class="stat-subtext"><i class="fa-solid fa-mobile-screen"></i> Mobile & Web Apps</div>
+        </div>
+        <div class="stat-icon ic-purple"><i class="fa-solid fa-chart-pie"></i></div>
+      </div>
+    </section>
+
+    <!-- CHARTS SECTION 1 -->
+    <section class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3><i class="fa-solid fa-chart-line" style="color: var(--primary-blue);"></i> Service Request Trends</h3>
+          <span style="font-size: 12px; color: var(--text-muted);">Monthly Comparison</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3><i class="fa-solid fa-chart-pie" style="color: #9333ea;"></i> Top Requests by Dept</h3>
+          <span style="font-size: 12px; color: var(--text-muted);">Share %</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="deptChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHARTS SECTION 2 -->
+    <section class="charts-grid-equal">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3><i class="fa-solid fa-thumbs-up" style="color: #16a34a;"></i> Citizen Feedback Breakdown</h3>
+          <span style="font-size: 12px; color: var(--text-muted);">Based on 1,420 Ratings</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="feedbackChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3><i class="fa-solid fa-desktop" style="color: #d97706;"></i> Filing Channel Breakdown</h3>
+          <span style="font-size: 12px; color: var(--text-muted);">Online vs Walk-in</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="channelChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- POST NEW ANNOUNCEMENT MODAL (MATCHED TO IMAGE) -->
+  <div class="modal-overlay" id="newsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Post New Announcement</h3>
+        <i class="fa-solid fa-xmark close-btn" onclick="closeModal('newsModal')"></i>
+      </div>
+
+      <form id="newsForm" onsubmit="handleNewsSubmit(event)">
+        <div class="form-group">
+          <label>Announcement Category</label>
+          <select id="newsCategory" required>
+            <option value="Official Announcement">Official Announcement</option>
+            <option value="Emergency Advisory">Emergency Advisory</option>
+            <option value="Public Health Update">Public Health Update</option>
+            <option value="Holiday Advisory">Holiday Advisory</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Headline Title</label>
+          <input type="text" id="newsTitle" required placeholder="e.g. Executive Order No. 12 Announcement">
+        </div>
+
+        <div class="form-group">
+          <label>Content Description</label>
+          <textarea id="newsContent" rows="5" required placeholder="Write the announcement details here..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-modal btn-cancel" onclick="closeModal('newsModal')">Cancel</button>
+          <button type="submit" class="btn-modal btn-submit-news">Publish Announcement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toastBox">
+    <i class="fa-solid fa-circle-check" style="color: #4ade80;"></i>
+    <span id="toastMsg">Exporting report...</span>
+  </div>
+
+  <script>
+    let trendChart, deptChart, feedbackChart, channelChart;
+
+    document.addEventListener("DOMContentLoaded", function () {
+      initCharts();
+      updatePST();
+      setInterval(updatePST, 1000);
+    });
+
+    /* LIVE PHILIPPINE STANDARD TIME CLOCK */
+    function updatePST() {
+      const now = new Date();
+      const options = { 
+        timeZone: 'Asia/Manila',
+        weekday: 'short', 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      };
+      const timeElem = document.getElementById('pstTime');
+      if (timeElem) {
+        timeElem.innerText = now.toLocaleString('en-US', options) + ' PST';
+      }
+    }
+
+    /* MODAL & POST ANNOUNCEMENT FUNCTIONS */
+    function openNewsModal() {
+      document.getElementById('newsForm').reset();
+      document.getElementById('newsModal').style.display = 'flex';
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    function handleNewsSubmit(e) {
+      e.preventDefault();
+      const title = document.getElementById('newsTitle').value;
+      closeModal('newsModal');
+      showToast(`Successfully published announcement: "${title.substring(0, 25)}..."`);
+    }
+
+    function initCharts() {
+      // 1. TREND CHART (LINE)
+      const ctxTrend = document.getElementById('trendChart').getContext('2d');
+      trendChart = new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+          datasets: [
+            {
+              label: 'Document Requests',
+              data: [310, 380, 420, 390, 480, 520, 590, 610],
+              borderColor: '#2563eb',
+              backgroundColor: 'rgba(37, 99, 235, 0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Desk Appointments',
+              data: [120, 150, 180, 160, 210, 230, 270, 290],
+              borderColor: '#16a34a',
+              backgroundColor: 'rgba(22, 163, 74, 0.05)',
+              fill: true,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+
+      // 2. DEPARTMENT DISTRIBUTION (DOUGHNUT)
+      const ctxDept = document.getElementById('deptChart').getContext('2d');
+      deptChart = new Chart(ctxDept, {
+        type: 'doughnut',
+        data: {
+          labels: ['BPLO', 'Civil Registrar', 'MSWDO', 'Engineering', 'Others'],
+          datasets: [{
+            data: [35, 25, 20, 12, 8],
+            backgroundColor: ['#2563eb', '#16a34a', '#d97706', '#9333ea', '#cbd5e1']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+
+      // 3. CITIZEN SATISFACTION (BAR)
+      const ctxFeedback = document.getElementById('feedbackChart').getContext('2d');
+      feedbackChart = new Chart(ctxFeedback, {
+        type: 'bar',
+        data: {
+          labels: ['5 Stars (Excellent)', '4 Stars (Good)', '3 Stars (Average)', '1-2 Stars (Needs Imprv.)'],
+          datasets: [{
+            label: 'Responses',
+            data: [980, 320, 80, 40],
+            backgroundColor: ['#16a34a', '#60a5fa', '#f59e0b', '#ef4444']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      // 4. CHANNEL BREAKDOWN (PIE)
+      const ctxChannel = document.getElementById('channelChart').getContext('2d');
+      channelChart = new Chart(ctxChannel, {
+        type: 'pie',
+        data: {
+          labels: ['Web Portal', 'Mobile App', 'Kiosk Walk-In', 'Counter Direct'],
+          datasets: [{
+            data: [52, 30, 12, 6],
+            backgroundColor: ['#2563eb', '#3b82f6', '#f59e0b', '#64748b']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    /* UPDATE CHARTS ON FILTER CHANGE */
+    function updateAnalyticsData() {
+      let range = document.getElementById("timeRangeSelect").value;
+
+      if (range === "this_month") {
+        document.getElementById("metric-total").innerText = "610";
+        document.getElementById("metric-time").innerText = "1.2 Days";
+        trendChart.data.labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+        trendChart.data.datasets[0].data = [140, 160, 150, 160];
+        trendChart.data.datasets[1].data = [60, 75, 70, 85];
+      } else {
+        document.getElementById("metric-total").innerText = "2,845";
+        document.getElementById("metric-time").innerText = "1.8 Days";
+        trendChart.data.labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+        trendChart.data.datasets[0].data = [310, 380, 420, 390, 480, 520, 590, 610];
+        trendChart.data.datasets[1].data = [120, 150, 180, 160, 210, 230, 270, 290];
+      }
+
+      trendChart.update();
+      showToast("Analytics metrics updated!");
+    }
+
+    /* EXPORT FUNCTION */
+    function exportData() {
+      showToast("Generating CSV report...");
+      setTimeout(() => {
+        let csvContent = "data:text/csv;charset=utf-8,Month,Document Requests,Appointments\nJan,310,120\nFeb,380,150\nMar,420,180\nApr,390,160\nMay,480,210\nJun,520,230\nJul,590,270\nAug,610,290";
+        let encodedUri = encodeURI(csvContent);
+        let link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "LGU_Analytics_Report_2026.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, 1000);
+    }
+
+    /* TOAST NOTIFICATION */
+    function showToast(msg) {
+      const toast = document.getElementById("toastBox");
+      document.getElementById("toastMsg").innerText = msg;
+      toast.classList.add("show");
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+  </script>
+</body>
+
+</html>

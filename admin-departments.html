@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LGU Norzagaray Portal - 27 Departments</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary-blue: #2563eb;
+      --header-bg: #0b1329;
+      --green-btn: #10b981;
+      --green-btn-hover: #059669;
+      --bg-light: #f8fafc;
+      --text-dark: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg-light);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+
+    /* TOP NAVBAR */
+    .navbar {
+      background: var(--header-bg);
+      color: white;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      color: #fbbf24;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      color: white;
+    }
+
+    .nav-link.active {
+      background: var(--primary-blue);
+      color: white;
+    }
+
+    .btn-post-news-nav {
+      background: var(--green-btn);
+      color: white;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-post-news-nav:hover {
+      background: var(--green-btn-hover);
+    }
+
+    /* USER PROFILE */
+    .user-pill {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 5px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* SUB HEADER WITH LOGO & TIME */
+    .sub-header {
+      background: white;
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-section img {
+      width: 48px;
+      height: 48px;
+    }
+
+    .brand-text h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .brand-text p {
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: #d97706;
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    .time-box {
+      background: #f1f5f9;
+      padding: 8px 14px;
+      border-radius: 6px;
+      text-align: right;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    .time-box strong {
+      display: block;
+      color: var(--primary-blue);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    /* MAIN CONTAINER */
+    .container {
+      max-width: 1400px;
+      margin: 24px auto;
+      padding: 0 24px;
+    }
+
+    .page-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .page-title-row h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .page-title-row p {
+      margin: 4px 0 0 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .btn-create {
+      background: var(--primary-blue);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s ease;
+    }
+
+    .btn-create:hover {
+      background: #1d4ed8;
+    }
+
+    /* STATS CARDS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stat-card p {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card h2 {
+      margin: 6px 0 0 0;
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    .stat-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .ic-blue { background: #eff6ff; color: #2563eb; }
+    .ic-amber { background: #fffbeb; color: #d97706; }
+    .ic-green { background: #f0fdf4; color: #16a34a; }
+    .ic-purple { background: #faf5ff; color: #9333ea; }
+
+    /* CONTENT PANEL & TABLE */
+    .panel {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 24px;
+    }
+
+    /* TOOLBAR & FILTERS */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search-box {
+      position: relative;
+      flex-grow: 1;
+      max-width: 360px;
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px 8px 34px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    select, textarea {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      background: white;
+    }
+
+    select { cursor: pointer; }
+
+    /* DATA TABLE */
+    .table-container { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 14px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bg-active { background: #dcfce7; color: #15803d; }
+    .bg-inactive { background: #fee2e2; color: #b91c1c; }
+
+    .btn-action {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      background: #f8fafc;
+      cursor: pointer;
+      margin-right: 4px;
+      transition: all 0.2s;
+    }
+
+    .btn-action.edit { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+    .btn-action.toggle { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+
+    /* MODAL BASE DESIGN */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: white;
+      border-radius: 16px;
+      width: 520px;
+      max-width: 90%;
+      padding: 28px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      color: #0b1329;
+    }
+
+    .modal-header .close-btn {
+      font-size: 18px;
+      color: #0f172a;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .modal-header .close-btn:hover {
+      color: #64748b;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .form-group input, 
+    .form-group select, 
+    .form-group textarea {
+      padding: 10px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      color: #0f172a;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus, 
+    .form-group select:focus, 
+    .form-group textarea:focus {
+      border-color: #2563eb;
+    }
+
+    ::placeholder {
+      color: #94a3b8;
+      opacity: 1;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn-modal {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.2s;
+    }
+
+    .btn-modal:hover {
+      opacity: 0.9;
+    }
+
+    .btn-cancel {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .btn-submit {
+      background: var(--primary-blue);
+      color: white;
+    }
+
+    .btn-submit-news {
+      background: #10b981;
+      color: white;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 2000;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <i class="fa-solid fa-landmark"></i>
+      <span>LGU Norzagaray Portal</span>
+    </div>
+
+    <div class="nav-menu">
+      <a href="admin-dashboard.html" class="nav-link"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+      <a href="admin-document-request.html" class="nav-link"><i class="fa-solid fa-file-signature"></i> Document Requests</a>
+      <a href="admin-appointments.html" class="nav-link"><i class="fa-solid fa-calendar-check"></i> Appointments</a>
+      <a href="admin-departments.html" class="nav-link active"><i class="fa-solid fa-building"></i> 27 Departments</a>
+      <a href="admin-reports.html" class="nav-link"><i class="fa-solid fa-chart-line"></i> Analytics</a>
+
+      <button class="btn-post-news-nav" onclick="openNewsModal()">
+        <i class="fa-solid fa-bullhorn"></i>
+        <span>Post News</span>
+      </button>
+    </div>
+
+    <div class="user-pill">
+      <i class="fa-solid fa-circle-user"></i>
+      <span>System Admin</span>
+    </div>
+  </nav>
+
+  <!-- SUB HEADER -->
+  <header class="sub-header">
+    <div class="brand-section">
+      <img src="norzagaray-bulacan-official-logo-png_seeklogo-638527.png" alt="LGU Logo" onerror="this.src='https://via.placeholder.com/48'">
+      <div class="brand-text">
+        <span style="font-size: 10px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">REPUBLIC OF THE PHILIPPINES</span>
+        <h2>Municipality of Norzagaray</h2>
+        <p>May katuwanG ka!</p>
+      </div>
+    </div>
+
+    <div class="time-box">
+      <span style="font-size: 10px; font-weight: 700; color: var(--text-muted);"><i class="fa-regular fa-clock"></i> PHILIPPINE STANDARD TIME</span>
+      <strong id="pstTime">Loading time...</strong>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="container">
+
+    <div class="page-title-row">
+      <div>
+        <h1>27 LGU Offices & Departments</h1>
+        <p>Manage municipal office personnel, department heads, and service status.</p>
+      </div>
+      <button class="btn-create" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Office/Sub-Office</button>
+    </div>
+
+    <!-- STATS CARDS -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div>
+          <p>Total LGU Offices</p>
+          <h2 id="cnt-total">0</h2>
+        </div>
+        <div class="stat-icon ic-purple"><i class="fa-solid fa-building-columns"></i></div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <p>Active Departments</p>
+          <h2 id="cnt-active">0</h2>
+        </div>
+        <div class="stat-icon ic-green"><i class="fa-solid fa-circle-check"></i></div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <p>Total Active Staff</p>
+          <h2 id="cnt-staff">0</h2>
+        </div>
+        <div class="stat-icon ic-blue"><i class="fa-solid fa-users"></i></div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <p>System Online Rate</p>
+          <h2>100%</h2>
+        </div>
+        <div class="stat-icon ic-amber"><i class="fa-solid fa-bolt"></i></div>
+      </div>
+    </section>
+
+    <!-- CONTENT PANEL -->
+    <section class="panel">
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="Search department name or office head..." onkeyup="applyFilters()">
+        </div>
+
+        <select id="sectorSelect" onchange="applyFilters()">
+          <option value="all">All Sectors</option>
+          <option value="Executive">Executive & Administrative</option>
+          <option value="Finance">Finance & Revenue</option>
+          <option value="Social">Social & Health Services</option>
+          <option value="Infrastructure">Infrastructure & Environment</option>
+          <option value="Public Safety">Public Safety & Legislative</option>
+        </select>
+
+        <select id="statusSelect" onchange="applyFilters()">
+          <option value="all">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="On Leave">On Leave / Closed</option>
+        </select>
+      </div>
+
+      <!-- DATA TABLE FOR DEPARTMENTS -->
+      <div class="table-container">
+        <table id="deptTable">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Department Name</th>
+              <th>Sector</th>
+              <th>Department Head</th>
+              <th>Active Staff</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- EXECUTIVE & ADMINISTRATIVE -->
+            <tr>
+              <td><strong>MO</strong></td>
+              <td>Office of the Municipal Mayor</td>
+              <td>Executive</td>
+              <td>Hon. Maria Elena Santos</td>
+              <td>18 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>VM</strong></td>
+              <td>Office of the Vice Mayor & Sanggunian</td>
+              <td>Public Safety</td>
+              <td>Hon. Juan Dela Cruz</td>
+              <td>12 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>LCR</strong></td>
+              <td>Local Civil Registrar (LCR)</td>
+              <td>Executive</td>
+              <td>Engr. Clara Fernando</td>
+              <td>10 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>HRMO</strong></td>
+              <td>Human Resource Management Office</td>
+              <td>Executive</td>
+              <td>Ms. Teresa Alonzo</td>
+              <td>8 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>MPDO</strong></td>
+              <td>Municipal Planning & Dev. Office</td>
+              <td>Executive</td>
+              <td>Arch. Carlos Mendoza</td>
+              <td>9 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>PIO</strong></td>
+              <td>Public Information Office</td>
+              <td>Executive</td>
+              <td>Mr. Mark Villanueva</td>
+              <td>5 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>LEGAL</strong></td>
+              <td>Municipal Legal Office</td>
+              <td>Executive</td>
+              <td>Atty. Francisco Baltazar</td>
+              <td>4 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>GSO</strong></td>
+              <td>General Services Office</td>
+              <td>Executive</td>
+              <td>Mr. Renato Garcia</td>
+              <td>15 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+
+            <!-- FINANCE & REVENUE -->
+            <tr>
+              <td><strong>BPLO</strong></td>
+              <td>Business Permits & Licensing Office</td>
+              <td>Finance</td>
+              <td>Atty. Roberto Cruz</td>
+              <td>12 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>TREAS</strong></td>
+              <td>Municipal Treasurer's Office</td>
+              <td>Finance</td>
+              <td>Mr. Gabriel Torres</td>
+              <td>11 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>ASS</strong></td>
+              <td>Municipal Assessor's Office</td>
+              <td>Finance</td>
+              <td>Ms. Beatriz Ramos</td>
+              <td>9 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>ACCT</strong></td>
+              <td>Municipal Accounting Office</td>
+              <td>Finance</td>
+              <td>CPA Maria Dizon</td>
+              <td>10 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>BUDGET</strong></td>
+              <td>Municipal Budget Office</td>
+              <td>Finance</td>
+              <td>Mr. Eduardo Santos</td>
+              <td>7 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+
+            <!-- SOCIAL & HEALTH SERVICES -->
+            <tr>
+              <td><strong>MSWDO</strong></td>
+              <td>Social Welfare & Development</td>
+              <td>Social</td>
+              <td>Dr. Teresa Aquino</td>
+              <td>15 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>MHO</strong></td>
+              <td>Municipal Health Office (MHO)</td>
+              <td>Social</td>
+              <td>Dr. Manuel Reyes</td>
+              <td>22 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>AGRIC</strong></td>
+              <td>Municipal Agriculture Office</td>
+              <td>Social</td>
+              <td>Engr. Danilo Perez</td>
+              <td>11 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>OSCA</strong></td>
+              <td>Office of Senior Citizens Affairs</td>
+              <td>Social</td>
+              <td>Mr. Pedro Pascual</td>
+              <td>6 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>PDAO</strong></td>
+              <td>Persons with Disability Affairs</td>
+              <td>Social</td>
+              <td>Ms. Elena Roxas</td>
+              <td>5 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>PESO</strong></td>
+              <td>Public Employment Service Office</td>
+              <td>Social</td>
+              <td>Mr. Arnel Castro</td>
+              <td>8 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>LYDO</strong></td>
+              <td>Local Youth Development Office</td>
+              <td>Social</td>
+              <td>Ms. Nicole Soriano</td>
+              <td>4 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+
+            <!-- INFRASTRUCTURE & ENVIRONMENT -->
+            <tr>
+              <td><strong>CEO</strong></td>
+              <td>Municipal Engineering Office</td>
+              <td>Infrastructure</td>
+              <td>Engr. Ramon Mercado</td>
+              <td>14 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>MENRO</strong></td>
+              <td>Environment & Natural Resources</td>
+              <td>Infrastructure</td>
+              <td>For. Antonio Reyes</td>
+              <td>8 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>TOUR</strong></td>
+              <td>Tourism & Cultural Affairs</td>
+              <td>Infrastructure</td>
+              <td>Ms. Sofia Bautista</td>
+              <td>6 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>MEEO</strong></td>
+              <td>Economic Enterprises Office (Markets)</td>
+              <td>Infrastructure</td>
+              <td>Mr. Jaime Tan</td>
+              <td>13 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+
+            <!-- PUBLIC SAFETY & LEGISLATIVE -->
+            <tr>
+              <td><strong>MDRRMO</strong></td>
+              <td>Disaster Risk Reduction Management</td>
+              <td>Public Safety</td>
+              <td>Capt. Joseph Domingo</td>
+              <td>20 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>POSO</strong></td>
+              <td>Public Order & Safety Office</td>
+              <td>Public Safety</td>
+              <td>Chief Fernando Laurel</td>
+              <td>25 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>BAPO</strong></td>
+              <td>Barangay Affairs & Operations Office</td>
+              <td>Public Safety</td>
+              <td>Mr. Gabriel Ocampo</td>
+              <td>7 Staff</td>
+              <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+              <td>
+                <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+                <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ADD / EDIT DEPARTMENT MODAL -->
+  <div class="modal-overlay" id="deptModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modalTitle">Department Details</h2>
+        <i class="fa-solid fa-xmark close-btn" onclick="closeModal('deptModal')"></i>
+      </div>
+      <form id="deptForm" onsubmit="handleDeptSubmit(event)">
+        <div class="form-group">
+          <label>Department Code</label>
+          <input type="text" id="deptCode" placeholder="e.g. MO, BPLO" required>
+        </div>
+
+        <div class="form-group">
+          <label>Department Name</label>
+          <input type="text" id="deptName" placeholder="Enter department name" required>
+        </div>
+
+        <div class="form-group">
+          <label>Sector Category</label>
+          <select id="deptSector" required>
+            <option value="Executive">Executive & Administrative</option>
+            <option value="Finance">Finance & Revenue</option>
+            <option value="Social">Social & Health Services</option>
+            <option value="Infrastructure">Infrastructure & Environment</option>
+            <option value="Public Safety">Public Safety & Legislative</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Department Head</label>
+          <input type="text" id="deptHead" placeholder="Name of Department Head" required>
+        </div>
+
+        <div class="form-group">
+          <label>Active Staff Count</label>
+          <input type="number" id="deptStaff" min="0" placeholder="0" required>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-modal btn-cancel" onclick="closeModal('deptModal')">Cancel</button>
+          <button type="submit" class="btn-modal btn-submit">Save Office</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- POST NEWS MODAL -->
+  <div class="modal-overlay" id="newsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Post Municipal Announcement</h2>
+        <i class="fa-solid fa-xmark close-btn" onclick="closeModal('newsModal')"></i>
+      </div>
+      <form id="newsForm" onsubmit="handleNewsSubmit(event)">
+        <div class="form-group">
+          <label>Announcement Title</label>
+          <input type="text" id="newsTitle" placeholder="Headline or announcement title" required>
+        </div>
+
+        <div class="form-group">
+          <label>Publishing Department</label>
+          <select id="newsDept" required>
+            <option value="PIO">Public Information Office (PIO)</option>
+            <option value="MO">Office of the Municipal Mayor</option>
+            <option value="MDRRMO">MDRRMO</option>
+            <option value="MHO">Municipal Health Office</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Content</label>
+          <textarea id="newsContent" rows="4" placeholder="Write announcement details..." required></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-modal btn-cancel" onclick="closeModal('newsModal')">Cancel</button>
+          <button type="submit" class="btn-modal btn-submit-news">Publish News</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toast">
+    <i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
+    <span id="toastMsg">Action completed successfully.</span>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    let activeEditRow = null;
+
+    // Clock
+    function updateClock() {
+      const options = {
+        timeZone: 'Asia/Manila',
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      };
+      document.getElementById('pstTime').textContent = new Date().toLocaleString('en-US', options) + ' PST';
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Stats recalculation
+    function calculateStats() {
+      const rows = document.querySelectorAll('#deptTable tbody tr');
+      let total = 0;
+      let active = 0;
+      let totalStaff = 0;
+
+      rows.forEach(row => {
+        if (row.style.display !== 'none') {
+          total++;
+          const isRowActive = row.querySelector('.badge').classList.contains('bg-active');
+          if (isRowActive) active++;
+
+          const staffText = row.cells[4].textContent;
+          const staffNum = parseInt(staffText) || 0;
+          totalStaff += staffNum;
+        }
+      });
+
+      document.getElementById('cnt-total').textContent = total;
+      document.getElementById('cnt-active').textContent = active;
+      document.getElementById('cnt-staff').textContent = totalStaff;
+    }
+
+    // Modal helpers
+    function openAddModal() {
+      activeEditRow = null;
+      document.getElementById('modalTitle').textContent = 'Add LGU Office / Sub-Office';
+      document.getElementById('deptForm').reset();
+      document.getElementById('deptModal').style.display = 'flex';
+    }
+
+    function openNewsModal() {
+      document.getElementById('newsForm').reset();
+      document.getElementById('newsModal').style.display = 'flex';
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    // Edit Department
+    function editDept(btn) {
+      activeEditRow = btn.closest('tr');
+      const cells = activeEditRow.cells;
+
+      document.getElementById('modalTitle').textContent = 'Edit Office Details';
+      document.getElementById('deptCode').value = cells[0].textContent.trim();
+      document.getElementById('deptName').value = cells[1].textContent.trim();
+      document.getElementById('deptSector').value = cells[2].textContent.trim();
+      document.getElementById('deptHead').value = cells[3].textContent.trim();
+      document.getElementById('deptStaff').value = parseInt(cells[4].textContent) || 0;
+
+      document.getElementById('deptModal').style.display = 'flex';
+    }
+
+    // Toggle Status
+    function toggleStatus(btn) {
+      const row = btn.closest('tr');
+      const badge = row.cells[5].querySelector('.badge');
+
+      if (badge.classList.contains('bg-active')) {
+        badge.className = 'badge bg-inactive';
+        badge.innerHTML = '<i class="fa-solid fa-circle"></i> On Leave';
+        showToast('Office status updated to On Leave.');
+      } else {
+        badge.className = 'badge bg-active';
+        badge.innerHTML = '<i class="fa-solid fa-circle"></i> Active';
+        showToast('Office status updated to Active.');
+      }
+      calculateStats();
+    }
+
+    // Form Handling
+    function handleDeptSubmit(e) {
+      e.preventDefault();
+      const code = document.getElementById('deptCode').value;
+      const name = document.getElementById('deptName').value;
+      const sector = document.getElementById('deptSector').value;
+      const head = document.getElementById('deptHead').value;
+      const staff = document.getElementById('deptStaff').value + ' Staff';
+
+      if (activeEditRow) {
+        activeEditRow.cells[0].innerHTML = `<strong>${code}</strong>`;
+        activeEditRow.cells[1].textContent = name;
+        activeEditRow.cells[2].textContent = sector;
+        activeEditRow.cells[3].textContent = head;
+        activeEditRow.cells[4].textContent = staff;
+        showToast('Department details updated successfully.');
+      } else {
+        const tbody = document.querySelector('#deptTable tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${code}</strong></td>
+          <td>${name}</td>
+          <td>${sector}</td>
+          <td>${head}</td>
+          <td>${staff}</td>
+          <td><span class="badge bg-active"><i class="fa-solid fa-circle"></i> Active</span></td>
+          <td>
+            <button class="btn-action edit" onclick="editDept(this)">Edit</button>
+            <button class="btn-action toggle" onclick="toggleStatus(this)">Toggle Status</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+        showToast('New office added successfully.');
+      }
+
+      closeModal('deptModal');
+      calculateStats();
+    }
+
+    function handleNewsSubmit(e) {
+      e.preventDefault();
+      closeModal('newsModal');
+      showToast('Announcement posted successfully.');
+    }
+
+    // Search and Filter
+    function applyFilters() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const sector = document.getElementById('sectorSelect').value;
+      const status = document.getElementById('statusSelect').value;
+      const rows = document.querySelectorAll('#deptTable tbody tr');
+
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowSector = row.cells[2].textContent.trim();
+        const isActive = row.querySelector('.badge').classList.contains('bg-active');
+        const rowStatus = isActive ? 'Active' : 'On Leave';
+
+        const matchesQuery = text.includes(query);
+        const matchesSector = (sector === 'all' || rowSector === sector);
+        const matchesStatus = (status === 'all' || rowStatus === status);
+
+        if (matchesQuery && matchesSector && matchesStatus) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      calculateStats();
+    }
+
+    // Toast Notification
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Initial setup
+    window.onload = calculateStats;
+  </script>
+</body>
+
+</html>
