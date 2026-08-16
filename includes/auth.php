@@ -29,9 +29,15 @@ function currentUser(): ?array
     ];
 }
 
+/**
+ * Where to land a user of the given role — used right after login/register
+ * and as the fallback when requireRole() blocks the wrong role. For admins
+ * that's their dashboard; for citizens it's the homepage (index.php), which
+ * doubles as their "Home" tab (their own Dashboard is one tab over).
+ */
 function dashboardUrlFor(string $role): string
 {
-    return $role === 'admin' ? '/LGU-Link/admin/dashboard.php' : '/LGU-Link/user/dashboard.php';
+    return $role === 'admin' ? '/LGU-Link/admin/dashboard.php' : '/LGU-Link/index.php';
 }
 
 /** Redirect to login if there is no session at all. */

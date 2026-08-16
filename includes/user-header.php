@@ -3,14 +3,17 @@
  * Shared citizen top navigation + LGU branding bar.
  * Expects $activePage to be set by the including page (e.g. 'dashboard').
  * Requires includes/auth.php to already be loaded (uses currentUser()).
+ * Included from both the project root (index.php) and user/*.php, so
+ * every href/action below is an absolute path rather than relative.
  */
 
 $activePage = $activePage ?? '';
 $citizen = currentUser();
 
 $navItems = [
-    'dashboard' => ['label' => 'Home',              'icon' => 'fa-house', 'href' => 'dashboard.php'],
-    'charter'   => ['label' => "Citizen's Charter",  'icon' => 'fa-book',  'href' => 'citizens-charter.php'],
+    'home'      => ['label' => 'Home',              'icon' => 'fa-house',  'href' => '/LGU-Link/index.php'],
+    'dashboard' => ['label' => 'Dashboard',          'icon' => 'fa-gauge',  'href' => '/LGU-Link/user/dashboard.php'],
+    'charter'   => ['label' => "Citizen's Charter",  'icon' => 'fa-book',   'href' => '/LGU-Link/user/citizens-charter.php'],
 ];
 ?>
   <header class="top-header">
@@ -26,7 +29,7 @@ $navItems = [
         </a>
       <?php endforeach; ?>
 
-      <form class="header-search-box" action="citizens-charter-search.php" method="get" role="search">
+      <form class="header-search-box" action="/LGU-Link/user/citizens-charter-search.php" method="get" role="search">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" name="q" placeholder="Search the Citizen's Charter..." aria-label="Search the Citizen's Charter">
       </form>
