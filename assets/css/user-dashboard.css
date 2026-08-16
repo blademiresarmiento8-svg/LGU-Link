@@ -1,0 +1,136 @@
+/* Citizen dashboard - welcome banner, service cards, account panel */
+
+.welcome-panel {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  color: white;
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.15);
+}
+
+.welcome-panel h2 {
+  margin: 0 0 6px 0;
+  font-size: 22px;
+}
+
+.welcome-panel p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.welcome-icon {
+  font-size: 56px;
+  opacity: 0.3;
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.service-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 24px;
+  text-align: left;
+}
+
+.service-card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.service-card-link:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.12);
+}
+
+.service-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.service-cta i {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.service-card-link:hover .service-cta i {
+  transform: translateX(3px);
+}
+
+.service-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-bottom: 14px;
+}
+
+.service-card h3 {
+  margin: 0 0 6px 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.service-card p {
+  margin: 0 0 14px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.service-status {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #d97706;
+  background: #fffbeb;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.account-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.account-details p {
+  margin: 0 0 4px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.account-details strong {
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+@media(max-width: 900px) {
+  .service-grid { grid-template-columns: 1fr; }
+  .account-details { grid-template-columns: 1fr; }
+  .welcome-panel { flex-direction: column; text-align: center; gap: 12px; }
+}

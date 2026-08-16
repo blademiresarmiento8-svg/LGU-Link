@@ -1,0 +1,213 @@
+/* Public homepage — hero fade carousel + latest news grid + footer */
+
+.public-main {
+  padding-top: 24px;
+}
+
+/* ---------- Public header extras (login/register links) ---------- */
+.public-login-link,
+.public-register-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: white;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.public-register-link {
+  background: var(--primary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-left: 4px;
+}
+
+.public-register-link:hover {
+  background: var(--primary-dark);
+}
+
+/* ---------- Hero fade carousel ---------- */
+.hero-carousel {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 36px;
+  background: #0f172a;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+}
+
+.carousel-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1s ease;
+  z-index: 0;
+}
+
+.carousel-slide.active {
+  opacity: 1;
+  z-index: 1;
+}
+
+.carousel-slide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.15) 45%, transparent 70%);
+}
+
+.carousel-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 32px 40px;
+  z-index: 2;
+  color: white;
+}
+
+.carousel-caption .badge {
+  margin-bottom: 10px;
+}
+
+.carousel-caption h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  max-width: 760px;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15, 23, 42, 0.45);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.carousel-arrow:hover {
+  background: rgba(15, 23, 42, 0.75);
+}
+
+.carousel-prev { left: 16px; }
+.carousel-next { right: 16px; }
+
+.carousel-dots {
+  position: absolute;
+  bottom: 16px;
+  right: 24px;
+  z-index: 3;
+  display: flex;
+  gap: 8px;
+}
+
+.carousel-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.carousel-dot.active {
+  background: white;
+  transform: scale(1.2);
+}
+
+/* ---------- Latest news grid ---------- */
+.public-news-section {
+  margin-bottom: 40px;
+}
+
+.public-news-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.public-news-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.public-news-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+}
+
+.public-news-thumb {
+  height: 170px;
+  background-color: var(--bg-main);
+  background-size: cover;
+  background-position: center;
+}
+
+.public-news-body {
+  padding: 18px 20px;
+}
+
+.public-news-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.public-news-body h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.public-news-body p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* ---------- Footer ---------- */
+.public-footer {
+  background: var(--header-bg);
+  color: #94a3b8;
+  text-align: center;
+  padding: 24px 16px;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.public-footer p {
+  margin: 0;
+}
+
+/* ---------- Responsive ---------- */
+@media(max-width: 900px) {
+  .hero-carousel { height: 280px; }
+  .carousel-caption { padding: 20px; }
+  .carousel-caption h2 { font-size: 19px; }
+  .public-news-grid { grid-template-columns: 1fr; }
+}

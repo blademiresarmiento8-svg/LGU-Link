@@ -1,0 +1,488 @@
+/* Citizen's Charter — browse, category, service detail, and search pages */
+
+/* ---------- Breadcrumb ---------- */
+.charter-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.charter-breadcrumb a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.charter-breadcrumb a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.charter-breadcrumb i {
+  font-size: 9px;
+  color: #cbd5e1;
+}
+
+.charter-breadcrumb span {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.charter-title-icon {
+  color: var(--primary);
+  font-size: 17px;
+  margin-right: 4px;
+}
+
+/* ---------- Search hero (landing + search results page) ---------- */
+.charter-search-hero {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 6px 8px 6px 20px;
+  margin-bottom: 28px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.charter-search-hero i {
+  color: var(--text-muted);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.charter-search-hero input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  padding: 10px 0;
+  background: transparent;
+}
+
+.charter-search-hero button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.charter-search-hero button:hover {
+  background: var(--primary-dark);
+}
+
+/* ---------- Office/category grid ---------- */
+.charter-office-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.charter-office-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 18px 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.charter-office-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.12);
+}
+
+.charter-office-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.charter-office-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.charter-office-info h3 {
+  margin: 0 0 3px 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.charter-office-info span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.charter-office-arrow {
+  color: #cbd5e1;
+  font-size: 13px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.charter-office-card:hover .charter-office-arrow {
+  transform: translateX(3px);
+  color: var(--primary);
+}
+
+/* ---------- A-Z full list panel ---------- */
+.charter-az-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  max-height: 460px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.charter-az-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
+}
+
+.charter-az-item:hover {
+  background: var(--bg-main);
+}
+
+.charter-az-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.charter-az-office {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ---------- Service list (per-office page) ---------- */
+.charter-service-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.charter-service-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.charter-service-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.1);
+}
+
+.charter-service-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.charter-service-info p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.charter-service-card > i {
+  color: #cbd5e1;
+  font-size: 13px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.charter-service-card:hover > i {
+  transform: translateX(3px);
+  color: var(--primary);
+}
+
+/* ---------- Service detail page ---------- */
+.charter-detail-panel {
+  max-width: 760px;
+}
+
+.charter-detail-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.charter-detail-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.charter-detail-office {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.charter-detail-office:hover {
+  text-decoration: underline;
+}
+
+.charter-detail-header h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.charter-detail-meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.charter-detail-meta > div {
+  background: var(--bg-main);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.charter-detail-meta span {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.charter-detail-meta span i {
+  margin-right: 4px;
+}
+
+.charter-detail-meta strong {
+  font-size: 14px;
+  color: var(--text-main);
+  line-height: 1.4;
+}
+
+.charter-detail-subhead {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.charter-requirements-list {
+  list-style: none;
+  margin: 0 0 24px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.charter-requirements-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.charter-requirements-list li i {
+  color: var(--success);
+  font-size: 14px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.charter-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.charter-disclaimer i {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.charter-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.charter-back-link:hover {
+  color: var(--primary);
+}
+
+/* ---------- Search results page ---------- */
+.charter-result-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 16px 0;
+}
+
+.charter-result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.charter-result-card {
+  display: block;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.charter-result-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.1);
+}
+
+.charter-result-office {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
+}
+
+.charter-result-card h3 {
+  margin: 0 0 6px 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.charter-result-snippet {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.charter-result-label {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.charter-result-card mark,
+.charter-az-item mark {
+  background: #fef08a;
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+/* ---------- Empty state (no query / no results) ---------- */
+.charter-empty-state {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.charter-empty-state i {
+  font-size: 36px;
+  color: #cbd5e1;
+  margin-bottom: 14px;
+  display: block;
+}
+
+.charter-empty-state h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+.charter-empty-state p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.charter-empty-state a {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ---------- Responsive ---------- */
+@media(max-width: 900px) {
+  .charter-office-grid { grid-template-columns: 1fr; }
+  .charter-az-list { grid-template-columns: 1fr; max-height: 360px; }
+  .charter-detail-meta { grid-template-columns: 1fr; }
+  .charter-service-card { flex-direction: column; align-items: flex-start; }
+}

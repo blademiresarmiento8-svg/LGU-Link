@@ -1,0 +1,18 @@
+/* Admin Citizen's Charter — mostly reuses style.css panel/table/modal
+   components; this file only covers what's specific to this page. */
+
+.charter-modal-box {
+  width: 560px;
+}
+
+.charter-modal-box textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.form-group .row-note {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-muted);
+}

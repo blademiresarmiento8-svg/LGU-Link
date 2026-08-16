@@ -1,0 +1,114 @@
+/* Admin Reports & Analytics - filters, charts, print/export toolbar */
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-report-action {
+  background: white;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-report-action:hover {
+  background: #f1f5f9;
+}
+
+.btn-report-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+}
+
+.btn-report-primary:hover {
+  background: var(--primary-dark);
+}
+
+.filter-panel {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.charts-grid-equal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 24px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.chart-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.chart-header-note {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+@media(max-width: 1024px) {
+  .charts-grid, .charts-grid-equal { grid-template-columns: 1fr; }
+}
+
+@media print {
+  .top-header, .lgu-branding-bar, .header-actions, .filter-panel { display: none !important; }
+  .main { margin: 0; padding: 0; max-width: 100%; }
+}
