@@ -16,9 +16,7 @@ if (isLoggedIn() && $_SESSION['role'] === 'admin') {
 }
 
 $loggedInCitizen = isLoggedIn();
-if ($loggedInCitizen) {
-    $activePage = 'home';
-}
+$activePage = 'home';
 
 require_once __DIR__ . '/includes/news-helpers.php';
 

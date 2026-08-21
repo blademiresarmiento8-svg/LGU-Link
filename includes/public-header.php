@@ -1,10 +1,18 @@
 <?php
 /**
- * Header for the public (unauthenticated) homepage — no currentUser()
- * dependency, just LGU branding + Login/Register links.
- * Requires includes/auth.php to already be loaded (uses BASE_PATH-free
- * absolute links only, no session read).
+ * Header for public (unauthenticated) pages — no currentUser() dependency,
+ * just LGU branding, the Home/Citizen's Charter nav + search box, and
+ * Login/Register links. Expects $activePage to be set by the including
+ * page (e.g. 'home', 'charter'). Requires includes/auth.php to already be
+ * loaded (no session read here, but kept consistent with the other headers).
  */
+
+$activePage = $activePage ?? '';
+
+$navItems = [
+    'home'    => ['label' => 'Home',              'icon' => 'fa-house', 'href' => '/LGU-Link/index.php'],
+    'charter' => ['label' => "Citizen's Charter",  'icon' => 'fa-book',  'href' => '/LGU-Link/user/citizens-charter.php'],
+];
 ?>
   <header class="top-header">
     <div class="header-logo">
@@ -13,7 +21,16 @@
     </div>
 
     <nav class="header-nav">
-      <a href="/LGU-Link/index.php" class="active"><i class="fa-solid fa-house"></i><span>Home</span></a>
+      <?php foreach ($navItems as $key => $item): ?>
+        <a href="<?= htmlspecialchars($item['href']) ?>" class="<?= $activePage === $key ? 'active' : '' ?>">
+          <i class="fa-solid <?= htmlspecialchars($item['icon']) ?>"></i><span><?= htmlspecialchars($item['label']) ?></span>
+        </a>
+      <?php endforeach; ?>
+
+      <form class="header-search-box" action="/LGU-Link/user/citizens-charter-search.php" method="get" role="search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" name="q" placeholder="Search the Citizen's Charter..." aria-label="Search the Citizen's Charter">
+      </form>
     </nav>
 
     <div class="header-user">
