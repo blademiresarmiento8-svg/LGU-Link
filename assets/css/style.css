@@ -34,10 +34,12 @@ body {
 .top-header {
   background: var(--header-bg);
   color: white;
-  padding: 0 32px;
-  height: 65px;
+  padding: 10px 32px;
+  min-height: 65px;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  row-gap: 10px;
   justify-content: space-between;
   position: sticky;
   top: 0;
