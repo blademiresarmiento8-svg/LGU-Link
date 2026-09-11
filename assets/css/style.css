@@ -167,6 +167,29 @@ body {
   color: #f87171;
 }
 
+/* ---------- Public header (guest) login/register links ---------- */
+.public-login-link,
+.public-register-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: white;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.public-register-link {
+  background: var(--primary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-left: 4px;
+}
+
+.public-register-link:hover {
+  background: var(--primary-dark);
+}
+
 /* ---------- OFFICIAL LGU BRANDING BAR + PST CLOCK ---------- */
 .lgu-branding-bar {
   background: white;
