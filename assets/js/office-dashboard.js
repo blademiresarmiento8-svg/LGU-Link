@@ -1,13 +1,12 @@
-// Admin Appointments page logic - view detail, forward-to-office, reject,
-// filters. Forward/reject are real form submissions to
-// appointments-status.php (server persists to the DB), not DOM-only
-// mockups.
+// Office Dashboard page logic - view detail, set schedule, mark completed.
+// Schedule/complete are real form submissions to appointments-status.php
+// (server persists to the DB), not DOM-only mockups.
 
 /**
  * Every value here comes from a citizen's own submitted content (title,
- * description, etc.) — escape before inserting into innerHTML. The admin
- * viewing this is a DIFFERENT user than whoever wrote the text, so this is
- * a real stored-XSS boundary, not just defensive habit.
+ * description, etc.) — escape before inserting into innerHTML. The office
+ * staffer viewing this is a DIFFERENT user than whoever wrote the text, so
+ * this is a real stored-XSS boundary, not just defensive habit.
  */
 function escapeHtml(value) {
   if (value === null || value === undefined) {
@@ -48,20 +47,14 @@ function openAppointmentDetailModal(btn) {
     ['Description', escapeHtml(appt.description)],
     ['Contact Number', escapeHtml(appt.contact_number)],
     ['Email', escapeHtml(appt.email)],
-    ['Preferred Date/Time', escapeHtml(formatDateTime(appt.preferred_date, appt.preferred_time))],
+    ['Citizen Preferred Date/Time', escapeHtml(formatDateTime(appt.preferred_date, appt.preferred_time))],
   ];
 
-  if (appt.department_name) {
-    rows.push(['Forwarded To', escapeHtml(appt.department_name)]);
-  }
   if (appt.scheduled_date) {
     rows.push(['Scheduled', escapeHtml(formatDateTime(appt.scheduled_date, appt.scheduled_time))]);
   }
   if (appt.admin_notes) {
-    rows.push(['Admin Notes', escapeHtml(appt.admin_notes)]);
-  }
-  if (appt.rejection_reason) {
-    rows.push(['Rejection Reason', escapeHtml(appt.rejection_reason)]);
+    rows.push(['Notes', escapeHtml(appt.admin_notes)]);
   }
   if (appt.attachment_path) {
     const href = encodeURI(`/LGU-Link/${appt.attachment_path}`);
@@ -84,34 +77,21 @@ function openAppointmentDetailModal(btn) {
   openModal('appointmentDetailModal');
 }
 
-function openForwardModal(id, title) {
-  document.getElementById('forwardAppointmentId').value = id;
-  document.getElementById('forwardAppointmentTitle').textContent = `Request: "${title}"`;
-  openModal('forwardModal');
+function openScheduleModal(id, title) {
+  document.getElementById('scheduleAppointmentId').value = id;
+  document.getElementById('scheduleAppointmentTitle').textContent = `Request: "${title}"`;
+  openModal('scheduleModal');
 }
 
-function openRejectAppointmentModal(id, title) {
-  document.getElementById('rejectAppointmentId').value = id;
-  document.getElementById('rejectAppointmentTitle').textContent = `Request: "${title}"`;
-  openModal('rejectAppointmentModal');
-}
-
-/* Search and filter */
-function applyAppointmentFilters() {
-  const query = document.getElementById('appointmentSearchInput').value.toLowerCase();
-  const status = document.getElementById('appointmentStatusSelect').value;
-  const category = document.getElementById('appointmentCategorySelect').value;
-  const rows = document.querySelectorAll('#appointmentTable tbody tr');
-
-  rows.forEach((row) => {
-    const text = row.textContent.toLowerCase();
-    const rowStatus = row.dataset.status;
-    const rowCategory = row.dataset.category;
-
-    const matchesQuery = text.includes(query);
-    const matchesStatus = status === 'all' || rowStatus === status;
-    const matchesCategory = category === 'all' || rowCategory === category;
-
-    row.style.display = matchesQuery && matchesStatus && matchesCategory ? '' : 'none';
+function confirmMarkCompleted(id, title) {
+  confirmAction({
+    title: 'Mark as Completed',
+    message: `Mark "${title}" as completed?`,
+    confirmLabel: 'Mark Completed',
+    danger: false,
+    onConfirm: () => {
+      document.getElementById('markCompletedId').value = id;
+      document.getElementById('markCompletedForm').submit();
+    },
   });
 }

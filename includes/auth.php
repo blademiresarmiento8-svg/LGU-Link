@@ -22,22 +22,33 @@ function currentUser(): ?array
     }
 
     return [
-        'id'        => $_SESSION['user_id'],
-        'full_name' => $_SESSION['full_name'],
-        'email'     => $_SESSION['email'],
-        'role'      => $_SESSION['role'],
+        'id'              => $_SESSION['user_id'],
+        'full_name'       => $_SESSION['full_name'],
+        'email'           => $_SESSION['email'],
+        'role'            => $_SESSION['role'],
+        'department_id'   => $_SESSION['department_id'] ?? null,
+        'department_name' => $_SESSION['department_name'] ?? null,
     ];
 }
 
 /**
  * Where to land a user of the given role — used right after login/register
- * and as the fallback when requireRole() blocks the wrong role. For admins
- * that's their dashboard; for citizens it's the homepage (index.php), which
- * doubles as their "Home" tab (their own Dashboard is one tab over).
+ * and as the fallback when requireRole() blocks the wrong role. Admins land
+ * on the admin dashboard, office accounts on their own department-scoped
+ * dashboard, and citizens on the homepage (index.php), which doubles as
+ * their "Home" tab (their own Dashboard is one tab over).
  */
 function dashboardUrlFor(string $role): string
 {
-    return $role === 'admin' ? '/LGU-Link/admin/dashboard.php' : '/LGU-Link/index.php';
+    if ($role === 'admin') {
+        return '/LGU-Link/admin/dashboard.php';
+    }
+
+    if ($role === 'office') {
+        return '/LGU-Link/office/dashboard.php';
+    }
+
+    return '/LGU-Link/index.php';
 }
 
 /** Redirect to login if there is no session at all. */

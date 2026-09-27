@@ -12,10 +12,8 @@ $navItems = [
     'dashboard'         => ['label' => 'Dashboard',          'icon' => 'fa-chart-pie',       'href' => 'dashboard.php'],
     'news'              => ['label' => 'News',               'icon' => 'fa-newspaper',       'href' => 'news.php'],
     'charter'           => ['label' => "Citizen's Charter",  'icon' => 'fa-book',            'href' => 'citizens-charter.php'],
-    'document-request'  => ['label' => 'Document Requests',  'icon' => 'fa-file-signature',  'href' => 'document-request.php'],
     'appointments'      => ['label' => 'Appointments',       'icon' => 'fa-calendar-check',  'href' => 'appointments.php'],
-    'departments'       => ['label' => '27 Departments',     'icon' => 'fa-building',        'href' => 'departments.php'],
-    'reports'           => ['label' => 'Analytics',          'icon' => 'fa-chart-line',      'href' => 'reports.php'],
+    'office-accounts'   => ['label' => 'Office Accounts',    'icon' => 'fa-building-user',   'href' => 'office-accounts.php'],
 ];
 ?>
   <header class="top-header">

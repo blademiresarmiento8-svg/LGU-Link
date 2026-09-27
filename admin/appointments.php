@@ -1,8 +1,20 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('admin');
+require_once __DIR__ . '/../includes/appointment-helpers.php';
+require_once __DIR__ . '/../includes/department-helpers.php';
 
 $activePage = 'appointments';
+
+$appointments = getAllAppointments();
+$statusCounts = getAppointmentStatusCounts();
+$departments = getAllDepartments();
+
+$categories = APPOINTMENT_CATEGORIES;
+
+$flashForwarded = isset($_GET['forwarded']);
+$flashRejected = isset($_GET['rejected']);
+$flashError = trim((string) ($_GET['error'] ?? ''));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,9 +22,10 @@ $activePage = 'appointments';
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Appointments Management - LGU Portal</title>
+  <title>Appointments - LGU Norzagaray Admin</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="/LGU-Link/assets/css/style.css">
+  <link rel="stylesheet" href="/LGU-Link/assets/css/user-appointments.css">
 </head>
 
 <body>
@@ -24,132 +37,140 @@ $activePage = 'appointments';
 
     <div class="page-title-row">
       <div>
-        <h2>Appointment Schedule Management</h2>
-        <p>Monitor and organize citizen desk visits across LGU offices.</p>
+        <h1>Appointments</h1>
+        <p>Review citizen concerns and appointment requests, then forward the ones worth scheduling to the office that should handle them.</p>
       </div>
-      <button class="btn-primary" onclick="openModal('appointmentModal')">
-        <i class="fa-solid fa-plus"></i> New Appointment
-      </button>
     </div>
 
-    <!-- STATS CARDS -->
+    <!-- STATS -->
     <section class="stats-grid">
       <div class="stat-card">
         <div>
-          <p>Total Bookings</p>
-          <h2 id="cnt-total">0</h2>
-        </div>
-        <div class="stat-icon ic-blue"><i class="fa-solid fa-calendar-days"></i></div>
-      </div>
-
-      <div class="stat-card">
-        <div>
-          <p>Pending Approval</p>
-          <h2 id="cnt-pending">0</h2>
+          <p>Pending Review</p>
+          <h2><?= (int) $statusCounts['pending_review'] ?></h2>
         </div>
         <div class="stat-icon ic-amber"><i class="fa-solid fa-clock"></i></div>
       </div>
 
       <div class="stat-card">
         <div>
-          <p>Confirmed Appointments</p>
-          <h2 id="cnt-confirmed">0</h2>
+          <p>Forwarded to Office</p>
+          <h2><?= (int) $statusCounts['forwarded'] ?></h2>
+        </div>
+        <div class="stat-icon ic-purple"><i class="fa-solid fa-share"></i></div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <p>Scheduled</p>
+          <h2><?= (int) $statusCounts['scheduled'] ?></h2>
         </div>
         <div class="stat-icon ic-green"><i class="fa-solid fa-calendar-check"></i></div>
       </div>
 
       <div class="stat-card">
         <div>
-          <p>Completed Visits</p>
-          <h2 id="cnt-completed">0</h2>
+          <p>Total Requests</p>
+          <h2><?= array_sum($statusCounts) ?></h2>
         </div>
-        <div class="stat-icon ic-purple"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="stat-icon ic-blue"><i class="fa-solid fa-folder-open"></i></div>
       </div>
     </section>
 
     <!-- CONTENT PANEL -->
     <section class="panel">
 
+      <div class="panel-header">
+        <h3>All Requests</h3>
+      </div>
+
       <!-- TOOLBAR -->
       <div class="toolbar">
         <div class="search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="searchInput" placeholder="Search citizen or reference no..." onkeyup="applyFilters()">
+          <input type="text" id="appointmentSearchInput" placeholder="Search citizen, title, or category..." onkeyup="applyAppointmentFilters()">
         </div>
 
-        <select id="deptSelect" onchange="applyFilters()">
-          <option value="all">All Departments</option>
-          <option value="Mayor's Office">Mayor's Office</option>
-          <option value="BPLO">BPLO</option>
-          <option value="LCR">LCR</option>
-          <option value="MSWDO">MSWDO</option>
-          <option value="Engineering Office">Engineering Office</option>
-          <option value="Assessor's Office">Assessor's Office</option>
+        <select id="appointmentStatusSelect" onchange="applyAppointmentFilters()">
+          <option value="all">All Statuses</option>
+          <option value="pending_review">Pending Review</option>
+          <option value="forwarded">Forwarded to Office</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="completed">Completed</option>
+          <option value="rejected">Rejected</option>
+          <option value="cancelled">Cancelled</option>
         </select>
 
-        <select id="statusSelect" onchange="applyFilters()">
-          <option value="all">All Statuses</option>
-          <option value="Pending">Pending</option>
-          <option value="Confirmed">Confirmed</option>
-          <option value="Completed">Completed</option>
-          <option value="Cancelled">Cancelled</option>
+        <select id="appointmentCategorySelect" onchange="applyAppointmentFilters()">
+          <option value="all">All Categories</option>
+          <?php foreach ($categories as $category): ?>
+            <option value="<?= htmlspecialchars($category) ?>"><?= htmlspecialchars($category) ?></option>
+          <?php endforeach; ?>
         </select>
       </div>
 
-      <!-- DATA TABLE -->
       <div class="table-container">
-        <table id="appointmentsTable">
+        <table id="appointmentTable">
           <thead>
             <tr>
-              <th>Ref No.</th>
-              <th>Citizen Name</th>
-              <th>Target Department</th>
-              <th>Date & Time</th>
-              <th>Purpose</th>
+              <th>Submitted</th>
+              <th>Citizen</th>
+              <th>Category</th>
+              <th>Title</th>
               <th>Status</th>
+              <th>Department</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td><strong>APT-2026-101</strong></td>
-              <td>Jose Rizal</td>
-              <td>Mayor's Office</td>
-              <td>Aug 08, 2026 - 09:00 AM</td>
-              <td>Courtesy Call & Inquiry</td>
-              <td><span class="badge bg-pending"><i class="fa-solid fa-spinner"></i> Pending</span></td>
-              <td>
-                <div class="action-btns">
-                  <button class="btn-action approve" onclick="updateStatus(this, 'Confirmed')">Approve</button>
-                  <button class="btn-action reject" onclick="updateStatus(this, 'Cancelled')">Cancel</button>
-                </div>
-              </td>
-            </tr>
+            <?php if (empty($appointments)): ?>
+              <tr>
+                <td colspan="7" class="row-note">No appointment requests yet.</td>
+              </tr>
+            <?php endif; ?>
+            <?php foreach ($appointments as $appt): ?>
+              <?php
+              $statusMeta = getAppointmentStatusMeta($appt['status']);
+              $isPending = $appt['status'] === 'pending_review';
 
-            <tr>
-              <td><strong>APT-2026-102</strong></td>
-              <td>Andres Bonifacio</td>
-              <td>BPLO</td>
-              <td>Aug 07, 2026 - 01:30 PM</td>
-              <td>Business Assessment</td>
-              <td><span class="badge bg-approved"><i class="fa-solid fa-calendar-check"></i> Confirmed</span></td>
-              <td>
-                <div class="action-btns">
-                  <button class="btn-action complete" onclick="updateStatus(this, 'Completed')">Complete</button>
-                  <button class="btn-action reject" onclick="updateStatus(this, 'Cancelled')">Cancel</button>
-                </div>
-              </td>
-            </tr>
-
-            <tr>
-              <td><strong>APT-2026-103</strong></td>
-              <td>Apolinario Mabini</td>
-              <td>MSWDO</td>
-              <td>Aug 06, 2026 - 10:00 AM</td>
-              <td>PWD Assistance Consultation</td>
-              <td><span class="badge bg-completed"><i class="fa-solid fa-check-double"></i> Completed</span></td>
-              <td><span class="row-note">Updated</span></td>
-            </tr>
+              $apptJson = json_encode([
+                  'id' => $appt['id'],
+                  'citizen_name' => $appt['citizen_name'],
+                  'title' => $appt['title'],
+                  'category' => $appt['category'],
+                  'description' => $appt['description'],
+                  'contact_number' => $appt['contact_number'],
+                  'email' => $appt['email'],
+                  'preferred_date' => $appt['preferred_date'],
+                  'preferred_time' => $appt['preferred_time'],
+                  'department_name' => $appt['department_name'],
+                  'status_label' => $statusMeta['label'],
+                  'scheduled_date' => $appt['scheduled_date'],
+                  'scheduled_time' => $appt['scheduled_time'],
+                  'admin_notes' => $appt['admin_notes'],
+                  'rejection_reason' => $appt['rejection_reason'],
+                  'attachment_path' => $appt['attachment_path'],
+                  'attachment_original_name' => $appt['attachment_original_name'],
+              ]);
+              ?>
+              <tr data-status="<?= htmlspecialchars($appt['status']) ?>" data-category="<?= htmlspecialchars($appt['category']) ?>">
+                <td><?= htmlspecialchars(date('M j, Y', strtotime($appt['created_at']))) ?></td>
+                <td><?= htmlspecialchars($appt['citizen_name']) ?></td>
+                <td><?= htmlspecialchars($appt['category']) ?></td>
+                <td><strong><?= htmlspecialchars($appt['title']) ?></strong></td>
+                <td><span class="badge <?= htmlspecialchars($statusMeta['badgeClass']) ?>"><?= htmlspecialchars($statusMeta['label']) ?></span></td>
+                <td><?= $appt['department_name'] !== null ? htmlspecialchars($appt['department_name']) : '<span class="row-note">—</span>' ?></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn-action edit" data-appointment="<?= htmlspecialchars($apptJson, ENT_QUOTES) ?>" onclick="openAppointmentDetailModal(this)">View</button>
+                    <?php if ($isPending): ?>
+                      <button class="btn-action approve" onclick="openForwardModal(<?= (int) $appt['id'] ?>, <?= htmlspecialchars(json_encode($appt['title']), ENT_QUOTES) ?>)">Forward</button>
+                      <button class="btn-action reject" onclick="openRejectAppointmentModal(<?= (int) $appt['id'] ?>, <?= htmlspecialchars(json_encode($appt['title']), ENT_QUOTES) ?>)">Reject</button>
+                    <?php endif; ?>
+                  </div>
+                </td>
+              </tr>
+            <?php endforeach; ?>
           </tbody>
         </table>
       </div>
@@ -158,44 +179,79 @@ $activePage = 'appointments';
 
   </main>
 
-  <!-- MODAL: NEW APPOINTMENT -->
-  <div class="modal-overlay" id="appointmentModal">
+  <!-- VIEW APPOINTMENT DETAIL MODAL (read-only) -->
+  <div class="modal-overlay" id="appointmentDetailModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Create New Schedule</h3>
-        <i class="fa-solid fa-xmark close-btn" onclick="closeModal('appointmentModal')"></i>
+        <h3 id="appointmentDetailTitle">Appointment Details</h3>
+        <i class="fa-solid fa-xmark close-btn" onclick="closeModal('appointmentDetailModal')"></i>
       </div>
-      <form onsubmit="handleAppointmentSubmit(event)">
-        <div class="form-group">
-          <label>Citizen Full Name</label>
-          <input type="text" id="citizenName" required placeholder="e.g. Juan Dela Cruz">
-        </div>
+      <div id="appointmentDetailBody" class="appointment-detail-body"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-modal btn-cancel" onclick="closeModal('appointmentDetailModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORWARD TO OFFICE MODAL -->
+  <div class="modal-overlay" id="forwardModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Forward to Office</h3>
+        <i class="fa-solid fa-xmark close-btn" onclick="closeModal('forwardModal')"></i>
+      </div>
+      <form action="appointments-status.php" method="post">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
+        <input type="hidden" name="action" value="forward">
+        <input type="hidden" name="id" id="forwardAppointmentId" value="">
+
+        <p id="forwardAppointmentTitle" class="row-note" style="margin-bottom: 14px;"></p>
 
         <div class="form-group">
-          <label>Department Office</label>
-          <select id="deptName" required>
-            <option value="Mayor's Office">Mayor's Office</option>
-            <option value="BPLO">BPLO (Business Permit)</option>
-            <option value="LCR">LCR (Civil Registrar)</option>
-            <option value="MSWDO">MSWDO (Social Welfare)</option>
-            <option value="Engineering Office">Engineering Office</option>
-            <option value="Assessor's Office">Assessor's Office</option>
+          <label>Department</label>
+          <select name="department_id" required>
+            <option value="">Select the office that should handle this</option>
+            <?php foreach ($departments as $department): ?>
+              <option value="<?= (int) $department['id'] ?>"><?= htmlspecialchars($department['name']) ?> (<?= htmlspecialchars($department['code']) ?>)</option>
+            <?php endforeach; ?>
           </select>
         </div>
 
         <div class="form-group">
-          <label>Schedule Date & Time</label>
-          <input type="datetime-local" id="schedDateTime" required>
-        </div>
-
-        <div class="form-group">
-          <label>Purpose of Visit</label>
-          <input type="text" id="purposeText" required placeholder="Brief description">
+          <label>Note to the office <span class="row-note">— optional</span></label>
+          <textarea name="admin_notes" rows="3" placeholder="Any context the office should know before scheduling"></textarea>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="btn-modal btn-cancel" onclick="closeModal('appointmentModal')">Cancel</button>
-          <button type="submit" class="btn-modal btn-submit">Save Appointment</button>
+          <button type="button" class="btn-modal btn-cancel" onclick="closeModal('forwardModal')">Cancel</button>
+          <button type="submit" class="btn-modal btn-submit">Forward</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- REJECT MODAL -->
+  <div class="modal-overlay" id="rejectAppointmentModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="color: var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Reject Request</h3>
+        <i class="fa-solid fa-xmark close-btn" onclick="closeModal('rejectAppointmentModal')"></i>
+      </div>
+      <form action="appointments-status.php" method="post">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
+        <input type="hidden" name="action" value="reject">
+        <input type="hidden" name="id" id="rejectAppointmentId" value="">
+
+        <p id="rejectAppointmentTitle" class="row-note" style="margin-bottom: 14px;"></p>
+
+        <div class="form-group">
+          <label>Reason for Rejection</label>
+          <textarea name="rejection_reason" rows="3" required placeholder="The citizen will see this reason"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-modal btn-cancel" onclick="closeModal('rejectAppointmentModal')">Cancel</button>
+          <button type="submit" class="btn-modal btn-submit" style="background: var(--danger);">Confirm Rejection</button>
         </div>
       </form>
     </div>
@@ -207,6 +263,14 @@ $activePage = 'appointments';
 
   <script src="/LGU-Link/assets/js/main.js"></script>
   <script src="/LGU-Link/assets/js/admin-appointments.js"></script>
+
+  <?php if ($flashForwarded): ?>
+    <script>document.addEventListener('DOMContentLoaded', () => showToast('Request forwarded to the office.'));</script>
+  <?php elseif ($flashRejected): ?>
+    <script>document.addEventListener('DOMContentLoaded', () => showToast('Request rejected.'));</script>
+  <?php elseif ($flashError !== ''): ?>
+    <script>document.addEventListener('DOMContentLoaded', () => showToast(<?= json_encode($flashError) ?>, true));</script>
+  <?php endif; ?>
 </body>
 
 </html>

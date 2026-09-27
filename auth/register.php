@@ -64,68 +64,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body class="auth-body">
 
-  <div class="auth-wrapper">
-    <div class="auth-brand">
-      <img src="/LGU-Link/assets/img/lgu-logo.png" alt="LGU Norzagaray Seal" onerror="this.src='https://via.placeholder.com/72?text=LGU'">
+  <div class="auth-ornaments" aria-hidden="true">
+    <i class="fa-solid fa-cube auth-cube auth-cube-1"></i>
+    <i class="fa-solid fa-cube auth-cube auth-cube-2"></i>
+    <i class="fa-solid fa-cube auth-cube auth-cube-3"></i>
+    <i class="fa-solid fa-cube auth-cube auth-cube-4"></i>
+    <i class="fa-solid fa-cube auth-cube auth-cube-5"></i>
+  </div>
+
+  <header class="auth-top-bar">
+    <a href="/LGU-Link/auth/login.php" class="auth-top-link">Already have an account? <strong>Sign in</strong></a>
+  </header>
+
+  <div class="auth-brand-center">
+    <a href="/LGU-Link/index.php">
+      <img src="/LGU-Link/assets/img/lgu-logo.png" alt="LGU Norzagaray Seal" onerror="this.src='https://via.placeholder.com/60?text=LGU'">
       <h3>Republic of the Philippines</h3>
       <h1>Municipality of Norzagaray</h1>
       <p>May katuwanG ka!</p>
-    </div>
+    </a>
+  </div>
 
-    <div class="auth-card">
-      <div class="auth-card-header">
-        <h2>Create your citizen account</h2>
-        <p>Register to request documents, book appointments, and follow LGU announcements.</p>
+  <main class="auth-main">
+    <div class="auth-split">
+      <div class="auth-info">
+        <h2>Your gateway to LGU Norzagaray services</h2>
+        <p class="auth-info-lede">Register to manage appointments, browse the Citizen's Charter, and stay up to date with municipal announcements.</p>
+
+        <p class="auth-benefits-title">With a citizen account, you can:</p>
+        <ul class="auth-benefits">
+          <!-- <li><i class="fa-solid fa-file-signature"></i> Request certificates and permits online</li> -->
+          <li><i class="fa-solid fa-calendar-check"></i> Book appointments with LGU offices</li>
+          <li><i class="fa-solid fa-list-check"></i> Track the status of your requests</li>
+          <li><i class="fa-solid fa-bell"></i> Get the latest municipal news and advisories</li>
+          <li><i class="fa-solid fa-comments"></i> Chat with our AI assistant for quick answers</li>
+        </ul>
       </div>
 
-      <?php if ($error): ?>
-        <div class="auth-alert auth-alert-error">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          <span><?= htmlspecialchars($error) ?></span>
-        </div>
-      <?php endif; ?>
+      <div class="auth-divider" aria-hidden="true"></div>
 
-      <form method="post" action="/LGU-Link/auth/register.php" class="auth-form">
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
-
-        <div class="form-group">
-          <label for="full_name">Full Name</label>
-          <input type="text" id="full_name" name="full_name" required autofocus placeholder="e.g. Juan Dela Cruz" value="<?= htmlspecialchars($old['full_name']) ?>">
+      <div class="auth-form-col">
+        <div class="auth-card-header">
+          <h2>Create your citizen account</h2>
+          <p>Register to request documents, book appointments, and follow LGU announcements.</p>
         </div>
 
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" name="email" required placeholder="you@example.com" value="<?= htmlspecialchars($old['email']) ?>">
-        </div>
-
-        <div class="form-group">
-          <label for="password">Password</label>
-          <div class="auth-password-field">
-            <input type="password" id="password" name="password" required minlength="8" placeholder="At least 8 characters">
-            <button type="button" class="auth-toggle-password" data-target="password" aria-label="Show password">
-              <i class="fa-solid fa-eye"></i>
-            </button>
+        <?php if ($error): ?>
+          <div class="auth-alert auth-alert-error">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span><?= htmlspecialchars($error) ?></span>
           </div>
-        </div>
+        <?php endif; ?>
 
-        <div class="form-group">
-          <label for="confirm_password">Confirm Password</label>
-          <div class="auth-password-field">
-            <input type="password" id="confirm_password" name="confirm_password" required minlength="8" placeholder="Re-enter your password">
-            <button type="button" class="auth-toggle-password" data-target="confirm_password" aria-label="Show password">
-              <i class="fa-solid fa-eye"></i>
-            </button>
+        <form method="post" action="/LGU-Link/auth/register.php" class="auth-form">
+          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
+
+          <div class="form-group">
+            <label for="full_name">Full Name</label>
+            <input type="text" id="full_name" name="full_name" required autofocus placeholder="e.g. Juan Dela Cruz" value="<?= htmlspecialchars($old['full_name']) ?>">
           </div>
-        </div>
 
-        <button type="submit" class="btn-modal btn-submit auth-submit">
-          <i class="fa-solid fa-user-plus"></i> Create Account
-        </button>
-      </form>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required placeholder="you@example.com" value="<?= htmlspecialchars($old['email']) ?>">
+          </div>
 
-      <p class="auth-switch">Already have an account? <a href="/LGU-Link/auth/login.php">Sign in</a></p>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="auth-password-field">
+              <input type="password" id="password" name="password" required minlength="8" placeholder="At least 8 characters">
+              <button type="button" class="auth-toggle-password" data-target="password" aria-label="Show password">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="confirm_password">Confirm Password</label>
+            <div class="auth-password-field">
+              <input type="password" id="confirm_password" name="confirm_password" required minlength="8" placeholder="Re-enter your password">
+              <button type="button" class="auth-toggle-password" data-target="confirm_password" aria-label="Show password">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-modal btn-submit auth-submit">
+            <i class="fa-solid fa-user-plus"></i> Create Account
+          </button>
+        </form>
+
+        <div class="auth-or-divider">OR</div>
+
+        <a href="/LGU-Link/auth/login.php" class="auth-secondary-btn">Sign in instead</a>
+      </div>
     </div>
-  </div>
+  </main>
 
   <script src="/LGU-Link/assets/js/auth.js"></script>
 </body>

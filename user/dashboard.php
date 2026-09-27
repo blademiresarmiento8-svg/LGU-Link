@@ -40,19 +40,12 @@ $activePage = 'dashboard';
         <span class="service-cta">Browse services <i class="fa-solid fa-arrow-right"></i></span>
       </a>
 
-      <div class="service-card">
-        <div class="service-icon ic-blue"><i class="fa-solid fa-file-signature"></i></div>
-        <h3>Request a Document</h3>
-        <p>Apply for a birth certificate, indigency certificate, permits, and more.</p>
-        <span class="service-status">Coming soon</span>
-      </div>
-
-      <div class="service-card">
+      <a class="service-card service-card-link" href="appointments.php">
         <div class="service-icon ic-green"><i class="fa-solid fa-calendar-check"></i></div>
         <h3>My Appointments</h3>
-        <p>Book and track your desk appointments with LGU offices.</p>
-        <span class="service-status">Coming soon</span>
-      </div>
+        <p>Request an appointment for a concern, business proposal, or meeting, and track its status.</p>
+        <span class="service-cta">Book or view appointments <i class="fa-solid fa-arrow-right"></i></span>
+      </a>
 
       <div class="service-card">
         <div class="service-icon ic-amber"><i class="fa-solid fa-bullhorn"></i></div>

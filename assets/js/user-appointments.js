@@ -1,13 +1,18 @@
-// Admin Appointments page logic - view detail, forward-to-office, reject,
-// filters. Forward/reject are real form submissions to
-// appointments-status.php (server persists to the DB), not DOM-only
-// mockups.
+// Citizen Appointments page logic - new request modal, read-only detail
+// modal, cancel. Add is a real form submission to appointments-save.php
+// (server persists to the DB + handles the file upload), not a DOM-only
+// mockup.
+
+function openAppointmentFormModal() {
+  openModal('appointmentFormModal');
+}
 
 /**
  * Every value here comes from a citizen's own submitted content (title,
- * description, etc.) — escape before inserting into innerHTML. The admin
- * viewing this is a DIFFERENT user than whoever wrote the text, so this is
- * a real stored-XSS boundary, not just defensive habit.
+ * description, etc.) — escape before inserting into innerHTML. This same
+ * data-appointment JSON pattern is reused on the admin/office pages, where
+ * the viewer is a DIFFERENT user than whoever wrote the text, so this is a
+ * real stored-XSS boundary, not just defensive habit.
  */
 function escapeHtml(value) {
   if (value === null || value === undefined) {
@@ -42,7 +47,6 @@ function openAppointmentDetailModal(btn) {
   document.getElementById('appointmentDetailTitle').textContent = appt.title;
 
   const rows = [
-    ['Citizen', escapeHtml(appt.citizen_name)],
     ['Category', escapeHtml(appt.category)],
     ['Status', escapeHtml(appt.status_label)],
     ['Description', escapeHtml(appt.description)],
@@ -84,34 +88,15 @@ function openAppointmentDetailModal(btn) {
   openModal('appointmentDetailModal');
 }
 
-function openForwardModal(id, title) {
-  document.getElementById('forwardAppointmentId').value = id;
-  document.getElementById('forwardAppointmentTitle').textContent = `Request: "${title}"`;
-  openModal('forwardModal');
-}
-
-function openRejectAppointmentModal(id, title) {
-  document.getElementById('rejectAppointmentId').value = id;
-  document.getElementById('rejectAppointmentTitle').textContent = `Request: "${title}"`;
-  openModal('rejectAppointmentModal');
-}
-
-/* Search and filter */
-function applyAppointmentFilters() {
-  const query = document.getElementById('appointmentSearchInput').value.toLowerCase();
-  const status = document.getElementById('appointmentStatusSelect').value;
-  const category = document.getElementById('appointmentCategorySelect').value;
-  const rows = document.querySelectorAll('#appointmentTable tbody tr');
-
-  rows.forEach((row) => {
-    const text = row.textContent.toLowerCase();
-    const rowStatus = row.dataset.status;
-    const rowCategory = row.dataset.category;
-
-    const matchesQuery = text.includes(query);
-    const matchesStatus = status === 'all' || rowStatus === status;
-    const matchesCategory = category === 'all' || rowCategory === category;
-
-    row.style.display = matchesQuery && matchesStatus && matchesCategory ? '' : 'none';
+function confirmCancelAppointment(id, title) {
+  confirmAction({
+    title: 'Cancel Appointment Request',
+    message: `Are you sure you want to cancel "${title}"? This cannot be undone.`,
+    confirmLabel: 'Cancel Request',
+    danger: true,
+    onConfirm: () => {
+      document.getElementById('appointmentCancelId').value = id;
+      document.getElementById('appointmentCancelForm').submit();
+    },
   });
 }
