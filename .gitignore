@@ -1,3 +1,4 @@
 /vendor/
 /config/anthropic-key.local.php
 /assets/uploads/
+/.env

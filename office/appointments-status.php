@@ -11,6 +11,8 @@ require_once __DIR__ . '/../includes/auth.php';
 requireRole('office');
 require_once __DIR__ . '/../includes/appointment-helpers.php';
 require_once __DIR__ . '/../includes/appointment-admin.php';
+require_once __DIR__ . '/../config/mail.php';
+require_once __DIR__ . '/../includes/mailer.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verifyCsrfToken($_POST['csrf_token'] ?? null)) {
     header('Location: dashboard.php?error=' . urlencode('Invalid or expired request. Please try again.'));
@@ -33,6 +35,23 @@ if ($action === 'schedule') {
         header('Location: dashboard.php?error=' . urlencode(implode(' ', $result['errors'])));
         exit;
     }
+
+    $updated = findAppointmentById($id);
+    sendAppointmentEmail(
+        $updated['email'],
+        'Your appointment schedule is confirmed',
+        renderAppointmentEmailHtml(
+            'Schedule confirmed',
+            'Your appointment has been scheduled. Please see the details below.',
+            [
+                'Title' => $updated['title'],
+                'Office' => $updated['department_name'],
+                'Date' => date('F j, Y', strtotime($updated['scheduled_date'])),
+                'Time' => date('g:i A', strtotime($updated['scheduled_time'])),
+                'Note' => $officeNote,
+            ]
+        )
+    );
 
     header('Location: dashboard.php?scheduled=1');
     exit;

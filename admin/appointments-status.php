@@ -10,6 +10,8 @@ requireRole('admin');
 require_once __DIR__ . '/../includes/appointment-helpers.php';
 require_once __DIR__ . '/../includes/department-helpers.php';
 require_once __DIR__ . '/../includes/appointment-admin.php';
+require_once __DIR__ . '/../config/mail.php';
+require_once __DIR__ . '/../includes/mailer.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verifyCsrfToken($_POST['csrf_token'] ?? null)) {
     header('Location: appointments.php?error=' . urlencode('Invalid or expired request. Please try again.'));
@@ -36,6 +38,21 @@ if ($action === 'forward') {
         exit;
     }
 
+    $updated = findAppointmentById($id);
+    sendAppointmentEmail(
+        $updated['email'],
+        'Your appointment request has been forwarded',
+        renderAppointmentEmailHtml(
+            'Forwarded to an office',
+            'Good news — your request has been reviewed and forwarded to the office below. They\'ll set a schedule and notify you soon.',
+            [
+                'Title' => $updated['title'],
+                'Forwarded to' => $updated['department_name'],
+                'Note' => $adminNotes,
+            ]
+        )
+    );
+
     header('Location: appointments.php?forwarded=1');
     exit;
 }
@@ -49,6 +66,20 @@ if ($action === 'reject') {
         header('Location: appointments.php?error=' . urlencode(implode(' ', $result['errors'])));
         exit;
     }
+
+    $updated = findAppointmentById($id);
+    sendAppointmentEmail(
+        $updated['email'],
+        'Update on your appointment request',
+        renderAppointmentEmailHtml(
+            'Request not approved',
+            'We\'ve reviewed your request and it will not be proceeding. The reason is below.',
+            [
+                'Title' => $updated['title'],
+                'Reason' => $updated['rejection_reason'],
+            ]
+        )
+    );
 
     header('Location: appointments.php?rejected=1');
     exit;

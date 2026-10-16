@@ -16,7 +16,7 @@
  * @param array<string, mixed> $data Raw $_POST fields: category, title,
  *   description, contact_number, email, preferred_date, preferred_time.
  * @param array $file $_FILES['attachment']-shaped array.
- * @return array{success: bool, errors: string[]}
+ * @return array{success: bool, errors: string[], id?: int, email?: string, title?: string}
  */
 function insertAppointment(int $userId, array $data, array $file): array
 {
@@ -97,7 +97,7 @@ function insertAppointment(int $userId, array $data, array $file): array
         'preferred_time' => $preferredTime !== '' ? $preferredTime : null,
     ]);
 
-    return ['success' => true, 'errors' => []];
+    return ['success' => true, 'errors' => [], 'id' => (int) $pdo->lastInsertId(), 'email' => $email, 'title' => $title];
 }
 
 /**

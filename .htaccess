@@ -1,0 +1,6 @@
+# Block direct web access to dotfiles (.env, .git, etc.) — Apache would
+# otherwise serve them as plain text, unlike .php files which get executed
+# instead of read raw.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

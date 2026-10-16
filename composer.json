@@ -1,6 +1,8 @@
 {
     "require": {
         "anthropic-ai/sdk": "^0.42.0",
-        "guzzlehttp/guzzle": "^8.0"
+        "guzzlehttp/guzzle": "^8.0",
+        "vlucas/phpdotenv": "^5.7",
+        "phpmailer/phpmailer": "^7.1"
     }
 }
