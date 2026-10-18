@@ -475,7 +475,7 @@ return [
 
     // ---------- MENRO ----------
     [
-        'office' => "Municipal Environment & Natural Resources Office (MENRO)",
+        'office' => "Municipal Environment & Natural Resources Office",
         'title' => "Environmental Clearance for Business Permit — Non-Critical (New)",
         'keywords' => ["environmental clearance non critical", "environmental clearance new business"],
         'requirements' => ["Application form", "Certificate of Non-Coverage (apply online via EMB-DENR)", "Barangay Business Clearance", "DTI/SEC/CDA registration", "Geotagged photo of the project/business", "Valid government ID"],
@@ -483,7 +483,7 @@ return [
         'processing_time' => "About 12 minutes",
     ],
     [
-        'office' => "Municipal Environment & Natural Resources Office (MENRO)",
+        'office' => "Municipal Environment & Natural Resources Office",
         'title' => "Environmental Clearance for Business Permit — Non-Critical (Renewal)",
         'keywords' => ["environmental clearance renewal"],
         'requirements' => ["Application form", "Local Certificate of Non-Coverage for renewal, plus its Official Receipt", "Barangay Business Clearance", "DTI/SEC/CDA registration"],
@@ -491,7 +491,7 @@ return [
         'processing_time' => "About 10 minutes",
     ],
     [
-        'office' => "Municipal Environment & Natural Resources Office (MENRO)",
+        'office' => "Municipal Environment & Natural Resources Office",
         'title' => "Environmental Clearance for Business Permit — Critical Projects/Areas",
         'keywords' => ["environmental clearance critical project", "environmental clearance critical area"],
         'requirements' => ["Environmental Compliance Certificate (ECC)", "Provincial Government Acknowledgement Certificate", "Barangay Business Clearance", "DTI/SEC registration", "Valid ID", "Renewals also need PCO Accreditation, Permit to Operate, and Wastewater Discharge Permit"],
@@ -499,7 +499,7 @@ return [
         'processing_time' => "About 20 minutes",
     ],
     [
-        'office' => "Municipal Environment & Natural Resources Office (MENRO)",
+        'office' => "Municipal Environment & Natural Resources Office",
         'title' => "Certificate of No Objection for Tree Cutting Permit",
         'keywords' => ["tree cutting permit", "certificate of no objection tree", "cut down a tree"],
         'requirements' => ["2 request/application letters (addressed to CENRO-DENR and the Municipal Mayor)", "Authenticated land title or proof of ownership", "Sketch map", "Barangay Endorsement (no objection)", "Geotagged photos of the trees", "Valid government ID", "Chainsaw registration (CENRO-DENR)", "DENR clearance that the area is not forestland/protected"],
@@ -509,7 +509,7 @@ return [
 
     // ---------- MSWDO ----------
     [
-        'office' => "Municipal Social Welfare & Development Office (MSWDO)",
+        'office' => "Municipal Social Welfare & Development Office",
         'title' => "Assistance to Individuals in Crisis Situation (AICS)",
         'keywords' => ["aics", "financial assistance", "medical assistance", "burial assistance", "educational assistance", "crisis assistance"],
         'requirements' => ["Barangay Certificate of Indigency", "Letter of request addressed to the Municipal Mayor", "Valid IDs of patient/claimant", "Proof of need: hospital bill/medical certificate (medical), Certificate of Registration & Statement of Account (educational), or funeral contract & death certificate (burial)"],
@@ -517,7 +517,7 @@ return [
         'processing_time' => "About 14 minutes",
     ],
     [
-        'office' => "Municipal Social Welfare & Development Office (MSWDO)",
+        'office' => "Municipal Social Welfare & Development Office",
         'title' => "MSWDO Certification (e.g. Guardianship)",
         'keywords' => ["guardianship certification", "mswdo certification"],
         'requirements' => ["Barangay Certificate of Indigency", "For guardianship: birth certificate of children, guardian's valid ID, notarized Affidavit of Guardianship, barangay certification of the minor's circumstances, death certificate of parents (if applicable)"],
@@ -525,7 +525,7 @@ return [
         'processing_time' => "About 12 minutes",
     ],
     [
-        'office' => "Municipal Social Welfare & Development Office (MSWDO)",
+        'office' => "Municipal Social Welfare & Development Office",
         'title' => "Social Case Study Report (SCSR)",
         'keywords' => ["social case study report", "scsr"],
         'requirements' => ["Valid ID of client and the family member processing the SCSR", "Case reference (medical protocol, legal protocol, or other supporting document)"],
@@ -533,7 +533,7 @@ return [
         'processing_time' => "About 10 days (includes a home visit)",
     ],
     [
-        'office' => "Municipal Social Welfare & Development Office (MSWDO)",
+        'office' => "Municipal Social Welfare & Development Office",
         'title' => "Adoption",
         'keywords' => ["adoption", "adopt a child"],
         'requirements' => ["Notarized Petition for Adoption", "Home Study Report / Case Study Report", "Birth and marriage certificates of PAPs (SECPA copy)", "NBI/police clearance, medical & psychological evaluations", "Child care plan, character references, proof of financial capacity", "Attendance at a pre-adoption seminar"],
@@ -541,7 +541,7 @@ return [
         'processing_time' => "About 37 days (Home Study Report preparation alone takes about 30 working days)",
     ],
     [
-        'office' => "Municipal Social Welfare & Development Office (MSWDO)",
+        'office' => "Municipal Social Welfare & Development Office",
         'title' => "Person With Disability (PWD) ID",
         'keywords' => ["pwd id", "disability id", "person with disability id"],
         'requirements' => ["Medical Certificate stating the disability", "Certificate of Residency", "2 pcs 1x1 ID picture"],
@@ -549,7 +549,7 @@ return [
         'processing_time' => "About 7 minutes",
     ],
     [
-        'office' => "Municipal Social Welfare & Development Office (MSWDO)",
+        'office' => "Municipal Social Welfare & Development Office",
         'title' => "Solo Parent's ID",
         'keywords' => ["solo parent id", "solo parent"],
         'requirements' => ["Sworn Affidavit", "Birth certificate of minor children", "Certificate of Attendance at the RA 11861 orientation (new applicants)", "2 pcs 1x1 ID picture", "Proof of income"],
@@ -557,7 +557,7 @@ return [
         'processing_time' => "About 7 days (includes a home visit)",
     ],
     [
-        'office' => "Municipal Social Welfare & Development Office (MSWDO)",
+        'office' => "Municipal Social Welfare & Development Office",
         'title' => "Senior Citizen's ID",
         'keywords' => ["senior citizen id", "senior citizen"],
         'requirements' => ["Birth Certificate", "Certificate of Residency", "2 pcs 1x1 ID picture"],
@@ -565,7 +565,7 @@ return [
         'processing_time' => "About 7 minutes",
     ],
     [
-        'office' => "Municipal Social Welfare & Development Office (MSWDO)",
+        'office' => "Municipal Social Welfare & Development Office",
         'title' => "Livelihood Assistance",
         'keywords' => ["livelihood assistance", "capital assistance", "business capital assistance"],
         'requirements' => ["Barangay Certificate of Indigency", "Application Form", "Letter of request addressed to the Municipal Mayor", "Photocopy of ID", "Photo of yourself with your livelihood project/site", "List of products or materials needed with prices", "Sketch of your house location"],
@@ -573,7 +573,7 @@ return [
         'processing_time' => "About 7 days (includes a home visit)",
     ],
     [
-        'office' => "Municipal Social Welfare & Development Office (MSWDO)",
+        'office' => "Municipal Social Welfare & Development Office",
         'title' => "Provision of Assistive Devices",
         'keywords' => ["assistive device", "wheelchair request", "assistive devices"],
         'requirements' => ["Barangay Certificate of Indigency", "Letter of request addressed to the Municipal Mayor", "Valid IDs of patient/claimant", "Medical Certificate", "Photo of the patient requesting the device"],

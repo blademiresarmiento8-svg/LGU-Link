@@ -2,18 +2,21 @@
 /**
  * Chatbot backend for the citizen portal.
  *
- * Primary path: calls Claude (Anthropic API) with the full Citizen's Charter
- * data as system-prompt context, plus this session's conversation history,
- * so it understands natural phrasing and remembers earlier turns.
+ * Primary path: calls an LLM with the full Citizen's Charter data and the
+ * office/department list as system-prompt context, plus this session's
+ * conversation history, so it understands natural phrasing and remembers
+ * earlier turns. Google Gemini is used when config/gemini-key.local.php has a
+ * key; otherwise Claude (Anthropic) when config/anthropic-key.local.php does.
  *
- * Fallback path: if no API key is configured (config/anthropic-key.local.php
- * missing) or the API call fails, degrades to the original rule-based
- * keyword matcher below so the widget never just breaks.
+ * Fallback path: if neither key is configured or the API call fails,
+ * degrades to the original rule-based keyword matcher below so the widget
+ * never just breaks.
  */
 
 require_once __DIR__ . '/../includes/auth.php';
 requireLogin();
 require_once __DIR__ . '/../includes/charter-helpers.php';
+require_once __DIR__ . '/../includes/department-helpers.php';
 
 header('Content-Type: application/json');
 
@@ -31,7 +34,9 @@ if ($message === '') {
     exit;
 }
 
-$reply = getAiReply($message);
+$lang = ($input['lang'] ?? 'en') === 'tl' ? 'tl' : 'en';
+
+$reply = getAiReply($message, $lang);
 if ($reply === null) {
     $reply = getRuleBasedReply($message);
 }
@@ -40,23 +45,18 @@ echo json_encode(['reply' => $reply]);
 exit;
 
 /**
- * Try answering via Claude, with the Citizen's Charter as context and this
+ * Try answering via an LLM, with the Citizen's Charter as context and this
  * session's chat history for memory. Returns null (never throws) if no API
  * key is configured or the request fails, so the caller can fall back.
  */
-function getAiReply(string $message): ?string
+function getAiReply(string $message, string $lang = 'en'): ?string
 {
+    require_once __DIR__ . '/../config/gemini.php';
     require_once __DIR__ . '/../config/anthropic.php';
 
-    if (ANTHROPIC_API_KEY === '') {
+    if (GEMINI_API_KEY === '' && ANTHROPIC_API_KEY === '') {
         return null;
     }
-
-    $autoload = __DIR__ . '/../vendor/autoload.php';
-    if (!file_exists($autoload)) {
-        return null;
-    }
-    require_once $autoload;
 
     if (!isset($_SESSION['chatbot_history']) || !is_array($_SESSION['chatbot_history'])) {
         $_SESSION['chatbot_history'] = [];
@@ -65,28 +65,12 @@ function getAiReply(string $message): ?string
     $history = $_SESSION['chatbot_history'];
     $history[] = ['role' => 'user', 'content' => $message];
 
-    try {
-        $client = new \Anthropic\Client(apiKey: ANTHROPIC_API_KEY);
-        $response = $client->messages->create(
-            model: ANTHROPIC_MODEL,
-            maxTokens: 1024,
-            system: getCharterSystemPrompt(),
-            messages: $history,
-        );
-    } catch (\Throwable $e) {
-        error_log('Anthropic chatbot request failed: ' . $e->getMessage());
-        return null;
-    }
+    $systemPrompt = getCharterSystemPrompt() . "\n\n" . getLanguageInstruction($lang);
+    $reply = GEMINI_API_KEY !== ''
+        ? requestGeminiReply($systemPrompt, $history)
+        : requestClaudeReply($systemPrompt, $history);
 
-    $reply = '';
-    foreach ($response->content as $block) {
-        if ($block->type === 'text') {
-            $reply .= $block->text;
-        }
-    }
-    $reply = trim($reply);
-
-    if ($reply === '') {
+    if ($reply === null || $reply === '') {
         return null;
     }
 
@@ -101,8 +85,100 @@ function getAiReply(string $message): ?string
 }
 
 /**
- * Builds the system prompt: assistant persona + the full Citizen's Charter
- * knowledge base flattened into plain text, so Claude can answer any
+ * The citizen picks the reply language with the chat widget's EN / TL switch.
+ * It goes at the END of the prompt so it wins over the examples above it.
+ */
+function getLanguageInstruction(string $lang): string
+{
+    if ($lang === 'tl') {
+        return "=== Reply language ===\nReply in Tagalog (Filipino) for every message, even if the citizen writes in English. Use a polite, friendly tone with \"po\" and \"opo\" where natural. Keep official document names, office names, and amounts exactly as listed above (they may stay in English).";
+    }
+
+    return "=== Reply language ===\nReply in English for every message, even if the citizen writes in Tagalog.";
+}
+
+/**
+ * One Gemini turn over plain HTTPS. $history is [['role' => 'user'|'assistant', 'content' => ...], ...].
+ * Returns the reply text, or null on any failure (logged to the PHP error log).
+ */
+function requestGeminiReply(string $systemPrompt, array $history): ?string
+{
+    $contents = [];
+    foreach ($history as $turn) {
+        $contents[] = [
+            'role' => $turn['role'] === 'assistant' ? 'model' : 'user',
+            'parts' => [['text' => $turn['content']]],
+        ];
+    }
+
+    $ch = curl_init('https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode(GEMINI_MODEL) . ':generateContent');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HTTPHEADER => ['x-goog-api-key: ' . GEMINI_API_KEY, 'Content-Type: application/json'],
+        CURLOPT_POSTFIELDS => json_encode([
+            'system_instruction' => ['parts' => [['text' => $systemPrompt]]],
+            'contents' => $contents,
+            'generationConfig' => ['maxOutputTokens' => 1024, 'temperature' => 0.3],
+        ]),
+    ]);
+    $body = curl_exec($ch);
+    $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    if ($body === false || $status !== 200) {
+        $detail = $body === false ? $curlError : (json_decode($body, true)['error']['message'] ?? ('HTTP ' . $status));
+        error_log('Gemini chatbot request failed (' . $status . '): ' . $detail);
+        return null;
+    }
+
+    $parts = json_decode($body, true)['candidates'][0]['content']['parts'] ?? [];
+    $reply = '';
+    foreach ($parts as $part) {
+        $reply .= $part['text'] ?? '';
+    }
+
+    return trim($reply);
+}
+
+/** One Claude turn through Anthropic's PHP library; null on any failure. */
+function requestClaudeReply(string $systemPrompt, array $history): ?string
+{
+    $autoload = __DIR__ . '/../vendor/autoload.php';
+    if (!file_exists($autoload)) {
+        return null;
+    }
+    require_once $autoload;
+
+    try {
+        $client = new \Anthropic\Client(apiKey: ANTHROPIC_API_KEY);
+        $response = $client->messages->create(
+            model: ANTHROPIC_MODEL,
+            maxTokens: 1024,
+            system: $systemPrompt,
+            messages: $history,
+        );
+    } catch (\Throwable $e) {
+        error_log('Anthropic chatbot request failed: ' . $e->getMessage());
+        return null;
+    }
+
+    $reply = '';
+    foreach ($response->content as $block) {
+        if ($block->type === 'text') {
+            $reply .= $block->text;
+        }
+    }
+
+    return trim($reply);
+}
+
+/**
+ * Builds the system prompt: assistant persona, the LGU's real offices and
+ * their department heads (from the departments table), and the full
+ * Citizen's Charter knowledge base flattened into plain text, so the model can answer any
  * phrasing of a question the rule-based matcher's keyword list would miss.
  */
 function getCharterSystemPrompt(): string
@@ -122,12 +198,22 @@ function getCharterSystemPrompt(): string
         "- If the question matches one of the listed services, answer using exactly that data — title, requirements, fee, and processing time. Do not invent or guess figures that aren't listed.",
         "- Remember the conversation. Resolve follow-ups like \"how much is that\" or \"what about the renewal\" using whichever service was just discussed.",
         "- If nothing below matches, say so plainly and suggest the citizen contact the relevant office, or visit the Municipal Compound, A. Payumo St., Barangay Poblacion, Norzagaray, Bulacan.",
-        "- For general questions (office hours, location, departments, filing a complaint, appointments) answer briefly: offices are open Monday-Friday 8:00 AM-5:00 PM except holidays; complaints/feedback go to the Office of the Mayor at 0965-377-5267 or officeofthemayor.norzagaray@gmail.com (also ARTA at complaints@arta.gov.ph); frontline offices include BPLO, Municipal Assessor's Office, Civil Registrar, Engineering, Health Office, MPDO, MENRO, MSWDO, Treasurer's Office, and the Municipal Hospital.",
+        "- For general questions (office hours, location, departments, filing a complaint, appointments) answer briefly: offices are open Monday-Friday 8:00 AM-5:00 PM except holidays; complaints/feedback go to the Office of the Mayor at 0965-377-5267 or officeofthemayor.norzagaray@gmail.com (also ARTA at complaints@arta.gov.ph); the LGU's offices and their heads are listed below.",
+        "- Questions about who heads an office: answer from the office list below. If an office has no head listed, say that the head isn't on record and suggest contacting the Municipal Hall.",
+        "- Never ask for or repeat personal details such as ID numbers, addresses, or phone numbers. If a citizen shares them, tell them not to and that they can bring them to the office.",
         "- Keep replies short and scannable for a small chat bubble: a one-line intro, a plain dash-bulleted requirements list, then fee and processing time. No markdown headers, no asterisk bold.",
         "- End a service answer with a brief reminder to confirm at the counter since requirements can change.",
         "",
-        "=== Citizen's Charter services ===",
+        "=== LGU offices and department heads ===",
     ];
+
+    foreach (getAllDepartments() as $department) {
+        $head = trim((string) $department['department_head']);
+        $lines[] = '- ' . $department['name'] . ': ' . ($head !== '' ? 'headed by ' . $head : 'no head on record');
+    }
+
+    $lines[] = "";
+    $lines[] = "=== Citizen's Charter services ===";
 
     foreach ($services as $service) {
         $lines[] = "";
@@ -289,8 +375,8 @@ function getGeneralRules(): array
             'reply' => "Most offices are at the Municipal Compound, A. Payumo St., Barangay Poblacion, Norzagaray, Bulacan. Ask me about a specific office (e.g. \"Municipal Health Office\") and I can tell you which department handles it.",
         ],
         [
-            'keywords' => ['department', '27 department', 'list of offices', 'what offices'],
-            'reply' => "LGU Norzagaray's frontline offices include: BPLO, Municipal Assessor's Office, Civil Registrar, Engineering, Health Office, Planning & Development (MPDO), Environment & Natural Resources (MENRO), Social Welfare (MSWDO), Treasurer's Office, and the Municipal Hospital. Tell me what you need and I'll point you to the right one.",
+            'keywords' => ['department', '29 department', 'list of offices', 'what offices'],
+            'reply' => "LGU Norzagaray's frontline offices include: BPLO, Municipal Assessor's Office, Civil Registrar, Engineering, Health Office, Planning & Development, Environment & Natural Resources, Social Welfare, Treasurer's Office, and the Municipal Hospital. Tell me what you need and I'll point you to the right one.",
         ],
         [
             'keywords' => ['complaint', 'feedback', 'reklamo', 'file a complaint'],

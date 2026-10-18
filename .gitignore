@@ -1,4 +1,6 @@
 /vendor/
 /config/anthropic-key.local.php
+/config/gemini-key.local.php
 /assets/uploads/
 /.env
+/storage/

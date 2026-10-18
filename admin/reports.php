@@ -51,11 +51,11 @@ $activePage = 'reports';
       <div class="filter-group">
         <label>Department:</label>
         <select id="deptFilter" style="width: auto;" onchange="updateAnalyticsData()">
-          <option value="all">All 27 Departments</option>
+          <option value="all">All 29 Departments</option>
           <option value="BPLO">BPLO</option>
           <option value="LCR">Local Civil Registrar</option>
           <option value="MSWDO">MSWDO</option>
-          <option value="CEO">Engineering Office</option>
+          <option value="ENGR">Engineering Office</option>
         </select>
       </div>
     </section>

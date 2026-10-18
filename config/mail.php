@@ -37,3 +37,7 @@ define('SMTP_PASS', envValue('SMTP_PASS'));
 const MAIL_FROM_NAME = 'LGU Norzagaray Portal';
 
 define('MAIL_CONFIGURED', SMTP_HOST !== '' && SMTP_PORT > 0 && SMTP_USER !== '' && SMTP_PASS !== '');
+
+// Public address of the portal, used to build links inside emails. Set APP_URL
+// in .env when the site is hosted somewhere other than localhost.
+define('APP_URL', rtrim(envValue('APP_URL') ?: 'http://localhost/LGU-Link', '/'));

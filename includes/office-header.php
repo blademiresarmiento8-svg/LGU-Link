@@ -11,6 +11,7 @@ $officeUser = currentUser();
 
 $navItems = [
     'dashboard' => ['label' => 'Dashboard', 'icon' => 'fa-chart-pie', 'href' => 'dashboard.php'],
+    'meetings'  => ['label' => 'Meetings',  'icon' => 'fa-people-group', 'href' => 'meetings.php'],
 ];
 ?>
   <header class="top-header">
@@ -28,6 +29,7 @@ $navItems = [
     </nav>
 
     <div class="header-user">
+      <?php require __DIR__ . '/notification-bell.php'; ?>
       <i class="fa-solid fa-building-user" style="color: #60a5fa; font-size: 16px;"></i>
       <span><?= htmlspecialchars($officeUser['department_name'] ?? $officeUser['full_name']) ?></span>
       <a href="/LGU-Link/auth/logout.php" class="logout-link" title="Log out" onclick="event.preventDefault(); confirmLogout();"><i class="fa-solid fa-right-from-bracket"></i></a>
@@ -49,3 +51,5 @@ $navItems = [
       <strong id="livePST">Loading time...</strong>
     </div>
   </div>
+
+  <?php require __DIR__ . '/session-timeout.php'; ?>

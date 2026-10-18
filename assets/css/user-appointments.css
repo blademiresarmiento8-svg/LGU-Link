@@ -41,3 +41,49 @@
   color: var(--primary);
   font-weight: 600;
 }
+
+/* ---------- Meetings ---------- */
+.invitee-picker {
+  max-height: 190px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.invitee-option {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-weight: 400 !important;
+  cursor: pointer;
+}
+
+.invitee-option input {
+  width: auto !important;
+  margin: 0;
+}
+
+.clash-warning {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fef3c7;
+  border-left: 3px solid #f59e0b;
+  color: #92400e;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.clash-warning ul {
+  margin: 4px 0 0 16px;
+  padding: 0;
+}
+
+.invitee-all {
+  margin-bottom: 6px;
+  padding: 8px 10px !important;
+  border-radius: 8px;
+  background: #eff6ff;
+}

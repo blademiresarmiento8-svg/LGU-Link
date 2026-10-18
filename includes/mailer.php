@@ -11,14 +11,44 @@
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 use PHPMailer\PHPMailer\PHPMailer;
 
+require_once __DIR__ . '/office-account-helpers.php';
+
+/**
+ * Records one email attempt (sent / failed / skipped) in mail_log so a system
+ * admin can see what didn't go out and why. Never throws.
+ */
+function logMailAttempt(string $to, string $subject, string $status, ?string $error = null): void
+{
+    try {
+        getDbConnection()->prepare(
+            'INSERT INTO mail_log (recipient, subject, status, error) VALUES (:recipient, :subject, :status, :error)'
+        )->execute([
+            'recipient' => mb_substr($to, 0, 150),
+            'subject' => mb_substr($subject, 0, 200),
+            'status' => $status,
+            'error' => $error === null ? null : mb_substr($error, 0, 255),
+        ]);
+    } catch (\Throwable $e) {
+        error_log('Could not write mail_log: ' . $e->getMessage());
+    }
+}
+
 function sendAppointmentEmail(string $to, string $subject, string $bodyHtml): bool
 {
     if (!MAIL_CONFIGURED) {
+        logMailAttempt($to, $subject, 'skipped', 'SMTP is not configured in .env.');
+        return false;
+    }
+
+    // Office accounts still on their fake address can't receive anything.
+    if (isPlaceholderEmail($to)) {
+        logMailAttempt($to, $subject, 'skipped', 'Placeholder email address - replace it on the Office Accounts page.');
         return false;
     }
 
     $autoload = __DIR__ . '/../vendor/autoload.php';
     if (!file_exists($autoload)) {
+        logMailAttempt($to, $subject, 'failed', 'vendor/autoload.php is missing - run composer install.');
         return false;
     }
     require_once $autoload;
@@ -33,6 +63,7 @@ function sendAppointmentEmail(string $to, string $subject, string $bodyHtml): bo
         $mail->Password = SMTP_PASS;
         $mail->SMTPSecure = SMTP_PORT === 465 ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = SMTP_PORT;
+        $mail->Timeout = 10;
 
         $mail->setFrom(SMTP_USER, MAIL_FROM_NAME);
         $mail->addAddress($to);
@@ -43,10 +74,12 @@ function sendAppointmentEmail(string $to, string $subject, string $bodyHtml): bo
         $mail->AltBody = trim(strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</tr>'], "\n", $bodyHtml)));
 
         $mail->send();
+        logMailAttempt($to, $subject, 'sent');
 
         return true;
     } catch (PHPMailerException | \Throwable $e) {
         error_log('Appointment email failed: ' . $e->getMessage());
+        logMailAttempt($to, $subject, 'failed', $e->getMessage());
 
         return false;
     }

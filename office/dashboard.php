@@ -2,10 +2,12 @@
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('office');
 require_once __DIR__ . '/../includes/appointment-helpers.php';
+require_once __DIR__ . '/../includes/department-helpers.php';
 
 $activePage = 'dashboard';
 $officeUser = currentUser();
 $departmentId = (int) $officeUser['department_id'];
+$departmentHead = trim((string) (findDepartmentById($departmentId)['department_head'] ?? ''));
 
 $deptAppointments = getAppointmentsForDepartment($departmentId);
 $needsScheduling = array_values(array_filter($deptAppointments, fn($a) => $a['status'] === 'forwarded'));
@@ -31,6 +33,7 @@ function officeAppointmentJson(array $appt, array $statusMeta): string
         'email' => $appt['email'],
         'preferred_date' => $appt['preferred_date'],
         'preferred_time' => $appt['preferred_time'],
+        'status' => $appt['status'],
         'status_label' => $statusMeta['label'],
         'scheduled_date' => $appt['scheduled_date'],
         'scheduled_time' => $appt['scheduled_time'],
@@ -58,17 +61,20 @@ function officeAppointmentJson(array $appt, array $statusMeta): string
   <?php require __DIR__ . '/../includes/office-header.php'; ?>
 
   <!-- MAIN CONTENT AREA -->
-  <main class="main">
+  <main class="main" data-live-topics="appointments">
 
     <div class="page-title-row">
       <div>
         <h1>Welcome, <?= htmlspecialchars($officeUser['department_name']) ?></h1>
+        <?php if ($departmentHead !== ''): ?>
+          <p class="row-note">Department Head: <strong><?= htmlspecialchars($departmentHead) ?></strong></p>
+        <?php endif; ?>
         <p>Set the schedule for concerns the Municipal Administrator has forwarded to your office — you know your own calendar better than they do.</p>
       </div>
     </div>
 
     <!-- STATS -->
-    <section class="stats-grid">
+    <section class="stats-grid" data-live-region="stats">
       <div class="stat-card">
         <div>
           <p>Needs Scheduling</p>
@@ -100,7 +106,7 @@ function officeAppointmentJson(array $appt, array $statusMeta): string
         <h3>Needs Scheduling</h3>
       </div>
 
-      <div class="table-container">
+      <div class="table-container" data-live-region="table-1">
         <table>
           <thead>
             <tr>
@@ -150,7 +156,7 @@ function officeAppointmentJson(array $appt, array $statusMeta): string
         <h3>History</h3>
       </div>
 
-      <div class="table-container">
+      <div class="table-container" data-live-region="table-2">
         <table>
           <thead>
             <tr>
@@ -208,7 +214,7 @@ function officeAppointmentJson(array $appt, array $statusMeta): string
         <i class="fa-solid fa-xmark close-btn" onclick="closeModal('appointmentDetailModal')"></i>
       </div>
       <div id="appointmentDetailBody" class="appointment-detail-body"></div>
-      <div class="modal-actions">
+      <div class="modal-actions" id="appointmentDetailActions">
         <button type="button" class="btn-modal btn-cancel" onclick="closeModal('appointmentDetailModal')">Close</button>
       </div>
     </div>
@@ -221,7 +227,7 @@ function officeAppointmentJson(array $appt, array $statusMeta): string
         <h3>Set Schedule</h3>
         <i class="fa-solid fa-xmark close-btn" onclick="closeModal('scheduleModal')"></i>
       </div>
-      <form action="appointments-status.php" method="post">
+      <form action="appointments-status.php" method="post" data-schedule-rules>
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
         <input type="hidden" name="action" value="schedule">
         <input type="hidden" name="id" id="scheduleAppointmentId" value="">
@@ -230,12 +236,12 @@ function officeAppointmentJson(array $appt, array $statusMeta): string
 
         <div class="form-group">
           <label>Schedule Date</label>
-          <input type="date" name="scheduled_date" required>
+          <input type="date" name="scheduled_date" data-rule="date" required>
         </div>
 
         <div class="form-group">
           <label>Schedule Time</label>
-          <input type="time" name="scheduled_time" required>
+          <input type="time" name="scheduled_time" data-rule="time" required>
         </div>
 
         <div class="form-group">
@@ -262,6 +268,8 @@ function officeAppointmentJson(array $appt, array $statusMeta): string
   <?php require __DIR__ . '/../includes/confirm-modal.php'; ?>
 
   <script src="/LGU-Link/assets/js/main.js"></script>
+  <script src="/LGU-Link/assets/js/live-refresh.js" defer></script>
+  <?php require __DIR__ . '/../includes/schedule-rules-script.php'; ?>
   <script src="/LGU-Link/assets/js/office-dashboard.js"></script>
 
   <?php if ($flashScheduled): ?>

@@ -66,8 +66,8 @@ function getCharterOfficeIcon(string $office): string
         "Municipal Engineering Office" => 'fa-drafting-compass',
         "Municipal Health Office" => 'fa-briefcase-medical',
         "Municipal Planning & Development Office" => 'fa-city',
-        "Municipal Environment & Natural Resources Office (MENRO)" => 'fa-leaf',
-        "Municipal Social Welfare & Development Office (MSWDO)" => 'fa-hand-holding-heart',
+        "Municipal Environment & Natural Resources Office" => 'fa-leaf',
+        "Municipal Social Welfare & Development Office" => 'fa-hand-holding-heart',
         "Municipal Treasurer's Office" => 'fa-coins',
         "Norzagaray Municipal Hospital" => 'fa-hospital',
     ];

@@ -9,6 +9,8 @@ define('DB_NAME', 'lgu_link');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
+date_default_timezone_set('Asia/Manila');
+
 function getDbConnection(): PDO
 {
     static $pdo = null;
@@ -23,6 +25,8 @@ function getDbConnection(): PDO
 
         try {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+            // Keep MySQL's NOW()/timestamps on Philippine time too (a cloud server defaults to UTC).
+            $pdo->exec("SET time_zone = '+08:00'");
         } catch (PDOException $e) {
             http_response_code(500);
             die('Database connection failed. Make sure MySQL is running and the "lgu_link" database has been imported from sql/schema.sql.');

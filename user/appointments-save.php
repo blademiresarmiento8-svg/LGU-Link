@@ -12,6 +12,7 @@ require_once __DIR__ . '/../includes/appointment-uploads.php';
 require_once __DIR__ . '/../includes/appointment-admin.php';
 require_once __DIR__ . '/../config/mail.php';
 require_once __DIR__ . '/../includes/mailer.php';
+require_once __DIR__ . '/../includes/notification-helpers.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verifyCsrfToken($_POST['csrf_token'] ?? null)) {
     header('Location: appointments.php?error=' . urlencode('Invalid or expired request. Please try again.'));
@@ -27,6 +28,8 @@ if (!$result['success']) {
     header('Location: appointments.php?error=' . urlencode(implode(' ', $result['errors'])));
     exit;
 }
+
+notifyRole('admin', 'New request from ' . $citizen['full_name'] . ': ' . $result['title'], '/LGU-Link/admin/appointments.php');
 
 sendAppointmentEmail(
     $result['email'],

@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $stmt = getDbConnection()->prepare(
                 'SELECT users.id, users.full_name, users.email, users.password, users.role,
-                        users.department_id, departments.name AS department_name
+                        users.department_id, users.status, departments.name AS department_name
                  FROM users
                  LEFT JOIN departments ON departments.id = users.department_id
                  WHERE users.email = ? LIMIT 1'
@@ -30,7 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$oldEmail]);
             $user = $stmt->fetch();
 
-            if ($user && password_verify($password, $user['password'])) {
+            if ($user && password_verify($password, $user['password']) && $user['status'] === 'suspended') {
+                $error = 'This account has been suspended. Please contact the system administrator.';
+            } elseif ($user && password_verify($password, $user['password'])) {
                 session_regenerate_id(true);
                 $_SESSION['user_id']         = $user['id'];
                 $_SESSION['full_name']       = $user['full_name'];
@@ -38,17 +40,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['role']            = $user['role'];
                 $_SESSION['department_id']   = $user['department_id'];
                 $_SESSION['department_name'] = $user['department_name'];
+                $_SESSION['last_activity']   = time();
 
                 header('Location: ' . dashboardUrlFor($user['role']));
                 exit;
             }
 
-            $error = 'Invalid email or password.';
+            if ($error === '') {
+                $error = 'Invalid email or password.';
+            }
         }
     }
 }
 
 $registered = isset($_GET['registered']);
+if ($error === '' && isset($_GET['expired'])) {
+    $error = 'You were logged out because you were inactive. Please sign in again.';
+} elseif ($error === '' && isset($_GET['suspended'])) {
+    $error = 'This account has been suspended. Please contact the system administrator.';
+} elseif ($error === '' && isset($_GET['gone'])) {
+    $error = 'This account no longer exists.';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

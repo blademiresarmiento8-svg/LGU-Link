@@ -13,6 +13,7 @@ require_once __DIR__ . '/../includes/appointment-helpers.php';
 require_once __DIR__ . '/../includes/appointment-admin.php';
 require_once __DIR__ . '/../config/mail.php';
 require_once __DIR__ . '/../includes/mailer.php';
+require_once __DIR__ . '/../includes/notification-helpers.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verifyCsrfToken($_POST['csrf_token'] ?? null)) {
     header('Location: dashboard.php?error=' . urlencode('Invalid or expired request. Please try again.'));
@@ -37,6 +38,7 @@ if ($action === 'schedule') {
     }
 
     $updated = findAppointmentById($id);
+    createNotification((int) $updated['user_id'], 'Your appointment "' . $updated['title'] . '" is scheduled for ' . date('F j, Y', strtotime($updated['scheduled_date'])) . ' at ' . date('g:i A', strtotime($updated['scheduled_time'])) . '.', '/LGU-Link/user/appointments.php');
     sendAppointmentEmail(
         $updated['email'],
         'Your appointment schedule is confirmed',
@@ -59,6 +61,9 @@ if ($action === 'schedule') {
 
 if ($action === 'complete') {
     $completed = $id > 0 && markAppointmentCompleted($id, $departmentId);
+    if ($completed && ($done = findAppointmentById($id)) !== null) {
+        createNotification((int) $done['user_id'], 'Your appointment "' . $done['title'] . '" was marked completed.', '/LGU-Link/user/appointments.php');
+    }
 
     if (!$completed) {
         header('Location: dashboard.php?error=' . urlencode('That request is no longer awaiting completion.'));

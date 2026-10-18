@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/schedule-helpers.php';
+
 /**
  * Write operations for the appointments table. Requires
  * includes/appointment-helpers.php (getDbConnection(), APPOINTMENT_CATEGORIES,
@@ -58,6 +60,11 @@ function insertAppointment(int $userId, array $data, array $file): array
             $errors[] = 'Enter a valid preferred time.';
             $preferredTime = '';
         }
+    }
+
+    // A preferred date/time is optional, but when given it must be bookable.
+    if ($preferredDate !== '' || $preferredTime !== '') {
+        $errors = array_merge($errors, validateBookingDateTime($preferredDate, $preferredTime));
     }
 
     $upload = uploadAppointmentAttachment($file);
@@ -129,6 +136,12 @@ function forwardAppointmentToDepartment(int $appointmentId, int $departmentId, s
 {
     if (findDepartmentById($departmentId) === null) {
         return ['success' => false, 'errors' => ['Choose a valid department.']];
+    }
+    if (in_array($departmentId, getSuspendedDepartmentIds(), true)) {
+        return ['success' => false, 'errors' => ['That office\'s account is suspended. Choose another department or ask the system admin to unsuspend it.']];
+    }
+    if (!departmentHasOfficeAccount($departmentId)) {
+        return ['success' => false, 'errors' => ['That department has no office account yet, so nobody could schedule the concern.']];
     }
 
     $pdo = getDbConnection();
@@ -203,6 +216,10 @@ function scheduleAppointment(int $appointmentId, int $departmentId, string $sche
     $parsedTime = \DateTime::createFromFormat('H:i', $scheduledTime);
     if ($parsedTime === false || $parsedTime->format('H:i') !== $scheduledTime) {
         $errors[] = 'Enter a valid schedule time.';
+    }
+
+    if (empty($errors)) {
+        $errors = validateBookingDateTime($scheduledDate, $scheduledTime);
     }
 
     if (!empty($errors)) {

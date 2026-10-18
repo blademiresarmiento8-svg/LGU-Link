@@ -1,7 +1,6 @@
-// Admin Office Accounts page logic - add/delete office logins, search filter.
-// Add/delete are real form submissions to office-accounts-save.php /
-// office-accounts-delete.php (server persists to the DB), not DOM-only
-// mockups.
+// System admin Office Accounts page logic - add/delete/suspend office logins, reset passwords, search filter.
+// Every action is a real form submission to an office-accounts-*.php endpoint
+// (server persists to the DB), not a DOM-only mockup.
 
 function openAddOfficeAccountModal() {
   document.getElementById('officeAccountForm').reset();
@@ -17,6 +16,42 @@ function confirmDeleteOfficeAccount(id, name) {
     onConfirm: () => {
       document.getElementById('officeAccountDeleteId').value = id;
       document.getElementById('officeAccountDeleteForm').submit();
+    },
+  });
+}
+
+/* Reset password */
+function openResetPasswordModal(id, office) {
+  document.getElementById('resetPasswordId').value = id;
+  document.getElementById('resetPasswordOffice').value = office;
+  generateTemporaryPassword();
+  openModal('resetPasswordModal');
+}
+
+function generateTemporaryPassword() {
+  // No look-alike characters (0/O, 1/l/I) so it is easy to read out over the phone.
+  const alphabet = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const bytes = new Uint32Array(10);
+  crypto.getRandomValues(bytes);
+  document.getElementById('resetPasswordValue').value = Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
+}
+
+/* Suspend / unsuspend */
+function openSuspendModal(id, office) {
+  document.getElementById('suspendId').value = id;
+  document.getElementById('suspendMessage').textContent =
+    `"${office}" will be unable to log in, and will be logged out on their next page load.`;
+  openModal('suspendModal');
+}
+
+function confirmUnsuspendOfficeAccount(id, office) {
+  confirmAction({
+    title: 'Unsuspend Account',
+    message: `Let "${office}" log in again?`,
+    confirmLabel: 'Unsuspend',
+    onConfirm: () => {
+      document.getElementById('officeAccountUnsuspendId').value = id;
+      document.getElementById('officeAccountUnsuspendForm').submit();
     },
   });
 }

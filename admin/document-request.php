@@ -51,7 +51,7 @@ $activePage = 'document-request';
       <div class="stat-card">
         <div>
           <p>Active LGU Offices</p>
-          <h2>27</h2>
+          <h2>29</h2>
         </div>
         <div class="stat-icon ic-purple"><i class="fa-solid fa-building-columns"></i></div>
       </div>

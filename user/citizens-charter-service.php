@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 
-if (isLoggedIn() && $_SESSION['role'] === 'admin') {
-    header('Location: ' . dashboardUrlFor('admin'));
+if (isLoggedIn() && isAdminRole($_SESSION['role'])) {
+    header('Location: ' . dashboardUrlFor($_SESSION['role']));
     exit;
 }
 
@@ -32,7 +32,7 @@ $officeIcon = $office['icon'] ?? getCharterOfficeIcon($service['office']);
   <link rel="stylesheet" href="/LGU-Link/assets/css/style.css">
   <link rel="stylesheet" href="/LGU-Link/assets/css/citizens-charter.css">
   <?php if ($loggedInCitizen): ?>
-    <link rel="stylesheet" href="/LGU-Link/assets/css/chatbot.css">
+    <link rel="stylesheet" href="/LGU-Link/assets/css/chatbot.css?v=<?= filemtime(__DIR__ . '/../assets/css/chatbot.css') ?>">
   <?php endif; ?>
 </head>
 
@@ -99,7 +99,7 @@ $officeIcon = $office['icon'] ?? getCharterOfficeIcon($service['office']);
 
   <script src="/LGU-Link/assets/js/main.js"></script>
   <?php if ($loggedInCitizen): ?>
-    <script src="/LGU-Link/assets/js/chatbot.js"></script>
+    <script src="/LGU-Link/assets/js/chatbot.js?v=<?= filemtime(__DIR__ . '/../assets/js/chatbot.js') ?>"></script>
   <?php endif; ?>
 </body>
 

@@ -13,7 +13,7 @@ $navItems = [
     'news'              => ['label' => 'News',               'icon' => 'fa-newspaper',       'href' => 'news.php'],
     'charter'           => ['label' => "Citizen's Charter",  'icon' => 'fa-book',            'href' => 'citizens-charter.php'],
     'appointments'      => ['label' => 'Appointments',       'icon' => 'fa-calendar-check',  'href' => 'appointments.php'],
-    'office-accounts'   => ['label' => 'Office Accounts',    'icon' => 'fa-building-user',   'href' => 'office-accounts.php'],
+    'meetings'          => ['label' => 'Meetings',           'icon' => 'fa-people-group',    'href' => 'meetings.php'],
 ];
 ?>
   <header class="top-header">
@@ -35,6 +35,7 @@ $navItems = [
     </nav>
 
     <div class="header-user">
+      <?php require __DIR__ . '/notification-bell.php'; ?>
       <i class="fa-solid fa-circle-user" style="color: #60a5fa; font-size: 16px;"></i>
       <span><?= htmlspecialchars($admin['full_name']) ?></span>
       <a href="/LGU-Link/auth/logout.php" class="logout-link" title="Log out" onclick="event.preventDefault(); confirmLogout();"><i class="fa-solid fa-right-from-bracket"></i></a>
@@ -56,3 +57,5 @@ $navItems = [
       <strong id="livePST">Loading time...</strong>
     </div>
   </div>
+
+  <?php require __DIR__ . '/session-timeout.php'; ?>

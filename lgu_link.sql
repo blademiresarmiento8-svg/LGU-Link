@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 21, 2026 at 06:54 AM
+-- Generation Time: Oct 16, 2026 at 03:18 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,43 @@ SET time_zone = "+00:00";
 --
 -- Database: `lgu_link`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appointments`
+--
+
+CREATE TABLE `appointments` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `category` varchar(100) NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `description` text NOT NULL,
+  `attachment_path` varchar(255) DEFAULT NULL,
+  `attachment_original_name` varchar(255) DEFAULT NULL,
+  `contact_number` varchar(30) NOT NULL,
+  `email` varchar(150) NOT NULL,
+  `preferred_date` date DEFAULT NULL,
+  `preferred_time` time DEFAULT NULL,
+  `department_id` int(10) UNSIGNED DEFAULT NULL,
+  `status` enum('pending_review','forwarded','scheduled','completed','rejected','cancelled') NOT NULL DEFAULT 'pending_review',
+  `scheduled_date` date DEFAULT NULL,
+  `scheduled_time` time DEFAULT NULL,
+  `admin_notes` text DEFAULT NULL,
+  `rejection_reason` text DEFAULT NULL,
+  `reviewed_by` int(10) UNSIGNED DEFAULT NULL,
+  `scheduled_by` int(10) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `appointments`
+--
+
+INSERT INTO `appointments` (`id`, `user_id`, `category`, `title`, `description`, `attachment_path`, `attachment_original_name`, `contact_number`, `email`, `preferred_date`, `preferred_time`, `department_id`, `status`, `scheduled_date`, `scheduled_time`, `admin_notes`, `rejection_reason`, `reviewed_by`, `scheduled_by`, `created_at`, `updated_at`) VALUES
+(12, 2, 'Courtesy Call / Meeting Request', 'Sample Title', 'Sample Description', 'assets/uploads/appointments/aff3fe0c794e65b2c68ef415.png', 'sequence diagram.png', '09151713531', 'nikkisanpedro314@gmail.com', NULL, NULL, NULL, 'rejected', NULL, NULL, NULL, 'sample reject', 1, NULL, '2026-09-28 01:01:42', '2026-09-28 01:06:50');
 
 -- --------------------------------------------------------
 
@@ -106,6 +143,53 @@ INSERT INTO `citizens_charter_services` (`id`, `office`, `title`, `keywords`, `r
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `departments`
+--
+
+CREATE TABLE `departments` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `code` varchar(20) NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `sector` varchar(50) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `departments`
+--
+
+INSERT INTO `departments` (`id`, `code`, `name`, `sector`, `created_at`) VALUES
+(1, 'MO', 'Office of the Municipal Mayor', 'Executive', '2026-09-25 01:59:32'),
+(2, 'VM', 'Office of the Vice Mayor & Sanggunian', 'Public Safety', '2026-09-25 01:59:32'),
+(3, 'LCR', 'Local Civil Registrar (LCR)', 'Executive', '2026-09-25 01:59:32'),
+(4, 'HRMO', 'Human Resource Management Office', 'Executive', '2026-09-25 01:59:32'),
+(5, 'MPDO', 'Municipal Planning & Dev. Office', 'Executive', '2026-09-25 01:59:32'),
+(6, 'PIO', 'Public Information Office', 'Executive', '2026-09-25 01:59:32'),
+(7, 'LEGAL', 'Municipal Legal Office', 'Executive', '2026-09-25 01:59:32'),
+(8, 'GSO', 'General Services Office', 'Executive', '2026-09-25 01:59:32'),
+(9, 'BPLO', 'Business Permits & Licensing Office', 'Finance', '2026-09-25 01:59:32'),
+(10, 'TREAS', 'Municipal Treasurer\'s Office', 'Finance', '2026-09-25 01:59:32'),
+(11, 'ASS', 'Municipal Assessor\'s Office', 'Finance', '2026-09-25 01:59:32'),
+(12, 'ACCT', 'Municipal Accounting Office', 'Finance', '2026-09-25 01:59:32'),
+(13, 'BUDGET', 'Municipal Budget Office', 'Finance', '2026-09-25 01:59:32'),
+(14, 'MSWDO', 'Social Welfare & Development', 'Social', '2026-09-25 01:59:32'),
+(15, 'MHO', 'Municipal Health Office (MHO)', 'Social', '2026-09-25 01:59:32'),
+(16, 'AGRIC', 'Municipal Agriculture Office', 'Social', '2026-09-25 01:59:32'),
+(17, 'OSCA', 'Office of Senior Citizens Affairs', 'Social', '2026-09-25 01:59:32'),
+(18, 'PDAO', 'Persons with Disability Affairs', 'Social', '2026-09-25 01:59:32'),
+(19, 'PESO', 'Public Employment Service Office', 'Social', '2026-09-25 01:59:32'),
+(20, 'LYDO', 'Local Youth Development Office', 'Social', '2026-09-25 01:59:32'),
+(21, 'CEO', 'Municipal Engineering Office', 'Infrastructure', '2026-09-25 01:59:32'),
+(22, 'MENRO', 'Environment & Natural Resources', 'Infrastructure', '2026-09-25 01:59:32'),
+(23, 'TOUR', 'Tourism & Cultural Affairs', 'Infrastructure', '2026-09-25 01:59:32'),
+(24, 'MEEO', 'Economic Enterprises Office (Markets)', 'Infrastructure', '2026-09-25 01:59:32'),
+(25, 'MDRRMO', 'Disaster Risk Reduction Management', 'Public Safety', '2026-09-25 01:59:32'),
+(26, 'POSO', 'Public Order & Safety Office', 'Public Safety', '2026-09-25 01:59:32'),
+(27, 'BAPO', 'Barangay Affairs & Operations Office', 'Public Safety', '2026-09-25 01:59:32');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `news_posts`
 --
 
@@ -126,7 +210,7 @@ CREATE TABLE `news_posts` (
 --
 
 INSERT INTO `news_posts` (`id`, `category`, `title`, `description`, `image`, `is_featured`, `published_at`, `created_at`, `updated_at`) VALUES
-(2, 'Official Announcement', 'Norzagaray Casayahan Music Festival', 'An unforgettable night of live music in Norzagaray, Bulacan, featuring the iconic Filipino band Orange & Lemons!. Experience their timeless hits, sing along to your favorite songs, and enjoy an electrifying evening filled with great music, good vibes, and unforgettable memories. Don’t miss the chance to see Orange & Lemons live!', 'assets/uploads/news/db5069a940d84068d39e2c80.jpg', 0, '2026-08-16', '2026-08-16 09:28:32', '2026-08-16 09:28:32');
+(2, 'Official Announcement', 'Norzagaray Casayahan Music Festival', 'An unforgettable night of live music in Norzagaray, Bulacan, featuring the iconic Filipino band Orange & Lemons!. Experience their timeless hits, sing along to your favorite songs, and enjoy an electrifying evening filled with great music, good vibes, and unforgettable memories. Don’t miss the chance to see Orange & Lemons live!', 'assets/uploads/news/2526cbce2f9b781efd642540.jpg', 0, '2026-08-16', '2026-08-16 09:28:32', '2026-08-21 07:06:57');
 
 -- --------------------------------------------------------
 
@@ -139,7 +223,8 @@ CREATE TABLE `users` (
   `full_name` varchar(150) NOT NULL,
   `email` varchar(150) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('admin','user') NOT NULL DEFAULT 'user',
+  `role` enum('admin','office','user') NOT NULL DEFAULT 'user',
+  `department_id` int(10) UNSIGNED DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -147,19 +232,37 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `full_name`, `email`, `password`, `role`, `created_at`) VALUES
-(1, 'System Admin', 'admin@norzagaray.gov.ph', '$2y$10$O4OhYIqM1atikiHf4J4yxeeJg0O4DnyrzGcKATe3tA8b1qHqN7K/6', 'admin', '2026-08-14 12:28:34'),
-(2, 'Juan Dela Cruz', 'juan.delacruz@example.com', '$2y$10$Ok1.2eMQqL8t5VcCSHq1t.YaW6oy9TOtD7WV2vgBmPOwW.O4zz3JO', 'user', '2026-08-14 12:28:34');
+INSERT INTO `users` (`id`, `full_name`, `email`, `password`, `role`, `department_id`, `created_at`) VALUES
+(1, 'System Admin', 'admin@norzagaray.gov.ph', '$2y$10$O4OhYIqM1atikiHf4J4yxeeJg0O4DnyrzGcKATe3tA8b1qHqN7K/6', 'admin', NULL, '2026-08-14 12:28:34'),
+(2, 'Juan Dela Cruz', 'nikkisanpedro314@gmail.com', '$2y$10$Ok1.2eMQqL8t5VcCSHq1t.YaW6oy9TOtD7WV2vgBmPOwW.O4zz3JO', 'user', NULL, '2026-08-14 12:28:34'),
+(5, 'Nikki San Pedro', 'nikkisanpedro@hotmail.com', '$2y$10$D8zjgm8aEqW7B2eeSeXZEO18tZFGpKjSZqUeRISIBLJKrFM3OcTga', 'user', NULL, '2026-09-11 07:25:40');
 
 --
 -- Indexes for dumped tables
 --
 
 --
+-- Indexes for table `appointments`
+--
+ALTER TABLE `appointments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `department_id` (`department_id`),
+  ADD KEY `reviewed_by` (`reviewed_by`),
+  ADD KEY `scheduled_by` (`scheduled_by`);
+
+--
 -- Indexes for table `citizens_charter_services`
 --
 ALTER TABLE `citizens_charter_services`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `departments`
+--
+ALTER TABLE `departments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `code` (`code`);
 
 --
 -- Indexes for table `news_posts`
@@ -172,17 +275,30 @@ ALTER TABLE `news_posts`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `users_ibfk_1` (`department_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
 
 --
+-- AUTO_INCREMENT for table `appointments`
+--
+ALTER TABLE `appointments`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
 -- AUTO_INCREMENT for table `citizens_charter_services`
 --
 ALTER TABLE `citizens_charter_services`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
+
+--
+-- AUTO_INCREMENT for table `departments`
+--
+ALTER TABLE `departments`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `news_posts`
@@ -194,7 +310,26 @@ ALTER TABLE `news_posts`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `appointments`
+--
+ALTER TABLE `appointments`
+  ADD CONSTRAINT `appointments_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `appointments_ibfk_2` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`),
+  ADD CONSTRAINT `appointments_ibfk_3` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `appointments_ibfk_4` FOREIGN KEY (`scheduled_by`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `users`
+--
+ALTER TABLE `users`
+  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

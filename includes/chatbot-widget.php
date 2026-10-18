@@ -14,7 +14,13 @@
             <span>Ask about documents, appointments & offices</span>
           </div>
         </div>
-        <i class="fa-solid fa-xmark chatbot-close" id="chatbotClose"></i>
+        <div class="chatbot-header-actions">
+          <div class="chatbot-lang" role="group" aria-label="Chatbot language">
+            <button type="button" class="chatbot-lang-btn active" data-lang="en" aria-pressed="true">EN</button>
+            <button type="button" class="chatbot-lang-btn" data-lang="tl" aria-pressed="false">TL</button>
+          </div>
+          <i class="fa-solid fa-xmark chatbot-close" id="chatbotClose"></i>
+        </div>
       </div>
 
       <div class="chatbot-messages" id="chatbotMessages"></div>

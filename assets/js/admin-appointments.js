@@ -36,6 +36,28 @@ function formatDateTime(date, time) {
   return text;
 }
 
+/**
+ * Puts action buttons (e.g. "Set Schedule") next to Close in a detail popup, so a
+ * decision can be made without closing it first. Each click closes the popup and
+ * runs the action (which usually opens the next popup).
+ */
+function setDetailActions(containerId, modalId, actions) {
+  const box = document.getElementById(containerId);
+  box.querySelectorAll('.detail-extra').forEach((b) => b.remove());
+  const close = box.querySelector('.btn-cancel');
+  actions.forEach(({ label, className, run }) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `btn-modal ${className} detail-extra`;
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      closeModal(modalId);
+      run();
+    });
+    box.insertBefore(btn, close);
+  });
+}
+
 function openAppointmentDetailModal(btn) {
   const appt = JSON.parse(btn.getAttribute('data-appointment'));
 
@@ -80,6 +102,18 @@ function openAppointmentDetailModal(btn) {
       `
     )
     .join('');
+
+  // A request still waiting for review can be approved or rejected straight from here.
+  setDetailActions(
+    'appointmentDetailActions',
+    'appointmentDetailModal',
+    appt.status === 'pending_review'
+      ? [
+          { label: 'Reject', className: 'btn-danger', run: () => openRejectAppointmentModal(appt.id, appt.title) },
+          { label: 'Approve & Forward', className: 'btn-submit', run: () => openForwardModal(appt.id, appt.title) },
+        ]
+      : []
+  );
 
   openModal('appointmentDetailModal');
 }

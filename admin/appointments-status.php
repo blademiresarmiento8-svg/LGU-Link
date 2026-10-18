@@ -9,9 +9,11 @@ require_once __DIR__ . '/../includes/auth.php';
 requireRole('admin');
 require_once __DIR__ . '/../includes/appointment-helpers.php';
 require_once __DIR__ . '/../includes/department-helpers.php';
+require_once __DIR__ . '/../includes/office-account-helpers.php';
 require_once __DIR__ . '/../includes/appointment-admin.php';
 require_once __DIR__ . '/../config/mail.php';
 require_once __DIR__ . '/../includes/mailer.php';
+require_once __DIR__ . '/../includes/notification-helpers.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verifyCsrfToken($_POST['csrf_token'] ?? null)) {
     header('Location: appointments.php?error=' . urlencode('Invalid or expired request. Please try again.'));
@@ -39,6 +41,8 @@ if ($action === 'forward') {
     }
 
     $updated = findAppointmentById($id);
+    createNotification((int) $updated['user_id'], 'Your request "' . $updated['title'] . '" was forwarded to ' . $updated['department_name'] . '.', '/LGU-Link/user/appointments.php');
+    notifyDepartment($departmentId, 'New concern forwarded to your office: ' . $updated['title'], '/LGU-Link/office/dashboard.php');
     sendAppointmentEmail(
         $updated['email'],
         'Your appointment request has been forwarded',
@@ -68,6 +72,7 @@ if ($action === 'reject') {
     }
 
     $updated = findAppointmentById($id);
+    createNotification((int) $updated['user_id'], 'Your request "' . $updated['title'] . '" was not approved. Open it to see the reason.', '/LGU-Link/user/appointments.php');
     sendAppointmentEmail(
         $updated['email'],
         'Update on your appointment request',

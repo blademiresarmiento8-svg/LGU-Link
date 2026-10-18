@@ -13,7 +13,7 @@ $activePage = 'dashboard';
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="/LGU-Link/assets/css/style.css">
   <link rel="stylesheet" href="/LGU-Link/assets/css/user-dashboard.css">
-  <link rel="stylesheet" href="/LGU-Link/assets/css/chatbot.css">
+  <link rel="stylesheet" href="/LGU-Link/assets/css/chatbot.css?v=<?= filemtime(__DIR__ . '/../assets/css/chatbot.css') ?>">
 </head>
 
 <body>
@@ -84,7 +84,7 @@ $activePage = 'dashboard';
 
   <script src="/LGU-Link/assets/js/main.js"></script>
   <script src="/LGU-Link/assets/js/user-dashboard.js"></script>
-  <script src="/LGU-Link/assets/js/chatbot.js"></script>
+  <script src="/LGU-Link/assets/js/chatbot.js?v=<?= filemtime(__DIR__ . '/../assets/js/chatbot.js') ?>"></script>
 </body>
 
 </html>

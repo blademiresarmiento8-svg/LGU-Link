@@ -22,7 +22,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="/LGU-Link/assets/css/style.css">
   <link rel="stylesheet" href="/LGU-Link/assets/css/user-appointments.css">
-  <link rel="stylesheet" href="/LGU-Link/assets/css/chatbot.css">
+  <link rel="stylesheet" href="/LGU-Link/assets/css/chatbot.css?v=<?= filemtime(__DIR__ . '/../assets/css/chatbot.css') ?>">
 </head>
 
 <body>
@@ -30,7 +30,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
   <?php require __DIR__ . '/../includes/user-header.php'; ?>
 
   <!-- MAIN CONTENT AREA -->
-  <main class="main">
+  <main class="main" data-live-topics="appointments">
 
     <div class="page-title-row">
       <div>
@@ -45,7 +45,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
         <h3>My Requests</h3>
       </div>
 
-      <div class="table-container">
+      <div class="table-container" data-live-region="table-1">
         <table id="appointmentTable">
           <thead>
             <tr>
@@ -127,7 +127,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
         <h3>New Appointment Request</h3>
         <i class="fa-solid fa-xmark close-btn" onclick="closeModal('appointmentFormModal')"></i>
       </div>
-      <form action="appointments-save.php" method="post" enctype="multipart/form-data">
+      <form action="appointments-save.php" method="post" enctype="multipart/form-data" data-schedule-rules>
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
 
         <div class="form-group">
@@ -167,12 +167,12 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <div class="form-group">
           <label>Preferred Date <span class="row-note">— optional</span></label>
-          <input type="date" name="preferred_date">
+          <input type="date" name="preferred_date" data-rule="date">
         </div>
 
         <div class="form-group">
           <label>Preferred Time <span class="row-note">— optional</span></label>
-          <input type="time" name="preferred_time">
+          <input type="time" name="preferred_time" data-rule="time" data-blank="No preferred time">
         </div>
 
         <div class="modal-actions">
@@ -208,8 +208,10 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
   <?php require __DIR__ . '/../includes/chatbot-widget.php'; ?>
 
   <script src="/LGU-Link/assets/js/main.js"></script>
+  <script src="/LGU-Link/assets/js/live-refresh.js" defer></script>
+  <?php require __DIR__ . '/../includes/schedule-rules-script.php'; ?>
   <script src="/LGU-Link/assets/js/user-appointments.js"></script>
-  <script src="/LGU-Link/assets/js/chatbot.js"></script>
+  <script src="/LGU-Link/assets/js/chatbot.js?v=<?= filemtime(__DIR__ . '/../assets/js/chatbot.js') ?>"></script>
 
   <?php if ($flashSubmitted): ?>
     <script>document.addEventListener('DOMContentLoaded', () => showToast('Appointment request submitted. We\'ll email you updates on its status.'));</script>

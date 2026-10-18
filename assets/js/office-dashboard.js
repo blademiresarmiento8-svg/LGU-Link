@@ -35,6 +35,28 @@ function formatDateTime(date, time) {
   return text;
 }
 
+/**
+ * Puts action buttons (e.g. "Set Schedule") next to Close in a detail popup, so a
+ * decision can be made without closing it first. Each click closes the popup and
+ * runs the action (which usually opens the next popup).
+ */
+function setDetailActions(containerId, modalId, actions) {
+  const box = document.getElementById(containerId);
+  box.querySelectorAll('.detail-extra').forEach((b) => b.remove());
+  const close = box.querySelector('.btn-cancel');
+  actions.forEach(({ label, className, run }) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `btn-modal ${className} detail-extra`;
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      closeModal(modalId);
+      run();
+    });
+    box.insertBefore(btn, close);
+  });
+}
+
 function openAppointmentDetailModal(btn) {
   const appt = JSON.parse(btn.getAttribute('data-appointment'));
 
@@ -74,12 +96,34 @@ function openAppointmentDetailModal(btn) {
     )
     .join('');
 
+  // A request waiting for a schedule can be scheduled straight from here.
+  setDetailActions(
+    'appointmentDetailActions',
+    'appointmentDetailModal',
+    appt.status === 'forwarded'
+      ? [{ label: 'Set Schedule', className: 'btn-submit', run: () => openScheduleModal(appt.id, appt.title, appt.preferred_date, appt.preferred_time) }]
+      : []
+  );
+
   openModal('appointmentDetailModal');
 }
 
-function openScheduleModal(id, title) {
+function openScheduleModal(id, title, preferredDate, preferredTime) {
+  const form = document.querySelector('#scheduleModal form');
+  form.reset();
   document.getElementById('scheduleAppointmentId').value = id;
   document.getElementById('scheduleAppointmentTitle').textContent = `Request: "${title}"`;
+
+  // Start from the citizen's preferred date/time, but only when the office is actually open then.
+  const rules = window.ScheduleRules;
+  if (rules && preferredDate) {
+    const usable = rules.canUse(preferredDate, preferredTime);
+    if (usable.date) {
+      rules.setValue(form.querySelector('[name="scheduled_date"]'), preferredDate);
+      if (preferredTime && usable.time) rules.setValue(form.querySelector('[name="scheduled_time"]'), preferredTime.slice(0, 5));
+    }
+  }
+
   openModal('scheduleModal');
 }
 

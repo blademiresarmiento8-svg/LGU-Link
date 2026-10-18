@@ -3,12 +3,15 @@ require_once __DIR__ . '/../includes/auth.php';
 requireRole('admin');
 require_once __DIR__ . '/../includes/appointment-helpers.php';
 require_once __DIR__ . '/../includes/department-helpers.php';
+require_once __DIR__ . '/../includes/office-account-helpers.php';
 
 $activePage = 'appointments';
 
 $appointments = getAllAppointments();
 $statusCounts = getAppointmentStatusCounts();
-$departments = getAllDepartments();
+// Only offices with a login can act on a forwarded concern.
+$departments = getDepartmentsWithOfficeAccount();
+$suspendedDepartmentIds = getSuspendedDepartmentIds();
 
 $categories = APPOINTMENT_CATEGORIES;
 
@@ -33,7 +36,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
   <?php require __DIR__ . '/../includes/admin-header.php'; ?>
 
   <!-- MAIN CONTENT AREA -->
-  <main class="main">
+  <main class="main" data-live-topics="appointments">
 
     <div class="page-title-row">
       <div>
@@ -43,7 +46,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
     </div>
 
     <!-- STATS -->
-    <section class="stats-grid">
+    <section class="stats-grid" data-live-region="stats">
       <div class="stat-card">
         <div>
           <p>Pending Review</p>
@@ -109,7 +112,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
         </select>
       </div>
 
-      <div class="table-container">
+      <div class="table-container" data-live-region="table-1">
         <table id="appointmentTable">
           <thead>
             <tr>
@@ -135,6 +138,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
               $apptJson = json_encode([
                   'id' => $appt['id'],
+                  'status' => $appt['status'],
                   'citizen_name' => $appt['citizen_name'],
                   'title' => $appt['title'],
                   'category' => $appt['category'],
@@ -159,12 +163,17 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
                 <td><?= htmlspecialchars($appt['category']) ?></td>
                 <td><strong><?= htmlspecialchars($appt['title']) ?></strong></td>
                 <td><span class="badge <?= htmlspecialchars($statusMeta['badgeClass']) ?>"><?= htmlspecialchars($statusMeta['label']) ?></span></td>
-                <td><?= $appt['department_name'] !== null ? htmlspecialchars($appt['department_name']) : '<span class="row-note">—</span>' ?></td>
+                <td>
+                  <?= $appt['department_name'] !== null ? htmlspecialchars($appt['department_name']) : '<span class="row-note">—</span>' ?>
+                  <?php if ($appt['department_id'] !== null && $appt['status'] === 'forwarded' && in_array((int) $appt['department_id'], $suspendedDepartmentIds, true)): ?>
+                    <span class="badge bg-inactive" title="This office's account is suspended, so nobody there can schedule this concern.">Office suspended</span>
+                  <?php endif; ?>
+                </td>
                 <td>
                   <div class="action-btns">
                     <button class="btn-action edit" data-appointment="<?= htmlspecialchars($apptJson, ENT_QUOTES) ?>" onclick="openAppointmentDetailModal(this)">View</button>
                     <?php if ($isPending): ?>
-                      <button class="btn-action approve" onclick="openForwardModal(<?= (int) $appt['id'] ?>, <?= htmlspecialchars(json_encode($appt['title']), ENT_QUOTES) ?>)">Forward</button>
+                      <button class="btn-action approve" onclick="openForwardModal(<?= (int) $appt['id'] ?>, <?= htmlspecialchars(json_encode($appt['title']), ENT_QUOTES) ?>)">Approve &amp; Forward</button>
                       <button class="btn-action reject" onclick="openRejectAppointmentModal(<?= (int) $appt['id'] ?>, <?= htmlspecialchars(json_encode($appt['title']), ENT_QUOTES) ?>)">Reject</button>
                     <?php endif; ?>
                   </div>
@@ -187,7 +196,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
         <i class="fa-solid fa-xmark close-btn" onclick="closeModal('appointmentDetailModal')"></i>
       </div>
       <div id="appointmentDetailBody" class="appointment-detail-body"></div>
-      <div class="modal-actions">
+      <div class="modal-actions" id="appointmentDetailActions">
         <button type="button" class="btn-modal btn-cancel" onclick="closeModal('appointmentDetailModal')">Close</button>
       </div>
     </div>
@@ -197,7 +206,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
   <div class="modal-overlay" id="forwardModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Forward to Office</h3>
+        <h3>Approve &amp; Forward to Office</h3>
         <i class="fa-solid fa-xmark close-btn" onclick="closeModal('forwardModal')"></i>
       </div>
       <form action="appointments-status.php" method="post">
@@ -212,7 +221,8 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
           <select name="department_id" required>
             <option value="">Select the office that should handle this</option>
             <?php foreach ($departments as $department): ?>
-              <option value="<?= (int) $department['id'] ?>"><?= htmlspecialchars($department['name']) ?> (<?= htmlspecialchars($department['code']) ?>)</option>
+              <?php $isSuspended = in_array((int) $department['id'], $suspendedDepartmentIds, true); ?>
+              <option value="<?= (int) $department['id'] ?>"<?= $isSuspended ? ' disabled' : '' ?>><?= htmlspecialchars($department['name']) ?><?= $isSuspended ? ' (account suspended)' : '' ?></option>
             <?php endforeach; ?>
           </select>
         </div>
@@ -224,7 +234,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <div class="modal-actions">
           <button type="button" class="btn-modal btn-cancel" onclick="closeModal('forwardModal')">Cancel</button>
-          <button type="submit" class="btn-modal btn-submit">Forward</button>
+          <button type="submit" class="btn-modal btn-submit">Approve &amp; Forward</button>
         </div>
       </form>
     </div>
@@ -262,6 +272,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
   <?php require __DIR__ . '/../includes/confirm-modal.php'; ?>
 
   <script src="/LGU-Link/assets/js/main.js"></script>
+  <script src="/LGU-Link/assets/js/live-refresh.js" defer></script>
   <script src="/LGU-Link/assets/js/admin-appointments.js"></script>
 
   <?php if ($flashForwarded): ?>
