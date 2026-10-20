@@ -5,6 +5,8 @@
  * every other save handler in this app.
  */
 
+// Answer the browser first; emails and the live signal go out afterwards (includes/deferred.php).
+define('DEFER_SLOW_TASKS', true);
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('user');
 require_once __DIR__ . '/../includes/appointment-helpers.php';
@@ -31,7 +33,7 @@ if (!$result['success']) {
 
 notifyRole('admin', 'New request from ' . $citizen['full_name'] . ': ' . $result['title'], '/LGU-Link/admin/appointments.php');
 
-sendAppointmentEmail(
+queueAppointmentEmail(
     $result['email'],
     'We\'ve received your appointment request',
     renderAppointmentEmailHtml(
@@ -44,5 +46,4 @@ sendAppointmentEmail(
     )
 );
 
-header('Location: appointments.php?submitted=1');
-exit;
+redirectAndRunDeferred('appointments.php?submitted=1');

@@ -51,8 +51,15 @@ INSERT IGNORE INTO departments (code, name, sector, department_head) VALUES
 CREATE TABLE IF NOT EXISTS users (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   full_name VARCHAR(150) NOT NULL,
+  -- Citizens fill these in when they sign up; full_name is composed from them.
+  first_name VARCHAR(60) NULL,
+  middle_name VARCHAR(60) NULL,
+  last_name VARCHAR(60) NULL,
+  suffix VARCHAR(10) NULL,
+  mobile VARCHAR(20) NULL,
   email VARCHAR(150) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
+  privacy_consent_at DATETIME NULL,
   role ENUM('admin', 'sysadmin', 'office', 'user') NOT NULL DEFAULT 'user',
   department_id INT UNSIGNED NULL,
   -- Suspended accounts can't log in (and are logged out on their next page load).
@@ -101,6 +108,20 @@ CREATE TABLE IF NOT EXISTS mail_log (
   status ENUM('sent', 'failed', 'skipped') NOT NULL,
   error VARCHAR(255) NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- One-time email codes used during citizen sign-up (hashed; expire after 10 minutes).
+CREATE TABLE IF NOT EXISTS email_verifications (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(150) NOT NULL,
+  code_hash VARCHAR(255) NOT NULL,
+  attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  expires_at DATETIME NOT NULL,
+  verified_at DATETIME NULL,
+  ip_address VARCHAR(45) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX email_verifications_email (email, id),
+  INDEX email_verifications_ip (ip_address, created_at)
 ) ENGINE=InnoDB;
 
 -- Citizen appointment/concern requests. Citizens submit (user/appointments.php,

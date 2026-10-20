@@ -6,6 +6,11 @@ require_once __DIR__ . '/../includes/appointment-helpers.php';
 $activePage = 'appointments';
 $citizen = currentUser();
 
+// The mobile number saved at sign-up prefills the request form (older accounts may not have one).
+$mobileStmt = getDbConnection()->prepare('SELECT mobile FROM users WHERE id = ?');
+$mobileStmt->execute([$citizen['id']]);
+$savedMobile = (string) $mobileStmt->fetchColumn();
+
 $appointments = getAppointmentsForUser((int) $citizen['id']);
 
 $flashSubmitted = isset($_GET['submitted']);
@@ -127,7 +132,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
         <h3>New Appointment Request</h3>
         <i class="fa-solid fa-xmark close-btn" onclick="closeModal('appointmentFormModal')"></i>
       </div>
-      <form action="appointments-save.php" method="post" enctype="multipart/form-data" data-schedule-rules>
+      <form id="appointmentForm" action="appointments-save.php" method="post" enctype="multipart/form-data" data-schedule-rules>
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
 
         <div class="form-group">
@@ -157,7 +162,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <div class="form-group">
           <label>Contact Number</label>
-          <input type="tel" name="contact_number" placeholder="09XXXXXXXXX" required>
+          <input type="tel" name="contact_number" placeholder="09XXXXXXXXX" value="<?= htmlspecialchars($savedMobile) ?>" required>
         </div>
 
         <div class="form-group">

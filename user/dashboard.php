@@ -83,7 +83,6 @@ $activePage = 'dashboard';
   <?php require __DIR__ . '/../includes/chatbot-widget.php'; ?>
 
   <script src="/LGU-Link/assets/js/main.js"></script>
-  <script src="/LGU-Link/assets/js/user-dashboard.js"></script>
   <script src="/LGU-Link/assets/js/chatbot.js?v=<?= filemtime(__DIR__ . '/../assets/js/chatbot.js') ?>"></script>
 </body>
 

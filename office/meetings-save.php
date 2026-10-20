@@ -6,6 +6,8 @@
  * account's own department_id from the session, never trusted from the request.
  */
 
+// Answer the browser first; emails and the live signal go out afterwards (includes/deferred.php).
+define('DEFER_SLOW_TASKS', true);
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('office');
 require_once __DIR__ . '/../includes/department-helpers.php';
@@ -55,5 +57,4 @@ if (!$result['success']) {
     exit;
 }
 
-header('Location: meetings.php?done=' . $done);
-exit;
+redirectAndRunDeferred('meetings.php?done=' . $done);

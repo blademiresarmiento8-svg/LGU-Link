@@ -37,3 +37,28 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 });
+
+// Sign-up: the "Send a new code" link waits out the server's cooldown, and the code box takes digits only.
+document.addEventListener('DOMContentLoaded', function () {
+  const code = document.getElementById('code');
+  if (code) {
+    code.addEventListener('input', function () {
+      code.value = code.value.replace(/\D/g, '').slice(0, 6);
+    });
+  }
+
+  const resend = document.getElementById('resendBtn');
+  if (resend) {
+    let wait = Number(resend.dataset.wait) || 0;
+    const hint = document.getElementById('resendHint');
+    const tick = function () {
+      resend.disabled = wait > 0;
+      hint.textContent = wait > 0 ? '(available in ' + wait + 's)' : '';
+      if (wait > 0) {
+        wait -= 1;
+        setTimeout(tick, 1000);
+      }
+    };
+    tick();
+  }
+});

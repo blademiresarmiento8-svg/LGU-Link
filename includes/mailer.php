@@ -12,6 +12,7 @@ use PHPMailer\PHPMailer\Exception as PHPMailerException;
 use PHPMailer\PHPMailer\PHPMailer;
 
 require_once __DIR__ . '/office-account-helpers.php';
+require_once __DIR__ . '/deferred.php';
 
 /**
  * Records one email attempt (sent / failed / skipped) in mail_log so a system
@@ -31,6 +32,15 @@ function logMailAttempt(string $to, string $subject, string $status, ?string $er
     } catch (\Throwable $e) {
         error_log('Could not write mail_log: ' . $e->getMessage());
     }
+}
+
+/**
+ * Same as sendAppointmentEmail(), but when the handler opted into deferral the
+ * email is sent after the browser has its answer (see includes/deferred.php).
+ */
+function queueAppointmentEmail(string $to, string $subject, string $bodyHtml): void
+{
+    runOrDefer(fn() => sendAppointmentEmail($to, $subject, $bodyHtml));
 }
 
 function sendAppointmentEmail(string $to, string $subject, string $bodyHtml): bool

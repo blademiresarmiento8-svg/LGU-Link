@@ -7,6 +7,8 @@
  * one office can never touch another office's appointment.
  */
 
+// Answer the browser first; emails and the live signal go out afterwards (includes/deferred.php).
+define('DEFER_SLOW_TASKS', true);
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('office');
 require_once __DIR__ . '/../includes/appointment-helpers.php';
@@ -39,7 +41,7 @@ if ($action === 'schedule') {
 
     $updated = findAppointmentById($id);
     createNotification((int) $updated['user_id'], 'Your appointment "' . $updated['title'] . '" is scheduled for ' . date('F j, Y', strtotime($updated['scheduled_date'])) . ' at ' . date('g:i A', strtotime($updated['scheduled_time'])) . '.', '/LGU-Link/user/appointments.php');
-    sendAppointmentEmail(
+    queueAppointmentEmail(
         $updated['email'],
         'Your appointment schedule is confirmed',
         renderAppointmentEmailHtml(
@@ -55,8 +57,7 @@ if ($action === 'schedule') {
         )
     );
 
-    header('Location: dashboard.php?scheduled=1');
-    exit;
+    redirectAndRunDeferred('dashboard.php?scheduled=1');
 }
 
 if ($action === 'complete') {
@@ -70,8 +71,7 @@ if ($action === 'complete') {
         exit;
     }
 
-    header('Location: dashboard.php?completed=1');
-    exit;
+    redirectAndRunDeferred('dashboard.php?completed=1');
 }
 
 header('Location: dashboard.php?error=' . urlencode('Unknown action.'));

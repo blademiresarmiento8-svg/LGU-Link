@@ -11,6 +11,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/pusher.php';
 require_once __DIR__ . '/../config/mail.php';
 require_once __DIR__ . '/mailer.php';
+require_once __DIR__ . '/deferred.php';
 
 /** The private Pusher channel only this user may subscribe to. */
 function notificationChannelFor(int $userId): string
@@ -50,7 +51,7 @@ function createNotification(int $userId, string $message, ?string $link = null):
  */
 function emailNotification(string $to, string $message, ?string $link): void
 {
-    sendAppointmentEmail(
+    queueAppointmentEmail(
         $to,
         $message,
         renderAppointmentEmailHtml(
@@ -149,17 +150,19 @@ function pusherClient(): ?\Pusher\Pusher
  */
 function pushNotificationSignal(int $userId, ?string $topic = null): void
 {
-    try {
-        $client = pusherClient();
-        if ($client !== null) {
-            $client->trigger(notificationChannelFor($userId), 'notification', [
-                'unread' => countUnreadNotifications($userId),
-                'topic' => $topic,
-            ]);
+    runOrDefer(function () use ($userId, $topic) {
+        try {
+            $client = pusherClient();
+            if ($client !== null) {
+                $client->trigger(notificationChannelFor($userId), 'notification', [
+                    'unread' => countUnreadNotifications($userId),
+                    'topic' => $topic,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // The notification is already saved; the bell will catch up on the next page load.
         }
-    } catch (\Throwable $e) {
-        // The notification is already saved; the bell will catch up on the next page load.
-    }
+    });
 }
 
 /**

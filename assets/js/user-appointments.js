@@ -4,6 +4,9 @@
 // mockup.
 
 function openAppointmentFormModal() {
+  // A new request always starts from a fresh form: this also puts back the prefilled email
+  // if it was deleted before cancelling, and drops anything half-typed last time.
+  document.getElementById('appointmentForm').reset();
   openModal('appointmentFormModal');
 }
 

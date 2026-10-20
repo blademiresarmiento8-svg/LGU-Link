@@ -28,7 +28,50 @@
 document.addEventListener('DOMContentLoaded', function () {
   startPSTClock();
   wireConfirmModal();
+  wireNavToggle();
 });
+
+/* Hamburger menu for the top navigation bar on narrow screens (see "Responsive header" in style.css). */
+function wireNavToggle() {
+  const toggle = document.getElementById('navToggle');
+  const nav = document.getElementById('mainNav');
+  if (!toggle || !nav) return;
+
+  const icon = toggle.querySelector('i');
+  function setOpen(open) {
+    nav.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    icon.classList.toggle('fa-bars', !open);
+    icon.classList.toggle('fa-xmark', open);
+  }
+
+  toggle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    setOpen(!nav.classList.contains('open'));
+  });
+  // Close on: choosing something in the menu, tapping elsewhere, Escape, or widening the window.
+  nav.addEventListener('click', function (e) {
+    if (e.target.closest('a, button')) setOpen(false);
+  });
+  document.addEventListener('click', function (e) {
+    if (!nav.contains(e.target) && !toggle.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && nav.classList.contains('open')) {
+      setOpen(false);
+      toggle.focus();
+    }
+  });
+  // When the window grows past the point where the menu folds away, reset it so it doesn't
+  // pop open by itself the next time the window is made narrow again.
+  const wide = window.matchMedia('(min-width: 1101px)');
+  const onWide = function (e) {
+    if (e.matches) setOpen(false);
+  };
+  if (wide.addEventListener) wide.addEventListener('change', onWide);
+  else wide.addListener(onWide);
+}
 
 /* Live Philippine Standard Time clock, targets <strong id="livePST"> */
 function startPSTClock() {

@@ -22,7 +22,7 @@ $navItems = [
       <span>LGU Norzagaray Portal</span>
     </div>
 
-    <nav class="header-nav">
+    <nav class="header-nav" id="mainNav">
       <?php foreach ($navItems as $key => $item): ?>
         <a href="<?= htmlspecialchars($item['href']) ?>" class="<?= $activePage === $key ? 'active' : '' ?>">
           <i class="fa-solid <?= htmlspecialchars($item['icon']) ?>"></i><span><?= htmlspecialchars($item['label']) ?></span>
@@ -36,6 +36,10 @@ $navItems = [
       <span><?= htmlspecialchars($admin['full_name']) ?></span>
       <a href="/LGU-Link/auth/logout.php" class="logout-link" title="Log out" onclick="event.preventDefault(); confirmLogout();"><i class="fa-solid fa-right-from-bracket"></i></a>
     </div>
+
+    <button type="button" class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mainNav">
+      <i class="fa-solid fa-bars"></i>
+    </button>
   </header>
 
   <div class="lgu-branding-bar">

@@ -3,6 +3,8 @@
  * Lets a citizen cancel their own appointment request. Plain POST + redirect.
  */
 
+// Answer the browser first; emails and the live signal go out afterwards (includes/deferred.php).
+define('DEFER_SLOW_TASKS', true);
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('user');
 require_once __DIR__ . '/../includes/appointment-helpers.php';
@@ -29,7 +31,7 @@ if ($cancelled && $before !== null) {
 }
 
 if ($cancelled) {
-    header('Location: appointments.php?cancelled=1');
+    redirectAndRunDeferred('appointments.php?cancelled=1');
 } else {
     header('Location: appointments.php?error=' . urlencode('That request can no longer be cancelled.'));
 }

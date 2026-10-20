@@ -5,6 +5,8 @@
  * pattern as every other save/delete handler in this app.
  */
 
+// Answer the browser first; emails and the live signal go out afterwards (includes/deferred.php).
+define('DEFER_SLOW_TASKS', true);
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('admin');
 require_once __DIR__ . '/../includes/appointment-helpers.php';
@@ -43,7 +45,7 @@ if ($action === 'forward') {
     $updated = findAppointmentById($id);
     createNotification((int) $updated['user_id'], 'Your request "' . $updated['title'] . '" was forwarded to ' . $updated['department_name'] . '.', '/LGU-Link/user/appointments.php');
     notifyDepartment($departmentId, 'New concern forwarded to your office: ' . $updated['title'], '/LGU-Link/office/dashboard.php');
-    sendAppointmentEmail(
+    queueAppointmentEmail(
         $updated['email'],
         'Your appointment request has been forwarded',
         renderAppointmentEmailHtml(
@@ -57,8 +59,7 @@ if ($action === 'forward') {
         )
     );
 
-    header('Location: appointments.php?forwarded=1');
-    exit;
+    redirectAndRunDeferred('appointments.php?forwarded=1');
 }
 
 if ($action === 'reject') {
@@ -73,7 +74,7 @@ if ($action === 'reject') {
 
     $updated = findAppointmentById($id);
     createNotification((int) $updated['user_id'], 'Your request "' . $updated['title'] . '" was not approved. Open it to see the reason.', '/LGU-Link/user/appointments.php');
-    sendAppointmentEmail(
+    queueAppointmentEmail(
         $updated['email'],
         'Update on your appointment request',
         renderAppointmentEmailHtml(
@@ -86,8 +87,7 @@ if ($action === 'reject') {
         )
     );
 
-    header('Location: appointments.php?rejected=1');
-    exit;
+    redirectAndRunDeferred('appointments.php?rejected=1');
 }
 
 header('Location: appointments.php?error=' . urlencode('Unknown action.'));

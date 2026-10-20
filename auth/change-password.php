@@ -7,6 +7,7 @@
 
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/password-rules.php';
 requireLogin();
 
 $pdo = getDbConnection();
@@ -23,8 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!verifyCsrfToken($_POST['csrf_token'] ?? null)) {
         $error = 'Your session expired. Please try again.';
-    } elseif (strlen($new) < 8) {
-        $error = 'Password must be at least 8 characters long.';
+    } elseif (($problem = passwordProblem($new)) !== null) {
+        $error = $problem;
     } elseif ($new !== $confirm) {
         $error = 'The two passwords do not match.';
     } elseif (password_verify($new, $account['password'])) {
@@ -81,7 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
           <div class="form-group">
             <label for="new_password">New Password</label>
-            <input type="password" id="new_password" name="new_password" required minlength="8" autofocus placeholder="At least 8 characters">
+            <input type="password" id="new_password" name="new_password" required minlength="8" pattern="<?= PASSWORD_RULE_PATTERN ?>" title="<?= htmlspecialchars(PASSWORD_RULE_TEXT) ?>" autofocus placeholder="Choose a strong password">
+            <small class="auth-hint"><?= htmlspecialchars(PASSWORD_RULE_TEXT) ?></small>
           </div>
 
           <div class="form-group">

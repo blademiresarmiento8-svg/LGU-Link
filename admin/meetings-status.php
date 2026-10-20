@@ -4,6 +4,8 @@
  * meeting, or cancel / mark completed an approved one. Plain POST + redirect.
  */
 
+// Answer the browser first; emails and the live signal go out afterwards (includes/deferred.php).
+define('DEFER_SLOW_TASKS', true);
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('admin');
 require_once __DIR__ . '/../includes/department-helpers.php';
@@ -48,5 +50,4 @@ if (!$result['success']) {
     exit;
 }
 
-header('Location: meetings.php?done=' . $done);
-exit;
+redirectAndRunDeferred('meetings.php?done=' . $done);
