@@ -25,22 +25,19 @@ if (isLoggedIn() && $_SESSION['role'] === 'user') {
     $stmt->execute(['id' => $_SESSION['user_id']]);
     $citizen = $stmt->fetch() ?: null;
 }
-$values = ['full_name' => $citizen['full_name'] ?? '', 'mobile' => $citizen['mobile'] ?? '', 'service_id' => 0, 'priority' => ''];
+$values = ['full_name' => $citizen['full_name'] ?? '', 'mobile' => $citizen['mobile'] ?? '', 'service_id' => 0, 'priority' => false];
 
 if ($open && !$expired && $closedReason === '' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $values = [
         'full_name' => trim((string) ($_POST['full_name'] ?? '')),
         'mobile' => trim((string) ($_POST['mobile'] ?? '')),
         'service_id' => (int) ($_POST['service_id'] ?? 0),
-        // The type only counts when the "priority" box is ticked.
-        'priority' => !empty($_POST['wants_priority']) ? (string) ($_POST['priority'] ?? '') : '',
+        'priority' => !empty($_POST['wants_priority']),
     ];
     if (!verifyCsrfToken($_POST['csrf_token'] ?? null)) {
         $errors[] = 'Your page expired. Please try again.';
     } elseif (empty($_POST['privacy'])) {
         $errors[] = 'Please tick the box to agree to the Privacy Notice.';
-    } elseif (!empty($_POST['wants_priority']) && $values['priority'] === '') {
-        $errors[] = 'Please choose the kind of priority, or untick the box.';
     } else {
         $result = createQueueTicket((int) $queue['id'], $values + ['source' => 'self', 'user_id' => $citizen ? $_SESSION['user_id'] : null]);
         if ($result['success']) {
@@ -125,18 +122,10 @@ if ($open && !$expired && $closedReason === '' && $_SERVER['REQUEST_METHOD'] ===
         <?php if (!$isEvent): ?>
         <div class="queue-priority">
           <label class="queue-priority-toggle">
-            <input type="checkbox" name="wants_priority" id="qWantsPriority" value="1" <?= $values['priority'] !== '' ? 'checked' : '' ?>>
+            <input type="checkbox" name="wants_priority" value="1" <?= $values['priority'] ? 'checked' : '' ?>>
             <span>I need priority</span>
           </label>
-          <div id="qPriorityBox" <?= $values['priority'] !== '' ? '' : 'hidden' ?>>
-            <select name="priority" id="qPriority" aria-label="Kind of priority">
-              <option value="">Choose one</option>
-              <?php foreach (QUEUE_PRIORITY_TYPES as $key => $label): ?>
-                <option value="<?= $key ?>" <?= $values['priority'] === $key ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
-              <?php endforeach; ?>
-            </select>
-            <small>The staff will check your ID before you are served as a priority.</small>
-          </div>
+          <small>For example: senior citizens, persons with disability, pregnant women, or someone with a small child.</small>
         </div>
         <?php endif; ?>
 
@@ -151,11 +140,8 @@ if ($open && !$expired && $closedReason === '' && $_SERVER['REQUEST_METHOD'] ===
 
   </div>
   <script>
-    // Show the priority choices only when the box is ticked; stop a double tap from taking two numbers.
+    // Stop a double tap from taking two numbers.
     (function () {
-      const box = document.getElementById('qWantsPriority');
-      const choices = document.getElementById('qPriorityBox');
-      if (box && choices) box.addEventListener('change', () => { choices.hidden = !box.checked; });
       const form = document.querySelector('form.queue-card');
       if (form) form.addEventListener('submit', () => {
         const button = form.querySelector('.queue-submit');

@@ -66,14 +66,12 @@ if (in_array($action, ['start', 'done', 'skip', 'recall', 'cancel', 'return'], t
     backToConsole('done=' . $action);
 }
 
-if (in_array($action, ['verify_priority', 'decline_priority', 'mark_priority'], true)) {
+if (in_array($action, ['mark_priority', 'clear_priority'], true)) {
     $ticket = findQueueTicketById((int) ($_POST['ticket_id'] ?? 0), $departmentId);
     if ($ticket === null || $staff === null) {
         backToConsole('error=' . urlencode($ticket === null ? 'That number was not found.' : 'Please choose your name first.'));
     }
-    $changed = $action === 'mark_priority'
-        ? markQueueTicketPriority((int) $ticket['id'], (string) ($_POST['priority'] ?? ''))
-        : reviewQueueTicketPriority((int) $ticket['id'], $action === 'verify_priority' ? 'verify' : 'decline');
+    $changed = $action === 'mark_priority' ? markQueueTicketPriority((int) $ticket['id']) : clearQueueTicketPriority((int) $ticket['id']);
     backToConsole($changed ? 'done=' . $action : 'error=' . urlencode('That number has already changed. The list was refreshed.'));
 }
 
@@ -82,7 +80,7 @@ if ($action === 'assist') {
         'full_name' => $_POST['full_name'] ?? '',
         'mobile' => $_POST['mobile'] ?? '',
         'service_id' => (int) ($_POST['service_id'] ?? 0),
-        'priority' => (string) ($_POST['priority'] ?? ''),
+        'priority' => !empty($_POST['priority']),
         'source' => 'staff',
     ]);
     if (!$result['success']) {

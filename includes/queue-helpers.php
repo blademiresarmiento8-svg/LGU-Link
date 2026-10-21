@@ -21,14 +21,6 @@ const QUEUE_MAX_WAITING = 400;
 /** Numbers one device (one address) may take in 10 minutes. Roomy on purpose: an office Wi-Fi shares one address, and several people may share a phone. */
 const QUEUE_MAX_SELF_PER_DEVICE = 30;
 
-/** What a person can say makes them a priority. Staff check the ID before it counts. */
-const QUEUE_PRIORITY_TYPES = [
-    'senior' => 'Senior citizen',
-    'pwd' => 'Person with disability',
-    'pregnant' => 'Pregnant',
-    'child' => 'With a small child',
-];
-
 function queueToday(): string
 {
     return date('Y-m-d');
@@ -102,7 +94,7 @@ function queueDayFor(array $queue): string
  * Gives a person the next number.
  *
  * $input: full_name, mobile (optional; events can require it), service_id, source ('self'|'staff'),
- * user_id (optional), priority (a key of QUEUE_PRIORITY_TYPES; staff-made tickets count as verified).
+ * user_id (optional), priority (true when the person needs priority).
  *
  * @return array{success: bool, errors: string[], ticket: ?array}
  */
@@ -136,18 +128,8 @@ function createQueueTicket(int $queueId, array $input): array
         $errors[] = 'Please enter a valid mobile number, like 09123456789.';
     }
 
-    // Priority: a person only claims it; staff check it. Staff who see the person can verify it at once.
-    $priorityKey = (string) ($input['priority'] ?? '');
-    $priorityLabel = null;
-    $priorityStatus = 'none';
-    if ($priorityKey !== '') {
-        if (!isset(QUEUE_PRIORITY_TYPES[$priorityKey])) {
-            $errors[] = 'Please choose a valid priority type.';
-        } else {
-            $priorityLabel = QUEUE_PRIORITY_TYPES[$priorityKey];
-            $priorityStatus = $source === 'staff' ? 'verified' : 'claimed';
-        }
-    }
+    // Priority is only a flag: staff can see who needs it and choose when to call them.
+    $isPriority = !empty($input['priority']) ? 1 : 0;
 
     $stmt = $pdo->prepare('SELECT * FROM queue_services WHERE id = :id AND department_id = :d AND is_active = 1');
     $stmt->execute(['id' => (int) ($input['service_id'] ?? 0), 'd' => $queue['department_id']]);
@@ -228,12 +210,12 @@ function createQueueTicket(int $queueId, array $input): array
 
         $code = $queue['prefix'] . '-' . $letter . str_pad((string) $number, 3, '0', STR_PAD_LEFT);
         $pdo->prepare(
-            'INSERT INTO queue_tickets (queue_id, queue_day, number, code, access_key, service_id, service_name, full_name, mobile, phone_key, user_id, source, priority_label, priority_status)
-             VALUES (:q, :d, :n, :c, :k, :sid, :sn, :name, :m, :pk, :u, :src, :pl, :ps)'
+            'INSERT INTO queue_tickets (queue_id, queue_day, number, code, access_key, service_id, service_name, full_name, mobile, phone_key, user_id, source, is_priority)
+             VALUES (:q, :d, :n, :c, :k, :sid, :sn, :name, :m, :pk, :u, :src, :pr)'
         )->execute([
             'q' => $queueId, 'd' => $day, 'n' => $number, 'c' => $code, 'k' => $key,
             'sid' => $service['id'] ?? null, 'sn' => $label, 'name' => $name, 'm' => $mobile, 'pk' => $phoneKey,
-            'u' => $input['user_id'] ?? null, 'src' => $source, 'pl' => $priorityLabel, 'ps' => $priorityStatus,
+            'u' => $input['user_id'] ?? null, 'src' => $source, 'pr' => $isPriority,
         ]);
         $ticketId = (int) $pdo->lastInsertId();
         $pdo->commit();
@@ -285,8 +267,8 @@ function queueTicketsAhead(array $ticket): int
 /**
  * A staff member calls the next waiting person (lowest number first). Services linked to a
  * different staff name are skipped; services linked to nobody go to whoever is free.
- * With $priorityOnly, only people who claimed or were verified as priority are considered
- * (verified ones first). Priority never moves anyone up by itself: staff choose to call it.
+ * With $priorityOnly, only people who need priority are considered. Priority never moves anyone
+ * up by itself: staff choose to call it.
  * Returns the claimed ticket, or null when nobody is waiting.
  */
 function callNextQueueTicket(int $queueId, int $staffId, bool $priorityOnly = false): ?array
@@ -307,8 +289,8 @@ function callNextQueueTicket(int $queueId, int $staffId, bool $priorityOnly = fa
     $find = $pdo->prepare(
         "SELECT t.id FROM queue_tickets t LEFT JOIN queue_services s ON s.id = t.service_id
          WHERE t.queue_id = :q AND t.queue_day = :d AND t.status = 'waiting'
-           AND (s.staff_id IS NULL OR s.staff_id = :staff)" . ($priorityOnly ? " AND t.priority_status IN ('claimed', 'verified')" : '') . "
-         ORDER BY " . ($priorityOnly ? "(t.priority_status = 'verified') DESC, " : '') . "t.number LIMIT 1"
+           AND (s.staff_id IS NULL OR s.staff_id = :staff)" . ($priorityOnly ? ' AND t.is_priority = 1' : '') . "
+         ORDER BY t.number LIMIT 1"
     );
     $claim = $pdo->prepare(
         "UPDATE queue_tickets SET status = 'called', staff_id = :staff, staff_name = :sn, called_at = NOW()
@@ -362,34 +344,24 @@ function updateQueueTicketStatus(int $ticketId, string $action): bool
     return $stmt->rowCount() === 1;
 }
 
-/**
- * Staff decide about a priority claim: 'verify' (the ID was checked) or 'decline' (not eligible;
- * the person is still served, in the normal order). Only a claim that is still open can be decided.
- */
-function reviewQueueTicketPriority(int $ticketId, string $decision): bool
+/** Staff who can see the person mark a waiting ticket as priority. */
+function markQueueTicketPriority(int $ticketId): bool
 {
-    if (!in_array($decision, ['verify', 'decline'], true)) {
-        return false;
-    }
     $stmt = getDbConnection()->prepare(
-        "UPDATE queue_tickets SET priority_status = :s WHERE id = :id AND priority_status = 'claimed' AND status IN ('waiting', 'called', 'serving')"
+        "UPDATE queue_tickets SET is_priority = 1 WHERE id = :id AND is_priority = 0 AND status IN ('waiting', 'called', 'serving')"
     );
-    $stmt->execute(['s' => $decision === 'verify' ? 'verified' : 'declined', 'id' => $ticketId]);
+    $stmt->execute(['id' => $ticketId]);
 
     return $stmt->rowCount() === 1;
 }
 
-/** Staff who can see the person mark a ticket as verified priority themselves. */
-function markQueueTicketPriority(int $ticketId, string $typeKey): bool
+/** Takes priority off a ticket (for example when the box was ticked by mistake). */
+function clearQueueTicketPriority(int $ticketId): bool
 {
-    if (!isset(QUEUE_PRIORITY_TYPES[$typeKey])) {
-        return false;
-    }
     $stmt = getDbConnection()->prepare(
-        "UPDATE queue_tickets SET priority_label = :l, priority_status = 'verified'
-         WHERE id = :id AND priority_status <> 'verified' AND status IN ('waiting', 'called', 'serving')"
+        "UPDATE queue_tickets SET is_priority = 0 WHERE id = :id AND is_priority = 1 AND status IN ('waiting', 'called', 'serving')"
     );
-    $stmt->execute(['l' => QUEUE_PRIORITY_TYPES[$typeKey], 'id' => $ticketId]);
+    $stmt->execute(['id' => $ticketId]);
 
     return $stmt->rowCount() === 1;
 }
@@ -399,7 +371,7 @@ function queuePriorityWaiting(array $queue, int $staffId): int
 {
     $stmt = getDbConnection()->prepare(
         "SELECT COUNT(*) FROM queue_tickets t LEFT JOIN queue_services s ON s.id = t.service_id
-         WHERE t.queue_id = ? AND t.queue_day = ? AND t.status = 'waiting' AND t.priority_status IN ('claimed', 'verified')
+         WHERE t.queue_id = ? AND t.queue_day = ? AND t.status = 'waiting' AND t.is_priority = 1
            AND (s.staff_id IS NULL OR s.staff_id = ?)"
     );
     $stmt->execute([$queue['id'], queueDayFor($queue), $staffId]);
@@ -428,14 +400,7 @@ function queueNowServing(array $ticket): ?array
 function queueTicketView(array $ticket): array
 {
     $view = queueTicketViewBase($ticket);
-    $note = '';
-    if ($view['live'] && !empty($ticket['priority_label'])) {
-        if ($ticket['priority_status'] === 'claimed') {
-            $note = 'Priority (' . $ticket['priority_label'] . '): please bring a valid ID so the staff can check it.';
-        } elseif ($ticket['priority_status'] === 'verified') {
-            $note = 'Priority (' . $ticket['priority_label'] . ')';
-        }
-    }
+    $note = $view['live'] && !empty($ticket['is_priority']) ? 'Priority' : '';
 
     return $view + ['priority_note' => $note];
 }
@@ -597,7 +562,7 @@ function queueDisplayData(array $queue): array
     $day = queueDayFor($queue);
 
     $stmt = $pdo->prepare(
-        "SELECT code, staff_name, status, priority_status, UNIX_TIMESTAMP(called_at) AS called_at FROM queue_tickets
+        "SELECT code, staff_name, status, is_priority, UNIX_TIMESTAMP(called_at) AS called_at FROM queue_tickets
          WHERE queue_id = ? AND queue_day = ? AND status IN ('called', 'serving') ORDER BY called_at DESC, id DESC"
     );
     $stmt->execute([$queue['id'], $day]);
@@ -609,7 +574,7 @@ function queueDisplayData(array $queue): array
 
     return [
         'office' => $queue['department_name'],
-        'serving' => array_map(fn($t) => ['code' => $t['code'], 'staff' => $t['staff_name'], 'status' => $t['status'], 'priority' => in_array($t['priority_status'], ['claimed', 'verified'], true), 'called_at' => (int) $t['called_at']], $serving),
+        'serving' => array_map(fn($t) => ['code' => $t['code'], 'staff' => $t['staff_name'], 'status' => $t['status'], 'priority' => (bool) $t['is_priority'], 'called_at' => (int) $t['called_at']], $serving),
         'next' => $next,
         'waiting' => queueCounts($queue)['waiting'],
     ];

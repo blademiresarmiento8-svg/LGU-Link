@@ -87,7 +87,7 @@ $pdo->exec(
 
 // phone_key is filled only for event tickets, so the unique key lets a mobile number hold one
 // number per event and the database itself refuses a second. The everyday queue has no such rule.
-// priority_status: 'claimed' = the person ticked priority and staff have not checked yet.
+// is_priority: the person ticked "I need priority" (or staff marked it); staff choose when to call them.
 $pdo->exec(
     "CREATE TABLE IF NOT EXISTS queue_tickets (
        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -110,8 +110,7 @@ $pdo->exec(
        started_at DATETIME NULL,
        finished_at DATETIME NULL,
        phone_key VARCHAR(20) NULL,
-       priority_label VARCHAR(40) NULL,
-       priority_status ENUM('none', 'claimed', 'verified', 'declined') NOT NULL DEFAULT 'none',
+       is_priority TINYINT(1) NOT NULL DEFAULT 0,
        UNIQUE KEY uq_ticket_number (queue_id, queue_day, number),
        UNIQUE KEY uq_ticket_key (access_key),
        UNIQUE KEY uq_event_phone (queue_id, phone_key),
@@ -144,8 +143,7 @@ if ($added) {
 // flags on tickets; the one-live-number-per-phone rule becomes an events-only rule (phone_key).
 $upgrades = [
     ['queues', 'require_mobile', 'ADD COLUMN require_mobile TINYINT(1) NOT NULL DEFAULT 1 AFTER max_tickets'],
-    ['queue_tickets', 'priority_label', 'ADD COLUMN priority_label VARCHAR(40) NULL AFTER staff_name'],
-    ['queue_tickets', 'priority_status', "ADD COLUMN priority_status ENUM('none', 'claimed', 'verified', 'declined') NOT NULL DEFAULT 'none' AFTER priority_label"],
+    ['queue_tickets', 'is_priority', 'ADD COLUMN is_priority TINYINT(1) NOT NULL DEFAULT 0 AFTER staff_name'],
     ['queue_tickets', 'phone_key', 'ADD COLUMN phone_key VARCHAR(20) NULL AFTER mobile'],
 ];
 foreach ($upgrades as [$table, $column, $change]) {
@@ -159,6 +157,15 @@ foreach ($upgrades as [$table, $column, $change]) {
             $pdo->exec('ALTER TABLE queue_tickets ADD UNIQUE KEY uq_event_phone (queue_id, phone_key)');
         }
     }
+}
+// Priority used to have a "verified / not eligible" step; it is now just a flag.
+if ($pdo->query("SHOW COLUMNS FROM queue_tickets LIKE 'priority_status'")->fetch()) {
+    $pdo->exec("UPDATE queue_tickets SET is_priority = 1 WHERE priority_status IN ('claimed', 'verified')");
+    $pdo->exec('ALTER TABLE queue_tickets DROP COLUMN priority_status');
+    echo "priority is now a simple flag\n";
+}
+if ($pdo->query("SHOW COLUMNS FROM queue_tickets LIKE 'priority_label'")->fetch()) {
+    $pdo->exec('ALTER TABLE queue_tickets DROP COLUMN priority_label');
 }
 if ($pdo->query("SHOW INDEX FROM queue_tickets WHERE Key_name = 'uq_one_live_ticket'")->fetch()) {
     $pdo->exec('ALTER TABLE queue_tickets DROP INDEX uq_one_live_ticket');

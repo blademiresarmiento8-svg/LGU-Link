@@ -423,7 +423,7 @@ CREATE TABLE IF NOT EXISTS queue_counters (
 
 -- phone_key is filled only for event tickets, so the unique key lets a mobile number hold one
 -- number per event and the database itself refuses a second. The everyday queue has no such rule.
--- priority_status: 'claimed' = the person ticked priority and staff have not checked yet.
+-- is_priority: the person ticked "I need priority" (or staff marked it); staff choose when to call them.
 CREATE TABLE IF NOT EXISTS queue_tickets (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   queue_id INT UNSIGNED NOT NULL,
@@ -446,8 +446,7 @@ CREATE TABLE IF NOT EXISTS queue_tickets (
   started_at DATETIME NULL,
   finished_at DATETIME NULL,
   phone_key VARCHAR(20) NULL,
-  priority_label VARCHAR(40) NULL,
-  priority_status ENUM('none', 'claimed', 'verified', 'declined') NOT NULL DEFAULT 'none',
+  is_priority TINYINT(1) NOT NULL DEFAULT 0,
   UNIQUE KEY uq_ticket_number (queue_id, queue_day, number),
   UNIQUE KEY uq_ticket_key (access_key),
   UNIQUE KEY uq_event_phone (queue_id, phone_key),

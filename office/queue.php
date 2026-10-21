@@ -34,7 +34,7 @@ unset($_SESSION['queue_assist_keep']);
 $flashDone = [
     'called' => 'Next person called.', 'start' => 'Now serving.', 'done' => 'Finished.', 'skip' => 'Marked as not here.',
     'recall' => 'Called again.', 'cancel' => 'Number cancelled.', 'return' => 'Put back in line.', 'assisted' => 'Number created.',
-    'call_priority' => 'Priority person called.', 'verify_priority' => 'Priority confirmed.', 'decline_priority' => 'Not eligible for priority. Please serve them as usual.', 'mark_priority' => 'Marked as priority.',
+    'call_priority' => 'Priority person called.', 'mark_priority' => 'Marked as priority.', 'clear_priority' => 'Priority removed.',
 ][$_GET['done'] ?? ''] ?? '';
 $flashError = trim((string) ($_GET['error'] ?? ''));
 $made = null;
@@ -56,26 +56,18 @@ $ticketButton = function (int $ticketId, string $action, string $label, string $
         . '<input type="hidden" name="ticket_id" value="' . $ticketId . '"><button type="submit" class="' . $class . '">' . $label . '</button></form>';
 };
 
-/** How a ticket's priority looks: a small tag, with what staff decided. */
+/** The small star tag on a priority ticket. */
 $priorityTag = function (array $t): string {
-    if (empty($t['priority_label']) || $t['priority_status'] === 'none') {
-        return '';
-    }
-    $text = ['claimed' => 'Priority? ', 'verified' => 'Priority: ', 'declined' => 'Not eligible: '][$t['priority_status']] ?? '';
-
-    return ' <span class="queue-pill ' . $t['priority_status'] . '">' . ($t['priority_status'] === 'declined' ? '' : '<i class="fa-solid fa-star"></i> ') . htmlspecialchars($text . $t['priority_label']) . '</span>';
+    return !empty($t['is_priority']) ? ' <span class="queue-pill"><i class="fa-solid fa-star"></i> Priority</span>' : '';
 };
 
-/** Staff who see the person can mark them as priority themselves (counts as verified). */
-$priorityPicker = function (int $ticketId) use ($csrf, $eHidden): string {
-    $options = '';
-    foreach (QUEUE_PRIORITY_TYPES as $key => $label) {
-        $options .= '<option value="' . $key . '">' . htmlspecialchars($label) . '</option>';
-    }
+/** One button that flips a waiting ticket's priority on or off (the staff can see the person). */
+$priorityButton = function (array $t) use ($csrf, $eHidden): string {
+    $on = !empty($t['is_priority']);
 
-    return '<form method="post" action="queue-action.php" class="inline-form queue-mark">'
-        . '<input type="hidden" name="csrf_token" value="' . $csrf . '">' . $eHidden . '<input type="hidden" name="action" value="mark_priority"><input type="hidden" name="ticket_id" value="' . $ticketId . '">'
-        . '<select name="priority" aria-label="Mark as priority">' . $options . '</select><button type="submit" class="btn-action edit"><i class="fa-solid fa-star"></i> Priority</button></form>';
+    return '<form method="post" action="queue-action.php" class="inline-form">'
+        . '<input type="hidden" name="csrf_token" value="' . $csrf . '">' . $eHidden . '<input type="hidden" name="action" value="' . ($on ? 'clear_priority' : 'mark_priority') . '"><input type="hidden" name="ticket_id" value="' . (int) $t['id'] . '">'
+        . '<button type="submit" class="btn-action edit"' . ($on ? ' title="Take priority off"><i class="fa-regular fa-star"></i> Not priority' : ' title="Mark as priority"><i class="fa-solid fa-star"></i> Priority') . '</button></form>';
 };
 ?>
 <!DOCTYPE html>
@@ -166,15 +158,7 @@ $priorityPicker = function (int $ticketId) use ($csrf, $eHidden): string {
               <div class="ticket-label">You are <?= $current['status'] === 'serving' ? 'serving' : 'calling' ?></div>
               <div class="queue-now-number"><?= htmlspecialchars($current['code']) ?></div>
               <div class="queue-now-who"><?= htmlspecialchars($current['full_name']) ?></div>
-              <?php if ($current['priority_status'] === 'claimed'): ?>
-                <div class="queue-priority-card">
-                  <p><i class="fa-solid fa-star"></i> Says priority: <?= htmlspecialchars($current['priority_label']) ?> - please check their ID.</p>
-                  <div class="queue-now-actions">
-                    <?= $ticketButton((int) $current['id'], 'verify_priority', '<i class="fa-solid fa-circle-check"></i> Verified', 'btn-action approve') ?>
-                    <?= $ticketButton((int) $current['id'], 'decline_priority', '<i class="fa-solid fa-circle-xmark"></i> Not eligible', 'btn-action reject', 'Mark as not eligible for priority? They will still be served.') ?>
-                  </div>
-                </div>
-              <?php elseif ($current['priority_status'] === 'verified'): ?>
+              <?php if (!empty($current['is_priority'])): ?>
                 <div class="queue-now-meta"><?= trim($priorityTag($current)) ?></div>
               <?php endif; ?>
               <div class="queue-now-meta"><?= $isEvent ? '' : htmlspecialchars($current['service_name']) ?><?= $current['mobile'] ? ($isEvent ? '' : ' &middot; ') . htmlspecialchars($current['mobile']) : '' ?></div>
@@ -241,15 +225,10 @@ $priorityPicker = function (int $ticketId) use ($csrf, $eHidden): string {
                 <label for="aMobile">Mobile number <span class="row-note">- optional</span></label>
                 <input type="tel" name="mobile" id="aMobile" maxlength="20" inputmode="numeric" placeholder="09123456789" autocomplete="off" value="<?= htmlspecialchars($keep['mobile']) ?>">
               </div>
-              <div class="form-group">
-                <label for="aPriority">Priority <span class="row-note">- only if you checked their ID</span></label>
-                <select name="priority" id="aPriority">
-                  <option value="">Not priority</option>
-                  <?php foreach (QUEUE_PRIORITY_TYPES as $key => $label): ?>
-                    <option value="<?= $key ?>"><?= htmlspecialchars($label) ?></option>
-                  <?php endforeach; ?>
-                </select>
-              </div>
+              <label class="news-form-check queue-assist-priority">
+                <input type="checkbox" name="priority" value="1">
+                <span>Priority</span>
+              </label>
               <button type="submit" class="btn-modal btn-submit"><i class="fa-solid fa-ticket"></i> Give a number</button>
             </form>
           </section>
@@ -272,12 +251,7 @@ $priorityPicker = function (int $ticketId) use ($csrf, $eHidden): string {
                         <?php if (!$isEvent): ?><td><?= htmlspecialchars($t['service_name']) ?><?= $t['routed_to'] ? '<br><span class="row-note">for ' . htmlspecialchars($t['routed_to']) . '</span>' : '' ?></td><?php endif; ?>
                         <td><?= $waitingSince($t['created_at']) ?></td>
                         <td class="queue-row-actions">
-                          <?php if ($t['priority_status'] === 'claimed'): ?>
-                            <?= $ticketButton((int) $t['id'], 'verify_priority', 'Verified', 'btn-action approve') ?>
-                            <?= $ticketButton((int) $t['id'], 'decline_priority', 'Not eligible', 'btn-action reject', 'Mark as not eligible for priority? They stay in line in their normal place.') ?>
-                          <?php elseif ($t['priority_status'] !== 'verified'): ?>
-                            <?= $priorityPicker((int) $t['id']) ?>
-                          <?php endif; ?>
+                          <?= $priorityButton($t) ?>
                           <?= $ticketButton((int) $t['id'], 'cancel', 'Remove', 'btn-action reject', 'Remove this number from the line?') ?>
                         </td>
                       </tr>

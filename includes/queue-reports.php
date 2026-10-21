@@ -53,8 +53,9 @@ function queueReport(int $queueId, string $from, string $to): array
     $totals = $run(
         "SELECT COUNT(*) AS issued, COALESCE(SUM(status = 'done'), 0) AS done, COALESCE(SUM(status = 'skipped'), 0) AS skipped,
                 COALESCE(SUM(status = 'cancelled'), 0) AS cancelled, COALESCE(SUM(source = 'staff'), 0) AS assisted,
-                COALESCE(SUM(priority_status <> 'none'), 0) AS priority_total, COALESCE(SUM(priority_status = 'verified'), 0) AS priority_verified,
-                COALESCE(SUM(priority_status = 'declined'), 0) AS priority_declined, COALESCE(SUM(priority_status = 'claimed'), 0) AS priority_open,
+                COALESCE(SUM(is_priority), 0) AS priority_total,
+                AVG(CASE WHEN is_priority = 1 AND called_at IS NOT NULL THEN TIMESTAMPDIFF(SECOND, created_at, called_at) END) AS wait_priority,
+                AVG(CASE WHEN is_priority = 0 AND called_at IS NOT NULL THEN TIMESTAMPDIFF(SECOND, created_at, called_at) END) AS wait_regular,
                 $wait AS avg_wait, $serve AS avg_service
          FROM queue_tickets WHERE $range"
     )[0];

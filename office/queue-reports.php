@@ -95,9 +95,8 @@ $hourLabel = fn(int $h) => date('g A', strtotime(sprintf('%02d:00', $h)));
         </p>
         <?php if ((int) $t['priority_total'] > 0): ?>
           <p class="row-note queue-report-note">
-            <i class="fa-solid fa-star queue-star"></i> Priority: <?= (int) $t['priority_total'] ?> in all &middot; <?= (int) $t['priority_verified'] ?> verified
-            &middot; <?= (int) $t['priority_declined'] ?> not eligible (<?= round(100 * (int) $t['priority_declined'] / max(1, (int) $t['priority_verified'] + (int) $t['priority_declined'])) ?>% of those checked)
-            <?= (int) $t['priority_open'] ? ' &middot; ' . (int) $t['priority_open'] . ' not checked yet' : '' ?>
+            <i class="fa-solid fa-star queue-star"></i> Priority: <?= (int) $t['priority_total'] ?> of <?= (int) $t['issued'] ?> numbers (<?= round(100 * (int) $t['priority_total'] / max(1, (int) $t['issued'])) ?>%)
+            &middot; average wait: priority <?= queueDuration($t['wait_priority'] !== null ? (float) $t['wait_priority'] : null) ?>, others <?= queueDuration($t['wait_regular'] !== null ? (float) $t['wait_regular'] : null) ?>
           </p>
         <?php endif; ?>
 
