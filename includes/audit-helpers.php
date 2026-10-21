@@ -9,7 +9,8 @@ require_once __DIR__ . '/../config/database.php';
 
 function logAudit(string $action, ?int $targetUserId, ?string $targetName, ?string $details = null): void
 {
-    $actor = currentUser();
+    // Pages always load includes/auth.php first; scripts run without a login simply log as "System".
+    $actor = function_exists('currentUser') ? currentUser() : null;
 
     getDbConnection()->prepare(
         'INSERT INTO audit_log (actor_user_id, actor_name, action, target_user_id, target_name, details)

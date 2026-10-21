@@ -11,6 +11,7 @@ $activePage = $activePage ?? '';
 
 $navItems = [
     'home'    => ['label' => 'Home',              'icon' => 'fa-house', 'href' => '/LGU-Link/index.php'],
+    'news'    => ['label' => 'News',               'icon' => 'fa-newspaper', 'href' => '/LGU-Link/news.php'],
     'charter' => ['label' => "Citizen's Charter",  'icon' => 'fa-book',  'href' => '/LGU-Link/user/citizens-charter.php'],
 ];
 ?>
@@ -34,8 +35,12 @@ $navItems = [
     </nav>
 
     <div class="header-user">
-      <a href="/LGU-Link/auth/login.php" class="public-login-link"><i class="fa-solid fa-right-to-bracket"></i><span>Login</span></a>
-      <a href="/LGU-Link/auth/register.php" class="public-register-link"><span>Register</span></a>
+      <?php if (function_exists('isLoggedIn') && isLoggedIn()): ?>
+        <a href="<?= htmlspecialchars(dashboardUrlFor($_SESSION['role'])) ?>" class="public-login-link"><i class="fa-solid fa-gauge"></i><span>Back to my dashboard</span></a>
+      <?php else: ?>
+        <a href="/LGU-Link/auth/login.php" class="public-login-link"><i class="fa-solid fa-right-to-bracket"></i><span>Login</span></a>
+        <a href="/LGU-Link/auth/register.php" class="public-register-link"><span>Register</span></a>
+      <?php endif; ?>
     </div>
 
     <button type="button" class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mainNav">

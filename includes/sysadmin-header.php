@@ -13,10 +13,13 @@ $navItems = [
     'departments'       => ['label' => 'Departments',        'icon' => 'fa-building-columns', 'href' => 'departments.php'],
     'office-accounts'   => ['label' => 'Office Accounts',    'icon' => 'fa-building-user',   'href' => 'office-accounts.php'],
     'schedule'          => ['label' => 'Work Schedule',      'icon' => 'fa-calendar-days',   'href' => 'work-schedule.php'],
+    'news-options' => ['label' => 'News Options',     'icon' => 'fa-tags',            'href' => 'news-options.php'],
+    'queue-offices' => ['label' => 'Queue',            'icon' => 'fa-list-ol',         'href' => 'queue-offices.php'],
+    'demo-data'     => ['label' => 'Synthetic Data',   'icon' => 'fa-database',        'href' => 'demo-data.php'],
     'audit-log'         => ['label' => 'Activity Log',       'icon' => 'fa-clipboard-list',  'href' => 'audit-log.php'],
 ];
 ?>
-  <header class="top-header">
+  <header class="top-header nav-many">
     <div class="header-logo">
       <i class="fa-solid fa-landmark"></i>
       <span>LGU Norzagaray Portal</span>

@@ -14,9 +14,19 @@ date_default_timezone_set('Asia/Manila');
 const SESSION_TIMEOUT_CITIZEN = 30000;
 const SESSION_TIMEOUT_STAFF = 36000;
 
+/** Queue staff watch the line all shift without clicking much, so the queue pages allow a longer idle time. */
+const SESSION_TIMEOUT_QUEUE_STAFF = 28800;
+
 function sessionTimeoutFor(?string $role): int
 {
-    return $role === 'user' ? SESSION_TIMEOUT_CITIZEN : SESSION_TIMEOUT_STAFF;
+    if ($role === 'user') {
+        return SESSION_TIMEOUT_CITIZEN;
+    }
+    if ($role === 'office' && str_starts_with(basename($_SERVER['SCRIPT_NAME'] ?? ''), 'queue')) {
+        return max(SESSION_TIMEOUT_STAFF, SESSION_TIMEOUT_QUEUE_STAFF);
+    }
+
+    return SESSION_TIMEOUT_STAFF;
 }
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -34,7 +44,16 @@ if (session_status() === PHP_SESSION_NONE) {
     if (is_dir($sessionDir) && is_writable($sessionDir)) {
         session_save_path($sessionDir);
     }
-    ini_set('session.gc_maxlifetime', (string) (SESSION_TIMEOUT_STAFF * 2));
+    // The session cookie is hidden from scripts, is not sent along with requests from other sites,
+    // and (on https) is never sent over plain http.
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+    session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'secure' => $https, 'httponly' => true, 'samesite' => 'Lax']);
+    ini_set('session.use_strict_mode', '1');
+    ini_set('expose_php', '0');
+    // Error details are shown on a developer's own machine only, never to visitors of a live site.
+    ini_set('display_errors', in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost', '127.0.0.1', '::1'], true) ? '1' : '0');
+    ini_set('log_errors', '1');
+    ini_set('session.gc_maxlifetime', (string) (max(SESSION_TIMEOUT_STAFF, SESSION_TIMEOUT_QUEUE_STAFF) * 2));
     session_start();
 }
 

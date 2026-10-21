@@ -12,7 +12,14 @@ $officeUser = currentUser();
 $navItems = [
     'dashboard' => ['label' => 'Dashboard', 'icon' => 'fa-chart-pie', 'href' => 'dashboard.php'],
     'meetings'  => ['label' => 'Meetings',  'icon' => 'fa-people-group', 'href' => 'meetings.php'],
+    'news'      => ['label' => 'News',      'icon' => 'fa-newspaper',    'href' => 'news.php'],
+    'analytics' => ['label' => 'Analytics', 'icon' => 'fa-chart-line',   'href' => 'analytics.php'],
 ];
+// Offices that use the QR queue get a page for it.
+require_once __DIR__ . '/queue-helpers.php';
+if (departmentUsesQueue($officeUser['department_id'] ?? null)) {
+    $navItems['queue'] = ['label' => 'Queue', 'icon' => 'fa-qrcode', 'href' => 'queue.php'];
+}
 ?>
   <header class="top-header">
     <div class="header-logo">

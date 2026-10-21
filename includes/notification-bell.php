@@ -30,6 +30,6 @@ $bellUser = currentUser();
         </div>
       </div>
       <?php if (PUSHER_CONFIGURED): ?>
-        <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+        <script src="https://js.pusher.com/8.4.0/pusher.min.js" integrity="sha384-F0kpynobTwTZnUdhUu3W6P6QcdLW2hKKDTh6ECx+p/osH1JYIKlYqUjNc4ObdiTj" crossorigin="anonymous"></script>
       <?php endif; ?>
       <script src="/LGU-Link/assets/js/notifications.js" defer></script>

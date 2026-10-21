@@ -105,8 +105,11 @@
 }
 
 @media(max-width: 1024px) {
-  .charts-grid, .charts-grid-equal { grid-template-columns: 1fr; }
+  .charts-grid, .charts-grid-equal { grid-template-columns: minmax(0, 1fr); }
 }
+.chart-card { min-width: 0; }
+.chart-card canvas { max-width: 100%; }
+@media(max-width: 520px) { .chart-card { padding: 16px; } }
 
 @media print {
   .top-header, .lgu-branding-bar, .header-actions, .filter-panel { display: none !important; }

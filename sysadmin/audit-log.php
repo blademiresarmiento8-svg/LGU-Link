@@ -17,6 +17,14 @@ $actionLabels = [
     'schedule_updated' => 'Working schedule updated',
     'holiday_added' => 'Holiday added',
     'holidays_synced' => 'Holidays synced',
+    'news_options_changed' => 'News options changed',
+    'queue_qr_renewed' => 'Queue QR code renewed',
+    'queue_event_created' => 'Queue event created',
+    'demo_data_changed' => 'Synthetic data loaded or removed',
+    'analytics_targets_changed' => 'Analytics targets changed',
+    'queue_event_changed' => 'Queue event changed',
+    'queue_settings_changed' => 'Queue settings changed',
+    'queue_office_changed' => 'Queue turned on or off for an office',
     'holiday_deleted' => 'Holiday removed',
 ];
 ?>
@@ -27,7 +35,7 @@ $actionLabels = [
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Activity Log - LGU Norzagaray System Admin</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha384-/o6I2CkkWC//PSjvWC/eYN7l3xM3tJm8ZzVkCOfp//W05QcE3mlGskpoHB6XqI+B" crossorigin="anonymous">
   <link rel="stylesheet" href="/LGU-Link/assets/css/style.css">
 </head>
 

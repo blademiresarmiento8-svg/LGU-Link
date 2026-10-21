@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/rate-limit.php';
 
 if (isLoggedIn()) {
     header('Location: ' . dashboardUrlFor($_SESSION['role']));
@@ -17,8 +18,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $oldEmail = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
 
+        // Wrong passwords are counted per account+device and per device; too many in 15 minutes locks them out for the rest of it.
+        $ip = clientIp();
+        $mailKey = 'login:' . $ip . ':' . strtolower($oldEmail);
+        $ipKey = 'login-ip:' . $ip;
         if ($oldEmail === '' || $password === '') {
             $error = 'Please enter both email and password.';
+        } elseif (rateLimitBlocked($mailKey, 5, 900) || rateLimitBlocked($ipKey, 30, 900)) {
+            $error = 'Too many failed attempts. Please wait 15 minutes and try again.';
         } else {
             $stmt = getDbConnection()->prepare(
                 'SELECT users.id, users.full_name, users.email, users.password, users.role,
@@ -33,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($user && password_verify($password, $user['password']) && $user['status'] === 'suspended') {
                 $error = 'This account has been suspended. Please contact the system administrator.';
             } elseif ($user && password_verify($password, $user['password'])) {
+                rateLimitReset($mailKey);
                 session_regenerate_id(true);
                 $_SESSION['user_id']         = $user['id'];
                 $_SESSION['full_name']       = $user['full_name'];
@@ -47,6 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($error === '') {
+                rateLimitAllow($mailKey, 5, 900);
+                rateLimitAllow($ipKey, 30, 900);
+                rateLimitCleanup();
                 $error = 'Invalid email or password.';
             }
         }
@@ -69,7 +80,7 @@ if ($error === '' && isset($_GET['expired'])) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In - LGU Norzagaray Portal</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha384-/o6I2CkkWC//PSjvWC/eYN7l3xM3tJm8ZzVkCOfp//W05QcE3mlGskpoHB6XqI+B" crossorigin="anonymous">
   <link rel="stylesheet" href="/LGU-Link/assets/css/style.css">
   <link rel="stylesheet" href="/LGU-Link/assets/css/auth.css">
 </head>

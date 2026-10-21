@@ -4,6 +4,7 @@
  * assets/js/chatbot.js, and user/chatbot-api.php.
  */
 ?>
+  <meta name="csrf-token" content="<?= htmlspecialchars(csrfToken()) ?>">
   <div class="chatbot-widget">
     <div class="chatbot-panel" id="chatbotPanel">
       <div class="chatbot-panel-header">

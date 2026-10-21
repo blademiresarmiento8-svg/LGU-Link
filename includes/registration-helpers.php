@@ -14,6 +14,7 @@ require_once __DIR__ . '/../config/mail.php';
 require_once __DIR__ . '/mailer.php';
 require_once __DIR__ . '/deferred.php';
 require_once __DIR__ . '/password-rules.php';
+require_once __DIR__ . '/organization-fields.php';
 
 const OTP_VALID_MINUTES = 10;
 const OTP_MAX_WRONG_GUESSES = 5;
@@ -160,7 +161,7 @@ function normalizePhilippineMobile(string $mobile): ?string
 /**
  * Validates the details form.
  *
- * @return array{errors: string[], data: array<string, string>}
+ * @return array{errors: string[], data: array<string, ?string>}
  */
 function validateRegistrationDetails(array $input, string $email): array
 {
@@ -205,11 +206,14 @@ function validateRegistrationDetails(array $input, string $email): array
         $errors[] = 'Please agree to the Privacy Notice to create an account.';
     }
 
+    $organization = validateOrganizationFields($input);
+    $errors = array_merge($errors, $organization['errors']);
+
     $fullName = trim(implode(' ', array_filter([$first, $middle, $last, $suffix], fn($v) => $v !== '')));
 
     return [
         'errors' => $errors,
-        'data' => ['first' => $first, 'middle' => $middle, 'last' => $last, 'suffix' => $suffix, 'mobile' => (string) $mobile, 'full_name' => $fullName, 'password' => $password],
+        'data' => ['first' => $first, 'middle' => $middle, 'last' => $last, 'suffix' => $suffix, 'mobile' => (string) $mobile, 'full_name' => $fullName, 'password' => $password, 'organization' => $organization['organization'], 'position_title' => $organization['position_title']],
     ];
 }
 
@@ -229,8 +233,8 @@ function createCitizenAccount(string $email, array $data): array
 
     try {
         $pdo->prepare(
-            "INSERT INTO users (full_name, first_name, middle_name, last_name, suffix, mobile, email, password, privacy_consent_at, role)
-             VALUES (:full_name, :first, :middle, :last, :suffix, :mobile, :email, :password, NOW(), 'user')"
+            "INSERT INTO users (full_name, first_name, middle_name, last_name, suffix, mobile, organization, position_title, email, password, privacy_consent_at, role)
+             VALUES (:full_name, :first, :middle, :last, :suffix, :mobile, :organization, :position_title, :email, :password, NOW(), 'user')"
         )->execute([
             'full_name' => $data['full_name'],
             'first' => $data['first'],
@@ -238,6 +242,8 @@ function createCitizenAccount(string $email, array $data): array
             'last' => $data['last'],
             'suffix' => $data['suffix'] === '' ? null : $data['suffix'],
             'mobile' => $data['mobile'],
+            'organization' => $data['organization'],
+            'position_title' => $data['position_title'],
             'email' => $email,
             'password' => password_hash($data['password'], PASSWORD_DEFAULT),
         ]);

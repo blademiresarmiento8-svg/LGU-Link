@@ -5,8 +5,7 @@
 
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('admin');
-require_once __DIR__ . '/../includes/news-helpers.php';
-require_once __DIR__ . '/../includes/news-admin.php';
+require_once __DIR__ . '/../includes/news-workflow.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verifyCsrfToken($_POST['csrf_token'] ?? null)) {
     header('Location: news.php?error=' . urlencode('Invalid or expired request. Please try again.'));
@@ -14,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verifyCsrfToken($_POST['csrf_token
 }
 
 $id = (int) ($_POST['id'] ?? 0);
-$deleted = $id > 0 && deleteNewsPost($id);
+$deleted = $id > 0 && adminDeleteLiveNewsPost($id);
 
 if ($deleted) {
     header('Location: news.php?deleted=1');

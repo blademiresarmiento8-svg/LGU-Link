@@ -21,7 +21,14 @@ $activePage = 'home';
 require_once __DIR__ . '/includes/news-helpers.php';
 
 $carouselPosts = getFeaturedNewsPosts();
-$allPosts = getAllNewsPosts();
+// One section per post type, in the order the system admin set, each with its own number of posts.
+$homeSections = [];
+foreach (getNewsTypes() as $slug => $type) {
+    $sectionPosts = getLatestNewsByType($slug, max(1, (int) $type['home_limit']));
+    if (!empty($sectionPosts)) {
+        $homeSections[] = ['slug' => $slug, 'type' => $type, 'posts' => $sectionPosts];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -30,9 +37,10 @@ $allPosts = getAllNewsPosts();
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LGU Norzagaray - Home</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha384-/o6I2CkkWC//PSjvWC/eYN7l3xM3tJm8ZzVkCOfp//W05QcE3mlGskpoHB6XqI+B" crossorigin="anonymous">
   <link rel="stylesheet" href="/LGU-Link/assets/css/style.css">
   <link rel="stylesheet" href="/LGU-Link/assets/css/public-home.css">
+  <link rel="stylesheet" href="/LGU-Link/assets/css/news.css">
   <?php if ($loggedInCitizen): ?>
     <link rel="stylesheet" href="/LGU-Link/assets/css/chatbot.css?v=<?= filemtime(__DIR__ . '/assets/css/chatbot.css') ?>">
   <?php endif; ?>
@@ -50,7 +58,8 @@ $allPosts = getAllNewsPosts();
           <div class="carousel-slide <?= $index === 0 ? 'active' : '' ?>" style="background-image: url('/LGU-Link/<?= htmlspecialchars($post['image']) ?>');">
             <div class="carousel-caption">
               <span class="badge <?= getNewsCategoryBadgeClass($post['category']) ?>"><?= htmlspecialchars($post['category']) ?></span>
-              <h2><?= htmlspecialchars($post['title']) ?></h2>
+              <h2><a href="/LGU-Link/news-post.php?id=<?= (int) $post['id'] ?>" style="color: inherit; text-decoration: none;"><?= htmlspecialchars($post['title']) ?></a></h2>
+              <span class="carousel-poster"><i class="fa-solid fa-building-columns"></i> <?= htmlspecialchars(newsPosterName($post)) ?></span>
             </div>
           </div>
         <?php endforeach; ?>
@@ -68,38 +77,40 @@ $allPosts = getAllNewsPosts();
       </section>
     <?php endif; ?>
 
-    <section class="public-news-section">
-      <div class="page-title-row">
-        <div>
-          <h1>Latest News & Announcements</h1>
-          <p>Updates, advisories, and announcements from the Municipality of Norzagaray.</p>
+    <?php if (empty($homeSections)): ?>
+      <section class="public-news-section">
+        <div class="page-title-row">
+          <div>
+            <h1>News & Announcements</h1>
+            <p>Updates, advisories, and announcements from the Municipality of Norzagaray.</p>
+          </div>
         </div>
-      </div>
-
-      <?php if (empty($allPosts)): ?>
         <div class="panel charter-empty-state">
           <i class="fa-solid fa-newspaper"></i>
           <h3>No news posted yet</h3>
           <p>Check back soon for updates from the municipality.</p>
         </div>
-      <?php else: ?>
-        <div class="public-news-grid">
-          <?php foreach ($allPosts as $post): ?>
-            <article class="public-news-card">
-              <div class="public-news-thumb" style="background-image: url('/LGU-Link/<?= htmlspecialchars($post['image']) ?>');"></div>
-              <div class="public-news-body">
-                <div class="public-news-meta">
-                  <span class="badge <?= getNewsCategoryBadgeClass($post['category']) ?>"><?= htmlspecialchars($post['category']) ?></span>
-                  <span class="row-note"><?= htmlspecialchars(date('M j, Y', strtotime($post['published_at']))) ?></span>
-                </div>
-                <h3><?= htmlspecialchars($post['title']) ?></h3>
-                <p><?= nl2br(htmlspecialchars($post['description'])) ?></p>
-              </div>
-            </article>
-          <?php endforeach; ?>
-        </div>
-      <?php endif; ?>
-    </section>
+      </section>
+    <?php else: ?>
+      <?php foreach ($homeSections as $section): ?>
+        <section class="public-news-section">
+          <div class="news-section-title">
+            <div>
+              <h2><i class="fa-solid <?= htmlspecialchars(newsTypeIcon($section['slug'])) ?>"></i> <?= htmlspecialchars($section['type']['label']) ?></h2>
+              <?php if (!empty($section['type']['description'])): ?><p class="row-note"><?= htmlspecialchars($section['type']['description']) ?></p><?php endif; ?>
+            </div>
+            <a href="/LGU-Link/news.php?type=<?= urlencode($section['slug']) ?>">See all &rarr;</a>
+          </div>
+          <div class="public-news-grid">
+            <?php foreach ($section['posts'] as $card): ?>
+              <article><?php require __DIR__ . '/includes/news-card.php'; ?></article>
+            <?php endforeach; ?>
+          </div>
+        </section>
+      <?php endforeach; ?>
+
+      <p style="text-align: center; margin: 8px 0 30px;"><a class="btn-primary" href="/LGU-Link/news.php">Browse all news and announcements</a></p>
+    <?php endif; ?>
 
   </main>
 

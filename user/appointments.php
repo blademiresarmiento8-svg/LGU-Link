@@ -6,10 +6,13 @@ require_once __DIR__ . '/../includes/appointment-helpers.php';
 $activePage = 'appointments';
 $citizen = currentUser();
 
-// The mobile number saved at sign-up prefills the request form (older accounts may not have one).
-$mobileStmt = getDbConnection()->prepare('SELECT mobile FROM users WHERE id = ?');
-$mobileStmt->execute([$citizen['id']]);
-$savedMobile = (string) $mobileStmt->fetchColumn();
+// The mobile number, organization and position saved at sign-up prefill the request form (older accounts may not have one).
+$profileStmt = getDbConnection()->prepare('SELECT mobile, organization, position_title FROM users WHERE id = ?');
+$profileStmt->execute([$citizen['id']]);
+$profile = $profileStmt->fetch() ?: [];
+$savedMobile = (string) ($profile['mobile'] ?? '');
+$savedOrganization = (string) ($profile['organization'] ?? '');
+$savedPosition = (string) ($profile['position_title'] ?? '');
 
 $appointments = getAppointmentsForUser((int) $citizen['id']);
 
@@ -24,7 +27,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Appointments - LGU Norzagaray Portal</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha384-/o6I2CkkWC//PSjvWC/eYN7l3xM3tJm8ZzVkCOfp//W05QcE3mlGskpoHB6XqI+B" crossorigin="anonymous">
   <link rel="stylesheet" href="/LGU-Link/assets/css/style.css">
   <link rel="stylesheet" href="/LGU-Link/assets/css/user-appointments.css">
   <link rel="stylesheet" href="/LGU-Link/assets/css/chatbot.css?v=<?= filemtime(__DIR__ . '/../assets/css/chatbot.css') ?>">
@@ -85,10 +88,13 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
               }
 
               $apptJson = json_encode([
+                  'id' => $appt['id'],
                   'title' => $appt['title'],
                   'category' => $appt['category'],
                   'description' => $appt['description'],
                   'contact_number' => $appt['contact_number'],
+                  'organization' => $appt['organization'],
+                  'position_title' => $appt['position_title'],
                   'email' => $appt['email'],
                   'preferred_date' => $appt['preferred_date'],
                   'preferred_time' => $appt['preferred_time'],
@@ -168,6 +174,16 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
         <div class="form-group">
           <label>Email Address <span class="row-note">— we'll notify you here; change it if you'd like updates elsewhere</span></label>
           <input type="email" name="email" value="<?= htmlspecialchars($citizen['email']) ?>" required>
+        </div>
+
+        <div class="form-group">
+          <label>Organization <span class="row-note">— optional, if you are making this request for a company, agency or group</span></label>
+          <input type="text" name="organization" maxlength="100" placeholder="e.g. ABC Trading, DPWH, a barangay association" value="<?= htmlspecialchars($savedOrganization) ?>">
+        </div>
+
+        <div class="form-group">
+          <label>Position <span class="row-note">— optional</span></label>
+          <input type="text" name="position_title" maxlength="100" placeholder="Your role in that organization" value="<?= htmlspecialchars($savedPosition) ?>">
         </div>
 
         <div class="form-group">

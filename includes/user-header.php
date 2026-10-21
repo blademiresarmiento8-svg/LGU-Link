@@ -13,6 +13,7 @@ $citizen = currentUser();
 $navItems = [
     'home'         => ['label' => 'Home',              'icon' => 'fa-house',          'href' => '/LGU-Link/index.php'],
     'dashboard'    => ['label' => 'Dashboard',          'icon' => 'fa-gauge',          'href' => '/LGU-Link/user/dashboard.php'],
+    'news'         => ['label' => 'News',               'icon' => 'fa-newspaper',      'href' => '/LGU-Link/news.php'],
     'charter'      => ['label' => "Citizen's Charter",  'icon' => 'fa-book',           'href' => '/LGU-Link/user/citizens-charter.php'],
     'appointments' => ['label' => 'My Appointments',    'icon' => 'fa-calendar-check', 'href' => '/LGU-Link/user/appointments.php'],
 ];

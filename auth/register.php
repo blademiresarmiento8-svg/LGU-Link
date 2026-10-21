@@ -25,7 +25,7 @@ $notice = (string) ($_SESSION['reg_notice'] ?? '');
 unset($_SESSION['reg_notice']);
 
 $error = '';
-$old = ['email' => (string) $reg['email'], 'first_name' => '', 'middle_name' => '', 'last_name' => '', 'suffix' => '', 'mobile' => ''];
+$old = ['email' => (string) $reg['email'], 'first_name' => '', 'middle_name' => '', 'last_name' => '', 'suffix' => '', 'mobile' => '', 'organization' => '', 'position_title' => ''];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string) ($_POST['action'] ?? '');
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $error = $result['error'];
     } elseif ($action === 'create_account' && $reg['email'] !== '' && !empty($reg['verified'])) {
-        foreach (['first_name', 'middle_name', 'last_name', 'suffix', 'mobile'] as $field) {
+        foreach (['first_name', 'middle_name', 'last_name', 'suffix', 'mobile', 'organization', 'position_title'] as $field) {
             $old[$field] = trim((string) ($_POST[$field] ?? ''));
         }
         $checked = validateRegistrationDetails($_POST, (string) $reg['email']);
@@ -105,7 +105,7 @@ $resendWait = $step === 2 ? secondsUntilResend((string) $reg['email']) : 0;
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create Account - LGU Norzagaray Portal</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha384-/o6I2CkkWC//PSjvWC/eYN7l3xM3tJm8ZzVkCOfp//W05QcE3mlGskpoHB6XqI+B" crossorigin="anonymous">
   <link rel="stylesheet" href="/LGU-Link/assets/css/style.css">
   <link rel="stylesheet" href="/LGU-Link/assets/css/auth.css">
 </head>
@@ -253,6 +253,17 @@ $resendWait = $step === 2 ? secondsUntilResend((string) $reg['email']) : 0;
             <div class="form-group">
               <label for="mobile">Mobile Number</label>
               <input type="tel" id="mobile" name="mobile" required inputmode="tel" autocomplete="tel" placeholder="09123456789" value="<?= htmlspecialchars($old['mobile']) ?>">
+            </div>
+
+            <div class="auth-row">
+              <div class="form-group">
+                <label for="organization">Organization <span class="row-note">(optional)</span></label>
+                <input type="text" id="organization" name="organization" maxlength="100" autocomplete="organization" placeholder="Company, agency or group" value="<?= htmlspecialchars($old['organization']) ?>">
+              </div>
+              <div class="form-group">
+                <label for="position_title">Position <span class="row-note">(optional)</span></label>
+                <input type="text" id="position_title" name="position_title" maxlength="100" autocomplete="organization-title" placeholder="Your role there" value="<?= htmlspecialchars($old['position_title']) ?>">
+              </div>
             </div>
 
             <div class="form-group">

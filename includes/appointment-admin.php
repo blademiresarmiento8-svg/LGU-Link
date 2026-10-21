@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/schedule-helpers.php';
+require_once __DIR__ . '/organization-fields.php';
 
 /**
  * Write operations for the appointments table. Requires
@@ -62,6 +63,9 @@ function insertAppointment(int $userId, array $data, array $file): array
         }
     }
 
+    $organization = validateOrganizationFields($data);
+    $errors = array_merge($errors, $organization['errors']);
+
     // A preferred date/time is optional, but when given it must be bookable.
     if ($preferredDate !== '' || $preferredTime !== '') {
         $errors = array_merge($errors, validateBookingDateTime($preferredDate, $preferredTime));
@@ -85,10 +89,10 @@ function insertAppointment(int $userId, array $data, array $file): array
     $stmt = $pdo->prepare(
         'INSERT INTO appointments (
             user_id, category, title, description, attachment_path, attachment_original_name,
-            contact_number, email, preferred_date, preferred_time
+            contact_number, email, organization, position_title, preferred_date, preferred_time
         ) VALUES (
             :user_id, :category, :title, :description, :attachment_path, :attachment_original_name,
-            :contact_number, :email, :preferred_date, :preferred_time
+            :contact_number, :email, :organization, :position_title, :preferred_date, :preferred_time
         )'
     );
     $stmt->execute([
@@ -100,6 +104,8 @@ function insertAppointment(int $userId, array $data, array $file): array
         'attachment_original_name' => $upload['path'] !== null ? ($file['name'] ?? null) : null,
         'contact_number' => $contactNumber,
         'email' => $email,
+        'organization' => $organization['organization'],
+        'position_title' => $organization['position_title'],
         'preferred_date' => $preferredDate !== '' ? $preferredDate : null,
         'preferred_time' => $preferredTime !== '' ? $preferredTime : null,
     ]);
@@ -147,7 +153,7 @@ function forwardAppointmentToDepartment(int $appointmentId, int $departmentId, s
     $pdo = getDbConnection();
     $stmt = $pdo->prepare(
         "UPDATE appointments
-         SET status = 'forwarded', department_id = :department_id, admin_notes = :admin_notes, reviewed_by = :reviewer
+         SET status = 'forwarded', department_id = :department_id, admin_notes = :admin_notes, reviewed_by = :reviewer, reviewed_at = NOW()
          WHERE id = :id AND status = 'pending_review'"
     );
     $stmt->execute([
@@ -180,7 +186,7 @@ function rejectAppointment(int $appointmentId, string $reason, int $reviewerUser
     $pdo = getDbConnection();
     $stmt = $pdo->prepare(
         "UPDATE appointments
-         SET status = 'rejected', rejection_reason = :reason, reviewed_by = :reviewer
+         SET status = 'rejected', rejection_reason = :reason, reviewed_by = :reviewer, reviewed_at = NOW()
          WHERE id = :id AND status = 'pending_review'"
     );
     $stmt->execute([
@@ -241,7 +247,7 @@ function scheduleAppointment(int $appointmentId, int $departmentId, string $sche
     $stmt = $pdo->prepare(
         "UPDATE appointments
          SET status = 'scheduled', scheduled_date = :scheduled_date, scheduled_time = :scheduled_time,
-             admin_notes = :admin_notes, scheduled_by = :scheduled_by
+             admin_notes = :admin_notes, scheduled_by = :scheduled_by, scheduled_at = NOW()
          WHERE id = :id AND department_id = :department_id AND status = 'forwarded'"
     );
     $stmt->execute([
@@ -269,7 +275,7 @@ function markAppointmentCompleted(int $appointmentId, int $departmentId): bool
     $pdo = getDbConnection();
     $stmt = $pdo->prepare(
         "UPDATE appointments
-         SET status = 'completed'
+         SET status = 'completed', completed_at = NOW()
          WHERE id = :id AND department_id = :department_id AND status = 'scheduled'"
     );
     $stmt->execute(['id' => $appointmentId, 'department_id' => $departmentId]);

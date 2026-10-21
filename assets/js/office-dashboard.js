@@ -72,6 +72,12 @@ function openAppointmentDetailModal(btn) {
     ['Citizen Preferred Date/Time', escapeHtml(formatDateTime(appt.preferred_date, appt.preferred_time))],
   ];
 
+  if (appt.organization) {
+    rows.push(['Organization', escapeHtml(appt.organization)]);
+  }
+  if (appt.position_title) {
+    rows.push(['Position', escapeHtml(appt.position_title)]);
+  }
   if (appt.scheduled_date) {
     rows.push(['Scheduled', escapeHtml(formatDateTime(appt.scheduled_date, appt.scheduled_time))]);
   }
@@ -79,7 +85,7 @@ function openAppointmentDetailModal(btn) {
     rows.push(['Notes', escapeHtml(appt.admin_notes)]);
   }
   if (appt.attachment_path) {
-    const href = encodeURI(`/LGU-Link/${appt.attachment_path}`);
+    const href = `/LGU-Link/appointment-file.php?id=${encodeURIComponent(appt.id)}`;
     const label = escapeHtml(appt.attachment_original_name || 'View attachment');
     rows.push(['Attachment', `<a href="${href}" target="_blank" rel="noopener">${label}</a>`]);
   }

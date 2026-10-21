@@ -1,6 +1,35 @@
-# Block direct web access to dotfiles (.env, .git, etc.) — Apache would
-# otherwise serve them as plain text, unlike .php files which get executed
-# instead of read raw.
+# No file listings anywhere.
+Options -Indexes
+
+# Block direct web access to dotfiles (.env etc.).
 <FilesMatch "^\.">
     Require all denied
 </FilesMatch>
+
+# Never serve version-control data, database dumps, setup scripts or project metadata.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule (^|/)\.git(/|$) - [F,L]
+    RewriteRule ^(sql|vendor|storage|config|departments\.sql|lgu_link\.sql)(/|$|\.) - [F,L]
+    RewriteRule ^includes/ - [F,L]
+    RewriteRule ^(composer\.(json|lock)|README\.md)$ - [F,L]
+</IfModule>
+<FilesMatch "\.(sql|md|lock|log|bak|dist|example)$">
+    Require all denied
+</FilesMatch>
+
+# The installer can wipe the database, so it only answers on the server's own machine.
+<Files "install-database.php">
+    Require local
+</Files>
+
+# Security headers.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://js.pusher.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com data:; img-src 'self' data: blob: https://via.placeholder.com; connect-src 'self' https://*.pusher.com wss://*.pusher.com https://sockjs.pusher.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
+</IfModule>

@@ -15,7 +15,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Privacy Notice - LGU Norzagaray Portal</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha384-/o6I2CkkWC//PSjvWC/eYN7l3xM3tJm8ZzVkCOfp//W05QcE3mlGskpoHB6XqI+B" crossorigin="anonymous">
   <link rel="stylesheet" href="/LGU-Link/assets/css/style.css">
   <style>
     .privacy-page { max-width: 780px; margin: 40px auto; padding: 0 16px 60px; line-height: 1.65; color: #0f172a; }
@@ -35,7 +35,7 @@
 
     <h2>What we collect</h2>
     <ul>
-      <li><strong>When you create an account:</strong> your name, email address, mobile number, and a password (stored in scrambled form, never as plain text).</li>
+      <li><strong>When you create an account:</strong> your name, email address, mobile number, and a password (stored in scrambled form, never as plain text). You may also tell us the organization you represent and your position there; this is optional and helps us direct your request to the right office.</li>
       <li><strong>When you ask for an appointment:</strong> the details you type in (concern, preferred date and time, contact details) and any file you attach.</li>
       <li><strong>Technical records:</strong> a log of the emails the portal sends you, and your device's internet address (IP), kept only briefly while you sign up, to limit abuse.</li>
     </ul>

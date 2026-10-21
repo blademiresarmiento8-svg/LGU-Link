@@ -18,3 +18,4 @@
       </div>
     </div>
   </div>
+  <script src="/LGU-Link/assets/js/dialogs.js"></script>

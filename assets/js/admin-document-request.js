@@ -64,11 +64,18 @@ function handleRejectSubmit(e) {
     const actionCell = selectedRowForReject.cells[5];
 
     statusCell.innerHTML = `
-      <span class="badge bg-rejected" title="Reason: ${finalReason}">
+      <span class="badge bg-rejected">
         <i class="fa-solid fa-xmark"></i> Rejected
       </span>
-      <button class="btn-view-reason" onclick="alert('Rejection Reason: ${finalReason}')">Reason</button>
     `;
+    // The reason is set as text (never as HTML) and shown in the portal's own dialog.
+    const reasonButton = document.createElement('button');
+    reasonButton.type = 'button';
+    reasonButton.className = 'btn-view-reason';
+    reasonButton.textContent = 'Reason';
+    reasonButton.dataset.alertTitle = 'Rejection reason';
+    reasonButton.dataset.alert = finalReason;
+    statusCell.appendChild(reasonButton);
 
     actionCell.innerHTML = '<span class="row-note">Updated</span>';
     updateDashboardStats();

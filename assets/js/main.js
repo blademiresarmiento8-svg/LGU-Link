@@ -179,25 +179,12 @@ function wireConfirmModal() {
 }
 
 /* ==========================================================================
-   SHARED "POST NEWS" MODAL
-   Markup lives in includes/news-modal.php (#newsModal), included on every
-   admin page. The header's "Post News" button calls this directly; a page
-   with its own news list (admin/news.php) calls it too for "Add", and
-   defines its own openEditNewsModal() to pre-fill the same fields.
+   "POST NEWS" button in the administrator's header: opens the full-page editor
+   (admin/news-edit.php), where type, schedule and activity details live.
    ========================================================================== */
 
 function openAddNewsModal() {
-  const form = document.getElementById('newsForm');
-  if (!form) return;
-
-  document.getElementById('newsModalTitle').textContent = 'Post New Announcement';
-  form.reset();
-  document.getElementById('newsId').value = '';
-  document.getElementById('newsPublishedAt').value = new Date().toISOString().slice(0, 10);
-  document.getElementById('newsImage').required = true;
-  document.getElementById('newsImageHint').textContent = '— shown on the public homepage';
-
-  openModal('newsModal');
+  window.location.href = '/LGU-Link/admin/news-edit.php';
 }
 
 /* Logout confirmation, used by the header logout link on every page. */

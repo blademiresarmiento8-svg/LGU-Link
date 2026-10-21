@@ -414,6 +414,12 @@ body {
   align-items: center;
 }
 
+.toolbar select, .toolbar input { max-width: 100%; }
+@media (max-width: 520px) {
+  .toolbar > * { flex: 1 1 100%; max-width: 100%; }
+  .toolbar .search-box { max-width: 100%; }
+}
+
 .search-box {
   position: relative;
   flex-grow: 1;
@@ -898,4 +904,34 @@ tr.live-new { animation: live-new 4s ease-out; }
   .header-logo > span { display: none; }
   .btn-create-news-compact span { display: none; }
   .btn-create-news-compact { padding: 10px 12px; }
+}
+
+/* A header with many links (the system admin's) switches to the menu button sooner. */
+@media (max-width: 1280px) {
+  .top-header.nav-many .nav-toggle { display: flex; }
+  .top-header.nav-many .header-logo { margin-right: auto; }
+  .top-header.nav-many .header-nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 10px 16px 16px;
+    background: var(--header-bg);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.35);
+    max-height: calc(100vh - 70px);
+    overflow-y: auto;
+  }
+  .top-header.nav-many .header-nav.open { display: flex; }
+  .top-header.nav-many .header-nav a { padding: 12px 14px; min-height: 44px; font-size: 14px; }
+}
+
+/* Touch screens: small buttons and header links get a bigger tap area. */
+@media (pointer: coarse) {
+  .btn-action { min-height: 36px; padding: 8px 12px; }
+  .public-login-link, .public-register-link { padding-top: 10px; padding-bottom: 10px; }
 }

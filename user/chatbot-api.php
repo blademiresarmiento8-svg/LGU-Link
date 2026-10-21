@@ -16,6 +16,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 requireLogin();
 require_once __DIR__ . '/../includes/charter-helpers.php';
+require_once __DIR__ . '/../includes/rate-limit.php';
 require_once __DIR__ . '/../includes/department-helpers.php';
 
 header('Content-Type: application/json');
@@ -26,8 +27,21 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
-$message = trim((string) ($input['message'] ?? ''));
+if (!verifyCsrfToken($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null)) {
+    http_response_code(400);
+    echo json_encode(['reply' => 'Your session expired. Please refresh the page.']);
+    exit;
+}
+// Every question may cost an AI request: 15 a minute per person, 200 an hour per device.
+if (!rateLimitAllow('chat:' . (int) $_SESSION['user_id'], 15, 60) || !rateLimitAllow('chat-ip:' . clientIp(), 200, 3600)) {
+    http_response_code(429);
+    echo json_encode(['reply' => 'You are asking too fast. Please wait a moment and try again.']);
+    exit;
+}
+rateLimitCleanup();
+
+$input = json_decode(file_get_contents('php://input', false, null, 0, 20000), true);
+$message = mb_substr(trim((string) ($input['message'] ?? '')), 0, 500);
 
 if ($message === '') {
     echo json_encode(['reply' => "I didn't catch that — could you type your question again?"]);

@@ -14,6 +14,7 @@ $navItems = [
     'charter'           => ['label' => "Citizen's Charter",  'icon' => 'fa-book',            'href' => 'citizens-charter.php'],
     'appointments'      => ['label' => 'Appointments',       'icon' => 'fa-calendar-check',  'href' => 'appointments.php'],
     'meetings'          => ['label' => 'Meetings',           'icon' => 'fa-people-group',    'href' => 'meetings.php'],
+    'analytics'         => ['label' => 'Analytics',          'icon' => 'fa-chart-line',      'href' => 'analytics.php'],
 ];
 ?>
   <header class="top-header">

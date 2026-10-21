@@ -1,11 +1,13 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('admin');
-require_once __DIR__ . '/../includes/news-helpers.php';
+require_once __DIR__ . '/../includes/news-workflow.php';
 
 $activePage = 'news';
 
 $posts = getAllNewsPosts();
+$awaitingMe = countNewsSubmissionsAwaitingAdmin();
+$inReview = count(getNewsSubmissionsForReview());
 
 $flashSaved = isset($_GET['saved']);
 $flashDeleted = isset($_GET['deleted']);
@@ -18,9 +20,10 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>News & Announcements - LGU Norzagaray Admin</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha384-/o6I2CkkWC//PSjvWC/eYN7l3xM3tJm8ZzVkCOfp//W05QcE3mlGskpoHB6XqI+B" crossorigin="anonymous">
   <link rel="stylesheet" href="/LGU-Link/assets/css/style.css">
   <link rel="stylesheet" href="/LGU-Link/assets/css/admin-news.css">
+  <link rel="stylesheet" href="/LGU-Link/assets/css/news.css">
 </head>
 
 <body>
@@ -33,17 +36,32 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
     <div class="page-title-row">
       <div>
         <h1>News & Announcements</h1>
-        <p>Manage what citizens see on the public homepage — the picture carousel at the top pulls from posts marked "featured" below.</p>
+        <p>Review what the offices write, and manage everything on the public website. The picture carousel at the top of the homepage shows the posts marked "featured".</p>
       </div>
-      <button class="btn-primary" onclick="openAddNewsModal()"><i class="fa-solid fa-plus"></i> Add News</button>
+      <a class="btn-primary" href="news-edit.php"><i class="fa-solid fa-plus"></i> Write a Post</a>
     </div>
+
+    <?php if ($awaitingMe > 0): ?>
+      <div class="news-banner warn">
+        <i class="fa-solid fa-inbox"></i>
+        <div><strong><?= $awaitingMe ?> post<?= $awaitingMe === 1 ? '' : 's' ?> from the offices <?= $awaitingMe === 1 ? 'is' : 'are' ?> waiting for your review.</strong> <a href="news-review.php">Open the review queue</a></div>
+      </div>
+    <?php endif; ?>
 
     <!-- STATS -->
     <section class="stats-grid">
       <div class="stat-card">
         <div>
-          <p>Total Posts</p>
-          <h2><?= count($posts) ?></h2>
+          <p>Waiting for Your Review</p>
+          <h2><?= $awaitingMe ?></h2>
+        </div>
+        <div class="stat-icon ic-amber"><i class="fa-solid fa-inbox"></i></div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <p>Live Posts</p>
+          <h2><?= count(array_filter($posts, fn($p) => newsPostState($p) === 'live')) ?></h2>
         </div>
         <div class="stat-icon ic-purple"><i class="fa-solid fa-newspaper"></i></div>
       </div>
@@ -51,9 +69,9 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
       <div class="stat-card">
         <div>
           <p>In Homepage Carousel</p>
-          <h2><?= count(array_filter($posts, fn($p) => (bool) $p['is_featured'])) ?></h2>
+          <h2><?= count(array_filter($posts, fn($p) => (bool) $p['is_featured'] && newsPostState($p) === 'live')) ?></h2>
         </div>
-        <div class="stat-icon ic-amber"><i class="fa-solid fa-images"></i></div>
+        <div class="stat-icon ic-green"><i class="fa-solid fa-images"></i></div>
       </div>
     </section>
 
@@ -62,45 +80,42 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
       <div class="panel-header">
         <h3>All Posts</h3>
+        <a class="btn-action edit" href="news-review.php">Review queue<?= $inReview > 0 ? ' (' . $inReview . ')' : '' ?></a>
       </div>
 
       <div class="toolbar">
         <div class="search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="newsSearchInput" placeholder="Search title or category..." onkeyup="applyNewsFilters()">
+          <input type="text" id="newsSearchInput" placeholder="Search title, category, or office..." onkeyup="applyNewsFilters()">
         </div>
       </div>
 
       <?php if (empty($posts)): ?>
-        <p class="row-note">No news posts yet. Click "Add News" to publish the first one.</p>
+        <p class="row-note">No news posts yet. Click "Write a Post" to publish the first one.</p>
       <?php else: ?>
         <div class="admin-news-grid" id="newsGrid">
           <?php foreach ($posts as $post): ?>
-            <?php
-            $postJson = json_encode([
-                'id' => $post['id'],
-                'category' => $post['category'],
-                'title' => $post['title'],
-                'description' => $post['description'],
-                'published_at' => $post['published_at'],
-                'is_featured' => (bool) $post['is_featured'],
-            ]);
-            ?>
-            <div class="admin-news-card" data-search="<?= htmlspecialchars(strtolower($post['title'] . ' ' . $post['category'])) ?>">
-              <div class="admin-news-thumb" style="background-image: url('/LGU-Link/<?= htmlspecialchars($post['image']) ?>');">
+            <?php [$stateLabel, $stateClass] = newsStateBadge(newsPostState($post)); ?>
+            <div class="admin-news-card" data-search="<?= htmlspecialchars(strtolower($post['title'] . ' ' . $post['category'] . ' ' . newsPosterName($post))) ?>">
+              <div class="admin-news-thumb" <?= !empty($post['image']) ? 'style="background-image: url(\'/LGU-Link/' . htmlspecialchars($post['image']) . '\');"' : '' ?>>
                 <?php if ($post['is_featured']): ?>
                   <span class="admin-news-featured-tag"><i class="fa-solid fa-star"></i> Carousel</span>
                 <?php endif; ?>
               </div>
               <div class="admin-news-body">
-                <span class="badge <?= getNewsCategoryBadgeClass($post['category']) ?>"><?= htmlspecialchars($post['category']) ?></span>
+                <div class="news-meta-row">
+                  <span class="badge <?= $stateClass ?>"><?= $stateLabel ?></span>
+                  <span class="badge <?= newsTypeBadgeClass($post['post_type']) ?>"><?= htmlspecialchars(newsTypeLabel($post['post_type'])) ?></span>
+                </div>
                 <h3><?= htmlspecialchars($post['title']) ?></h3>
-                <p><?= htmlspecialchars(mb_strimwidth($post['description'], 0, 140, '...')) ?></p>
-                <span class="row-note"><?= htmlspecialchars(date('M j, Y', strtotime($post['published_at']))) ?></span>
+                <p><?= htmlspecialchars(newsExcerpt($post['description'], 120)) ?></p>
+                <span class="news-poster-tag"><i class="fa-solid fa-building-columns"></i> <?= htmlspecialchars(newsPosterName($post)) ?></span>
+                <span class="row-note"><?= htmlspecialchars(describeNewsSchedule($post)) ?></span>
               </div>
               <div class="action-btns">
-                <button class="btn-action edit" data-post="<?= htmlspecialchars($postJson, ENT_QUOTES) ?>" onclick="openEditNewsModal(this)">Edit</button>
-                <button class="btn-action reject" onclick="confirmDeleteNewsPost(<?= (int) $post['id'] ?>, <?= json_encode($post['title']) ?>)">Delete</button>
+                <a class="btn-action approve" href="/LGU-Link/news-post.php?id=<?= (int) $post['id'] ?>&preview=1" target="_blank" rel="noopener">View</a>
+                <a class="btn-action edit" href="news-edit.php?id=<?= (int) $post['id'] ?>">Edit</a>
+                <button class="btn-action reject" onclick="confirmDeleteNewsPost(<?= (int) $post['id'] ?>, <?= htmlspecialchars(json_encode($post['title']), ENT_QUOTES) ?>)">Delete</button>
               </div>
             </div>
           <?php endforeach; ?>
@@ -117,7 +132,6 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
     <input type="hidden" name="id" id="newsDeleteId" value="">
   </form>
 
-  <?php require __DIR__ . '/../includes/news-modal.php'; ?>
   <?php require __DIR__ . '/../includes/toast.php'; ?>
   <?php require __DIR__ . '/../includes/confirm-modal.php'; ?>
 

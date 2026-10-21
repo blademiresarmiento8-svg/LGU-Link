@@ -1,20 +1,13 @@
 <?php
 /**
- * Admin-only write operations for the news_posts table, including image
- * upload handling. Requires includes/news-helpers.php (getDbConnection(),
+ * Photo upload handling and deleting live posts. (Writing posts, and the review of
+ * offices' posts, is in includes/news-workflow.php.) Requires includes/news-helpers.php (getDbConnection(),
  * getAllNewsPosts()) to already be loaded.
  */
 
 const NEWS_UPLOAD_DIR = __DIR__ . '/../assets/uploads/news';
 const NEWS_UPLOAD_URL_PREFIX = 'assets/uploads/news';
 const NEWS_MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB
-
-const NEWS_ALLOWED_CATEGORIES = [
-    'Official Announcement',
-    'Emergency Advisory',
-    'Public Health Update',
-    'Holiday Advisory',
-];
 
 /**
  * Validates an uploaded image ($_FILES['image']-shaped array) and moves
@@ -76,102 +69,21 @@ function deleteNewsImageFile(string $relativePath): void
     }
 }
 
-/**
- * Validates and saves a news post. Pass $id = null to create a new post,
- * or an existing post's id to update it in place. $file is the
- * $_FILES['image']-shaped array; required on create, optional on update
- * (omitting it keeps the post's current image).
- *
- * @return array{success: bool, errors: string[]}
- */
-function saveNewsPost(?int $id, array $data, array $file): array
+/** Deletes an uploaded photo file only when no post or submission still uses it. */
+function deleteNewsImageIfUnused(?string $path): void
 {
-    $category = trim((string) ($data['category'] ?? ''));
-    $title = trim((string) ($data['title'] ?? ''));
-    $description = trim((string) ($data['description'] ?? ''));
-    $publishedAt = trim((string) ($data['published_at'] ?? ''));
-    $isFeatured = !empty($data['is_featured']) ? 1 : 0;
-
-    $errors = [];
-    if (!in_array($category, NEWS_ALLOWED_CATEGORIES, true)) {
-        $errors[] = 'Choose a valid announcement category.';
+    if ($path === null || $path === '') {
+        return;
     }
-    if ($title === '') {
-        $errors[] = 'Title is required.';
-    }
-    if ($description === '') {
-        $errors[] = 'Content description is required.';
-    }
-    $publishedDate = \DateTime::createFromFormat('Y-m-d', $publishedAt);
-    if ($publishedDate === false || $publishedDate->format('Y-m-d') !== $publishedAt) {
-        $errors[] = 'Enter a valid publish date.';
-    }
-
-    $upload = uploadNewsImage($file);
-    if ($upload['error'] !== null) {
-        $errors[] = $upload['error'];
-    }
-
-    $existing = $id !== null ? findNewsPostById($id) : null;
-    if ($id !== null && $existing === null) {
-        $errors[] = 'That post no longer exists.';
-    }
-
-    if ($id === null && $upload['path'] === null && $upload['error'] === null) {
-        $errors[] = 'An image is required.';
-    }
-
-    if (!empty($errors)) {
-        // Don't leave an orphaned upload behind if validation failed elsewhere.
-        if ($upload['path'] !== null) {
-            deleteNewsImageFile($upload['path']);
-        }
-
-        return ['success' => false, 'errors' => $errors];
-    }
-
-    $imagePath = $upload['path'] ?? $existing['image'] ?? null;
-    $oldImagePath = $upload['path'] !== null ? ($existing['image'] ?? null) : null;
-
     $pdo = getDbConnection();
-
-    if ($id === null) {
-        $stmt = $pdo->prepare(
-            'INSERT INTO news_posts (category, title, description, image, is_featured, published_at)
-             VALUES (:category, :title, :description, :image, :is_featured, :published_at)'
-        );
-        $stmt->execute([
-            'category' => $category,
-            'title' => $title,
-            'description' => $description,
-            'image' => $imagePath,
-            'is_featured' => $isFeatured,
-            'published_at' => $publishedAt,
-        ]);
-    } else {
-        $stmt = $pdo->prepare(
-            'UPDATE news_posts
-             SET category = :category, title = :title, description = :description,
-                 image = :image, is_featured = :is_featured, published_at = :published_at
-             WHERE id = :id'
-        );
-        $stmt->execute([
-            'category' => $category,
-            'title' => $title,
-            'description' => $description,
-            'image' => $imagePath,
-            'is_featured' => $isFeatured,
-            'published_at' => $publishedAt,
-            'id' => $id,
-        ]);
+    foreach (['news_posts', 'news_submissions'] as $table) {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE image = :image");
+        $stmt->execute(['image' => $path]);
+        if ((int) $stmt->fetchColumn() > 0) {
+            return;
+        }
     }
-
-    // Replacing an image on update: remove the file it replaced.
-    if ($oldImagePath !== null && $oldImagePath !== $imagePath) {
-        deleteNewsImageFile($oldImagePath);
-    }
-
-    return ['success' => true, 'errors' => []];
+    deleteNewsImageFile($path);
 }
 
 function deleteNewsPost(int $id): bool
@@ -186,7 +98,7 @@ function deleteNewsPost(int $id): bool
     $stmt->execute(['id' => $id]);
 
     if ($stmt->rowCount() > 0) {
-        deleteNewsImageFile($post['image']);
+        deleteNewsImageIfUnused($post['image'] ?? null);
 
         return true;
     }

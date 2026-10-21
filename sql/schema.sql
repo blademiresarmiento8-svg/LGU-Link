@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS departments (
   name VARCHAR(150) NOT NULL,
   sector VARCHAR(50) NOT NULL,
   department_head VARCHAR(150) NULL,
+  queue_enabled TINYINT(1) NOT NULL DEFAULT 0,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -57,6 +58,8 @@ CREATE TABLE IF NOT EXISTS users (
   last_name VARCHAR(60) NULL,
   suffix VARCHAR(10) NULL,
   mobile VARCHAR(20) NULL,
+  organization VARCHAR(100) NULL,
+  position_title VARCHAR(100) NULL,
   email VARCHAR(150) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   privacy_consent_at DATETIME NULL,
@@ -68,6 +71,7 @@ CREATE TABLE IF NOT EXISTS users (
   suspended_reason VARCHAR(255) NULL,
   -- Set when the system admin resets a password: forces a new one at next login.
   must_change_password TINYINT(1) NOT NULL DEFAULT 0,
+  is_demo TINYINT(1) NOT NULL DEFAULT 0, -- 1 = made by the synthetic-data loader
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   -- Each department has at most one office account (NULL for non-office users).
   office_department_id INT UNSIGNED AS (IF(role = 'office', department_id, NULL)) PERSISTENT,
@@ -138,6 +142,8 @@ CREATE TABLE IF NOT EXISTS appointments (
   attachment_original_name VARCHAR(255) NULL,
   contact_number VARCHAR(30) NOT NULL,
   email VARCHAR(150) NOT NULL,
+  organization VARCHAR(100) NULL,
+  position_title VARCHAR(100) NULL,
   preferred_date DATE NULL,
   preferred_time TIME NULL,
   department_id INT UNSIGNED NULL,
@@ -148,6 +154,10 @@ CREATE TABLE IF NOT EXISTS appointments (
   rejection_reason TEXT NULL,
   reviewed_by INT UNSIGNED NULL,
   scheduled_by INT UNSIGNED NULL,
+  reviewed_at DATETIME NULL, -- when the administrator forwarded or rejected it
+  scheduled_at DATETIME NULL, -- when the office set the schedule
+  completed_at DATETIME NULL,
+  is_demo TINYINT(1) NOT NULL DEFAULT 0, -- 1 = made by the demo-data loader (includes/demo-data.php)
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id),
@@ -210,6 +220,7 @@ CREATE TABLE IF NOT EXISTS meetings (
   rejection_reason TEXT NULL,
   reviewed_by INT UNSIGNED NULL,
   reviewed_at DATETIME NULL,
+  is_demo TINYINT(1) NOT NULL DEFAULT 0, -- 1 = made by the demo-data loader
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (requester_user_id) REFERENCES users(id),
@@ -252,14 +263,205 @@ CREATE TABLE IF NOT EXISTS holidays (
 -- Featured posts appear in the homepage's top image carousel; every post
 -- appears in the "Latest News" grid below it. Images are uploaded to
 -- assets/uploads/news/ and referenced here by relative path.
+-- The lists behind the news form's Type and Category dropdowns, edited by the system
+-- admin (sysadmin/news-options.php). Each active type is a section on the homepage.
+-- Seed them by running:  php sql/migrate-news-options.php
+CREATE TABLE IF NOT EXISTS news_types (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  slug VARCHAR(30) NOT NULL UNIQUE,
+  label VARCHAR(40) NOT NULL,
+  description VARCHAR(120) NULL,
+  icon VARCHAR(30) NOT NULL DEFAULT 'newspaper',
+  color VARCHAR(10) NOT NULL DEFAULT 'blue',
+  home_limit TINYINT UNSIGNED NOT NULL DEFAULT 6,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS news_categories (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(60) NOT NULL UNIQUE,
+  color VARCHAR(10) NOT NULL DEFAULT 'blue',
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS news_posts (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   category VARCHAR(60) NOT NULL DEFAULT 'Official Announcement',
+  post_type VARCHAR(30) NOT NULL DEFAULT 'news', -- a slug from news_types
+  department_id INT UNSIGNED NULL, -- the office that posted it; NULL = the Municipal Government (administrator)
   title VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
-  image VARCHAR(255) NOT NULL,
+  image VARCHAR(255) NULL,
   is_featured TINYINT(1) NOT NULL DEFAULT 0,
   published_at DATE NOT NULL,
+  go_live_at DATETIME NULL, -- exact time it becomes visible (NULL = at published_at 00:00)
+  show_until DATETIME NULL, -- exact time it stops being visible (NULL = stays up)
+  is_activity TINYINT(1) NOT NULL DEFAULT 0,
+  starts_at DATETIME NULL,
+  ends_at DATETIME NULL,
+  venue VARCHAR(150) NULL,
+  requirements TEXT NULL, -- one requirement per line
+  contact_info VARCHAR(150) NULL,
+  is_demo TINYINT(1) NOT NULL DEFAULT 0, -- 1 = made by the demo-data loader
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT news_posts_department FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Office-written news/announcements. Each draft, with the Municipal Administrator's
+-- review, is a submission; approving one creates or updates the live post above.
+-- draft -> pending_review -> (awaiting_office <-> pending_review)* -> approved | rejected
+CREATE TABLE IF NOT EXISTS news_submissions (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  post_id INT UNSIGNED NULL, -- set when this proposes changes to an already-live post
+  department_id INT UNSIGNED NOT NULL,
+  author_user_id INT UNSIGNED NOT NULL,
+  status ENUM('draft', 'pending_review', 'awaiting_office', 'approved', 'rejected', 'withdrawn') NOT NULL DEFAULT 'draft',
+  post_type VARCHAR(30) NOT NULL DEFAULT 'news',
+  category VARCHAR(60) NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  description TEXT NOT NULL,
+  image VARCHAR(255) NULL,
+  is_activity TINYINT(1) NOT NULL DEFAULT 0,
+  starts_at DATETIME NULL,
+  ends_at DATETIME NULL,
+  venue VARCHAR(150) NULL,
+  requirements TEXT NULL,
+  contact_info VARCHAR(150) NULL,
+  go_live_at DATETIME NULL,
+  show_until DATETIME NULL,
+  reject_reason TEXT NULL,
+  decided_at DATETIME NULL,
+  is_demo TINYINT(1) NOT NULL DEFAULT 0, -- 1 = made by the demo-data loader
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX news_submissions_status (status, updated_at),
+  FOREIGN KEY (post_id) REFERENCES news_posts(id) ON DELETE SET NULL,
+  FOREIGN KEY (department_id) REFERENCES departments(id),
+  FOREIGN KEY (author_user_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+-- Everything that happened to a submission, with a snapshot of its content at that
+-- point, so the office and the administrator both see every change.
+CREATE TABLE IF NOT EXISTS news_submission_events (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  submission_id INT UNSIGNED NOT NULL,
+  actor_user_id INT UNSIGNED NULL,
+  actor_name VARCHAR(150) NOT NULL,
+  actor_role ENUM('office', 'admin') NOT NULL,
+  action VARCHAR(30) NOT NULL,
+  note TEXT NULL,
+  snapshot MEDIUMTEXT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX news_events_submission (submission_id, id),
+  FOREIGN KEY (submission_id) REFERENCES news_submissions(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- QR queueing (sql/migrate-queue.php): per-office queues, services, the staff names shown to
+-- the public, and one ticket per person. Add the on/off switch for an office with:
+--   ALTER TABLE departments ADD COLUMN queue_enabled TINYINT(1) NOT NULL DEFAULT 0;
+-- (already included below for a fresh install). Numbers come from queue_counters, one row per
+-- queue per day, incremented atomically inside the ticket-creating transaction.
+CREATE TABLE IF NOT EXISTS queue_staff (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  department_id INT UNSIGNED NOT NULL,
+  name VARCHAR(80) NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_staff_name (department_id, name),
+  FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS queue_services (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  department_id INT UNSIGNED NOT NULL,
+  name VARCHAR(80) NOT NULL,
+  letter CHAR(1) NOT NULL,
+  staff_id INT UNSIGNED NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_service_name (department_id, name),
+  UNIQUE KEY uq_service_letter (department_id, letter),
+  FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE,
+  FOREIGN KEY (staff_id) REFERENCES queue_staff(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- general_flag is 1 for an office's everyday queue and NULL for events, so the unique key
+-- allows one general queue per office but any number of events.
+CREATE TABLE IF NOT EXISTS queues (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  department_id INT UNSIGNED NOT NULL,
+  kind ENUM('general', 'event') NOT NULL DEFAULT 'general',
+  general_flag TINYINT NULL,
+  name VARCHAR(120) NOT NULL,
+  prefix VARCHAR(8) NOT NULL,
+  max_tickets INT UNSIGNED NULL,
+  require_mobile TINYINT(1) NOT NULL DEFAULT 1, -- events: ask for a mobile number
+  opens_at DATETIME NULL,
+  closes_at DATETIME NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  qr_salt CHAR(32) NULL, -- secret the QR code of the day is made from
+  qr_printed_on DATE NULL, -- last day the office printed or showed the code
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_one_general (department_id, general_flag),
+  FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS queue_counters (
+  queue_id INT UNSIGNED NOT NULL,
+  queue_day DATE NOT NULL,
+  last_number INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (queue_id, queue_day),
+  FOREIGN KEY (queue_id) REFERENCES queues(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- phone_key is filled only for event tickets, so the unique key lets a mobile number hold one
+-- number per event and the database itself refuses a second. The everyday queue has no such rule.
+-- priority_status: 'claimed' = the person ticked priority and staff have not checked yet.
+CREATE TABLE IF NOT EXISTS queue_tickets (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  queue_id INT UNSIGNED NOT NULL,
+  queue_day DATE NOT NULL,
+  number INT UNSIGNED NOT NULL,
+  code VARCHAR(20) NOT NULL,
+  access_key CHAR(32) NOT NULL,
+  service_id INT UNSIGNED NULL,
+  service_name VARCHAR(80) NOT NULL,
+  full_name VARCHAR(120) NOT NULL,
+  mobile VARCHAR(20) NULL,
+  user_id INT UNSIGNED NULL,
+  source ENUM('self', 'staff') NOT NULL DEFAULT 'self',
+  status ENUM('waiting', 'called', 'serving', 'done', 'skipped', 'cancelled', 'expired') NOT NULL DEFAULT 'waiting',
+  staff_id INT UNSIGNED NULL,
+  staff_name VARCHAR(80) NULL,
+  is_demo TINYINT(1) NOT NULL DEFAULT 0, -- 1 = made by the demo-data loader
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  called_at DATETIME NULL,
+  started_at DATETIME NULL,
+  finished_at DATETIME NULL,
+  phone_key VARCHAR(20) NULL,
+  priority_label VARCHAR(40) NULL,
+  priority_status ENUM('none', 'claimed', 'verified', 'declined') NOT NULL DEFAULT 'none',
+  UNIQUE KEY uq_ticket_number (queue_id, queue_day, number),
+  UNIQUE KEY uq_ticket_key (access_key),
+  UNIQUE KEY uq_event_phone (queue_id, phone_key),
+  KEY idx_line (queue_id, queue_day, status, number),
+  FOREIGN KEY (queue_id) REFERENCES queues(id) ON DELETE CASCADE,
+  FOREIGN KEY (service_id) REFERENCES queue_services(id) ON DELETE SET NULL,
+  FOREIGN KEY (staff_id) REFERENCES queue_staff(id) ON DELETE SET NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Request counters used to slow down repeated logins, chatbot questions and queue numbers
+-- (includes/rate-limit.php).
+CREATE TABLE IF NOT EXISTS rate_limits (
+  bucket VARCHAR(120) NOT NULL PRIMARY KEY,
+  hits INT UNSIGNED NOT NULL DEFAULT 0,
+  window_start DATETIME NOT NULL
 ) ENGINE=InnoDB;
