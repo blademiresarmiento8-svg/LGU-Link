@@ -119,3 +119,17 @@ function confirmMeetingAction(action, id, title) {
     },
   });
 }
+
+// "Review" links on the dashboard come here as meetings.php?open=ID: open that request straight away.
+document.addEventListener('DOMContentLoaded', function () {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('open');
+  if (!id) return;
+  const button = Array.from(document.querySelectorAll('button[data-meeting]')).find((b) => {
+    try { return String(JSON.parse(b.dataset.meeting).id) === id; } catch (e) { return false; }
+  });
+  if (button) button.click();
+  params.delete('open');
+  const rest = params.toString();
+  history.replaceState(null, '', window.location.pathname + (rest ? '?' + rest : ''));
+});

@@ -17,7 +17,7 @@ $navItems = [
     'analytics'         => ['label' => 'Analytics',          'icon' => 'fa-chart-line',      'href' => 'analytics.php'],
 ];
 ?>
-  <header class="top-header">
+  <header class="top-header nav-many">
     <div class="header-logo">
       <i class="fa-solid fa-landmark"></i>
       <span>LGU Norzagaray Portal</span>

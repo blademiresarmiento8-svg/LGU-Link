@@ -906,8 +906,8 @@ tr.live-new { animation: live-new 4s ease-out; }
   .btn-create-news-compact { padding: 10px 12px; }
 }
 
-/* A header with many links (the system admin's) switches to the menu button sooner. */
-@media (max-width: 1280px) {
+/* A header with many links (the system admin's and the administrator's) switches to the menu button sooner. */
+@media (max-width: 1400px) {
   .top-header.nav-many .nav-toggle { display: flex; }
   .top-header.nav-many .header-logo { margin-right: auto; }
   .top-header.nav-many .header-nav {
