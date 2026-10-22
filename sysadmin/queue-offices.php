@@ -49,16 +49,16 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
     </section>
 
     <section class="panel">
-      <div class="panel-header"><h3>Privacy</h3></div>
+      <div class="panel-header"><h3>Keeping names and mobile numbers</h3></div>
       <form method="post" action="queue-offices-save.php" class="queue-inline-edit">
         <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
         <input type="hidden" name="action" value="retention">
-        <label for="ret">Remove names and mobile numbers after</label>
-        <input type="number" id="ret" name="days" min="7" max="3650" value="<?= $retention ?>" style="max-width:110px;" required>
+        <label for="ret">Remove them after</label>
+        <input type="number" id="ret" name="days" min="7" max="3650" value="<?= $retention ?: '' ?>" placeholder="never" style="max-width:110px;">
         <span>days</span>
         <button type="submit" class="btn-action edit">Save</button>
       </form>
-      <p class="row-note">After this time a number keeps only its code, service and times, so reports still work but nobody can be identified. This runs by itself.</p>
+      <p class="row-note"><?= $retention === 0 ? 'Names and mobile numbers are <strong>kept</strong>. Leave the box empty to keep it that way.' : 'Names and mobile numbers are removed after <strong>' . $retention . ' days</strong>; the number, service and times stay for reports. Empty the box to keep them again.' ?></p>
     </section>
 
     <section class="panel">

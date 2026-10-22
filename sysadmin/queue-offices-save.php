@@ -20,12 +20,13 @@ $action = (string) ($_POST['action'] ?? '');
 $id = (int) ($_POST['id'] ?? 0);
 
 if ($action === 'retention') {
-    $days = (string) ($_POST['days'] ?? '');
-    if (!ctype_digit($days) || (int) $days < 7 || (int) $days > 3650) {
-        backToQueueOffices('error=' . urlencode('Please enter a number of days from 7 to 3650.'));
+    // Empty = keep names and mobile numbers for good.
+    $days = trim((string) ($_POST['days'] ?? ''));
+    if ($days !== '' && (!ctype_digit($days) || (int) $days < 7 || (int) $days > 3650)) {
+        backToQueueOffices('error=' . urlencode('Please enter a number of days from 7 to 3650, or leave it empty to keep them.'));
     }
-    saveQueueSetting('queue_retention_days', $days);
-    logAudit('queue_office_changed', null, null, 'Queue details are now kept for ' . (int) $days . ' days');
+    saveQueueSetting('queue_retention_days', $days === '' ? '0' : $days);
+    logAudit('queue_office_changed', null, null, $days === '' ? 'Queue names and mobile numbers are now kept for good' : 'Queue names and mobile numbers are now removed after ' . (int) $days . ' days');
     backToQueueOffices('done=retention');
 }
 

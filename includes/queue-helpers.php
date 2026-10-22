@@ -605,7 +605,8 @@ function resolveOfficeQueue(int $departmentId, int $eventId = 0): ?array
     return $queue && $queue['kind'] === 'event' && (int) $queue['department_id'] === $departmentId && (int) $queue['queue_enabled'] === 1 ? $queue : null;
 }
 
-const QUEUE_RETENTION_DEFAULT_DAYS = 90;
+/** 0 = keep names and mobile numbers for good (the default). A number of days turns removal on. */
+const QUEUE_RETENTION_DEFAULT_DAYS = 0;
 
 function queueSetting(string $key, string $default): string
 {
@@ -623,10 +624,12 @@ function saveQueueSetting(string $key, string $value): void
     )->execute(['k' => $key, 'v' => $value]);
 }
 
-/** How long people's names and phone numbers are kept after they took a number. */
+/** How long people's names and phone numbers are kept after they took a number; 0 = for good. */
 function queueRetentionDays(): int
 {
-    return max(7, min(3650, (int) queueSetting('queue_retention_days', (string) QUEUE_RETENTION_DEFAULT_DAYS)));
+    $days = (int) queueSetting('queue_retention_days', (string) QUEUE_RETENTION_DEFAULT_DAYS);
+
+    return $days <= 0 ? 0 : max(7, min(3650, $days));
 }
 
 /**
@@ -638,6 +641,10 @@ function queueRetentionDays(): int
  */
 function purgeOldQueueData(): int
 {
+    // Nothing is ever removed unless the system admin has chosen a number of days.
+    if (queueRetentionDays() === 0) {
+        return 0;
+    }
     $today = queueToday();
     if (queueSetting('queue_last_cleanup', '') === $today) {
         return 0;

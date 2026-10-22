@@ -10,10 +10,12 @@
  * The records look like ordinary records (people have ordinary names). Every row it creates is
  * marked is_demo = 1 in the database, so that the news never shows on the public site and
  * removeDemoData() can delete all of it again without touching real records.
+ *
+ * It is not part of the website: there is no page for it. Run it from the command line:
+ *   php sql/demo-data.php load | remove | status
  */
 
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/audit-helpers.php';
 
 const DEMO_SEED = 20261021;
 const DEMO_EMAIL_DOMAIN = '@demo.local';
@@ -349,7 +351,6 @@ function loadDemoData(): array
         throw $e;
     }
 
-    logAudit('demo_data_changed', null, null, 'Loaded the synthetic data for the analytics pages');
 
     return ['success' => true, 'message' => 'Synthetic data loaded.', 'counts' => demoDataCounts()];
 }
@@ -372,7 +373,6 @@ function removeDemoData(): array
         $pdo->rollBack();
         throw $e;
     }
-    logAudit('demo_data_changed', null, null, 'Removed the synthetic data');
 
     return ['success' => true, 'message' => 'Synthetic data removed.', 'counts' => demoDataCounts()];
 }

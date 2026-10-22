@@ -6,7 +6,6 @@
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('admin');
 require_once __DIR__ . '/../includes/analytics-helpers.php';
-require_once __DIR__ . '/../includes/demo-data.php';
 
 $activePage = 'analytics';
 $scope = 'admin';

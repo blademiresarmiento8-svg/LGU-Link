@@ -6,7 +6,6 @@
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('office');
 require_once __DIR__ . '/../includes/analytics-helpers.php';
-require_once __DIR__ . '/../includes/demo-data.php';
 require_once __DIR__ . '/../includes/queue-helpers.php';
 
 $activePage = 'analytics';

@@ -15,7 +15,6 @@ $navItems = [
     'schedule'          => ['label' => 'Work Schedule',      'icon' => 'fa-calendar-days',   'href' => 'work-schedule.php'],
     'news-options' => ['label' => 'News Options',     'icon' => 'fa-tags',            'href' => 'news-options.php'],
     'queue-offices' => ['label' => 'Queue',            'icon' => 'fa-list-ol',         'href' => 'queue-offices.php'],
-    'demo-data'     => ['label' => 'Synthetic Data',   'icon' => 'fa-database',        'href' => 'demo-data.php'],
     'audit-log'         => ['label' => 'Activity Log',       'icon' => 'fa-clipboard-list',  'href' => 'audit-log.php'],
 ];
 ?>
