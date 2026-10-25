@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('admin');
 require_once __DIR__ . '/../includes/admin-dashboard-data.php';
+require_once __DIR__ . '/../includes/news-email.php';
+newsEmailFallbackTick(); // sends waiting news emails if the scheduled job is not set up
 
 $activePage = 'dashboard';
 

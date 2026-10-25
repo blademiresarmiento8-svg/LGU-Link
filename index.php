@@ -9,6 +9,8 @@
  */
 
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/news-email.php';
+newsEmailFallbackTick(); // sends waiting news emails if the scheduled job is not set up
 
 if (isLoggedIn() && isAdminRole($_SESSION['role'])) {
     header('Location: ' . dashboardUrlFor($_SESSION['role']));

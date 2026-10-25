@@ -18,6 +18,7 @@ $actionLabels = [
     'holiday_added' => 'Holiday added',
     'holidays_synced' => 'Holidays synced',
     'news_options_changed' => 'News options changed',
+    'news_email_changed' => 'News emails changed',
     'queue_qr_renewed' => 'Queue QR code renewed',
     'queue_event_created' => 'Queue event created',
     'analytics_targets_changed' => 'Analytics targets changed',

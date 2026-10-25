@@ -10,7 +10,7 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteRule (^|/)\.git(/|$) - [F,L]
-    RewriteRule ^(sql|vendor|storage|config|departments\.sql|lgu_link\.sql)(/|$|\.) - [F,L]
+    RewriteRule ^(sql|vendor|storage|config|cron|departments\.sql|lgu_link\.sql)(/|$|\.) - [F,L]
     RewriteRule ^includes/ - [F,L]
     RewriteRule ^(composer\.(json|lock)|README\.md)$ - [F,L]
 </IfModule>

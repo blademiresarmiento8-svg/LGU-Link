@@ -36,6 +36,17 @@ define('SMTP_PASS', envValue('SMTP_PASS'));
 
 const MAIL_FROM_NAME = 'LGU Norzagaray Portal';
 
+// The address emails come from. Gmail only allows its own address, so this stays empty and the SMTP
+// login is used. A service such as Amazon SES needs a verified sender address; put it in
+// MAIL_FROM_ADDRESS in .env when you move to one.
+define('MAIL_FROM_ADDRESS', filter_var(envValue('MAIL_FROM_ADDRESS'), FILTER_VALIDATE_EMAIL) ?: SMTP_USER);
+
+// How fast the background worker may send news emails (includes/news-email.php). The defaults keep a
+// free Gmail account under its limit of about 500 recipients a day; after moving to a bigger service,
+// raise these two numbers and nothing else needs to change.
+define('MAIL_MAX_PER_MINUTE', max(1, (int) (envValue('MAIL_MAX_PER_MINUTE') ?: 30)));
+define('MAIL_MAX_PER_DAY', max(1, (int) (envValue('MAIL_MAX_PER_DAY') ?: 400)));
+
 define('MAIL_CONFIGURED', SMTP_HOST !== '' && SMTP_PORT > 0 && SMTP_USER !== '' && SMTP_PASS !== '');
 
 // Public address of the portal, used to build links inside emails. Set APP_URL

@@ -111,7 +111,8 @@ CREATE TABLE IF NOT EXISTS mail_log (
   subject VARCHAR(200) NOT NULL,
   status ENUM('sent', 'failed', 'skipped') NOT NULL,
   error VARCHAR(255) NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_mail_log_created (created_at)
 ) ENGINE=InnoDB;
 
 -- One-time email codes used during citizen sign-up (hashed; expire after 10 minutes).
@@ -306,6 +307,7 @@ CREATE TABLE IF NOT EXISTS news_posts (
   venue VARCHAR(150) NULL,
   requirements TEXT NULL, -- one requirement per line
   contact_info VARCHAR(150) NULL,
+  notified_at DATETIME NULL, -- when this post's subscriber emails were queued (NULL = not yet)
   is_demo TINYINT(1) NOT NULL DEFAULT 0, -- 1 = made by the demo-data loader
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -463,4 +465,43 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   bucket VARCHAR(120) NOT NULL PRIMARY KEY,
   hits INT UNSIGNED NOT NULL DEFAULT 0,
   window_start DATETIME NOT NULL
+) ENGINE=InnoDB;
+
+-- Email notifications for news and announcements (sql/migrate-news-email.php). Citizens choose which
+-- news types they want; posting only fills email_outbox, and a background worker sends from it in
+-- small batches. The unique key stops the same post being queued twice for the same person.
+CREATE TABLE IF NOT EXISTS news_subscriptions (
+  user_id INT UNSIGNED NOT NULL PRIMARY KEY,
+  unsubscribe_token CHAR(32) NOT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  subscribed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_unsubscribe_token (unsubscribe_token),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS news_subscription_types (
+  user_id INT UNSIGNED NOT NULL,
+  type_slug VARCHAR(30) NOT NULL,
+  PRIMARY KEY (user_id, type_slug),
+  KEY idx_type_slug (type_slug),
+  FOREIGN KEY (user_id) REFERENCES news_subscriptions(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS email_outbox (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  kind VARCHAR(20) NOT NULL DEFAULT 'news',
+  ref_id INT UNSIGNED NOT NULL,
+  user_id INT UNSIGNED NULL,
+  to_email VARCHAR(150) NOT NULL,
+  status ENUM('queued', 'sending', 'sent', 'failed', 'skipped') NOT NULL DEFAULT 'queued',
+  attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  last_error VARCHAR(255) NULL,
+  available_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  sent_at DATETIME NULL,
+  UNIQUE KEY uq_outbox_once (kind, ref_id, user_id),
+  KEY idx_outbox_due (status, available_at),
+  KEY idx_outbox_ref (kind, ref_id, status),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;

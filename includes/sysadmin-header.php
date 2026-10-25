@@ -14,6 +14,7 @@ $navItems = [
     'office-accounts'   => ['label' => 'Office Accounts',    'icon' => 'fa-building-user',   'href' => 'office-accounts.php'],
     'schedule'          => ['label' => 'Work Schedule',      'icon' => 'fa-calendar-days',   'href' => 'work-schedule.php'],
     'news-options' => ['label' => 'News Options',     'icon' => 'fa-tags',            'href' => 'news-options.php'],
+    'news-emails'  => ['label' => 'News Emails',      'icon' => 'fa-envelope-open-text', 'href' => 'news-emails.php'],
     'queue-offices' => ['label' => 'Queue',            'icon' => 'fa-list-ol',         'href' => 'queue-offices.php'],
     'audit-log'         => ['label' => 'Activity Log',       'icon' => 'fa-clipboard-list',  'href' => 'audit-log.php'],
 ];

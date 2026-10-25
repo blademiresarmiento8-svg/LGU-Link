@@ -75,7 +75,7 @@ function sendAppointmentEmail(string $to, string $subject, string $bodyHtml): bo
         $mail->Port = SMTP_PORT;
         $mail->Timeout = 10;
 
-        $mail->setFrom(SMTP_USER, MAIL_FROM_NAME);
+        $mail->setFrom(MAIL_FROM_ADDRESS, MAIL_FROM_NAME);
         $mail->addAddress($to);
 
         $mail->isHTML(true);

@@ -150,3 +150,41 @@
 .dt-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; font-size: 20px; line-height: 1; color: #888; cursor: pointer; padding: 0 4px; }
 .dt-clear:hover { color: #c0392b; }
 .dt-clear[hidden] { display: none; }
+
+/* ---------- "Email me the news" card on the public News page ---------- */
+.news-email-card {
+  background: #fff; border: 1px solid var(--border-color); border-radius: 14px;
+  margin-bottom: 16px; overflow: hidden;
+}
+.news-email-card > summary {
+  display: flex; align-items: center; gap: 14px; padding: 14px 18px; cursor: pointer; list-style: none;
+}
+.news-email-card > summary::-webkit-details-marker { display: none; }
+.news-email-card > summary > i, .news-email-guest > i { font-size: 22px; color: var(--primary); }
+.news-email-title { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.news-email-title strong { font-size: 15px; }
+.news-email-title small { color: var(--text-muted); font-size: 13px; }
+.news-email-action { color: var(--primary); font-weight: 600; font-size: 13px; white-space: nowrap; }
+.news-email-action i { margin-left: 4px; transition: transform .15s; }
+.news-email-card[open] .news-email-action i { transform: rotate(180deg); }
+.news-email-form { padding: 0 18px 16px; border-top: 1px solid var(--border-color); }
+.news-email-to { margin: 14px 0 10px; font-size: 14px; color: var(--text-muted); }
+.news-email-types { display: grid; gap: 8px; margin-bottom: 14px; }
+.news-email-type { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; }
+.news-email-type:has(input:checked) { border-color: var(--primary); background: #eff6ff; }
+.news-email-type input { width: 18px; height: 18px; margin: 2px 0 0; }
+.news-email-type span { display: flex; flex-direction: column; }
+.news-email-type small { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+.news-email-buttons { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+.news-email-guest { display: flex; align-items: center; gap: 14px; padding: 14px 18px; flex-wrap: wrap; }
+
+/* ---------- System admin: News Emails page ---------- */
+.ne-state { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ne-state-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ne-state-main p { margin: 0; color: var(--text-muted); font-size: 14px; }
+.ne-bar { height: 12px; border-radius: 999px; background: #e2e8f0; overflow: hidden; margin: 6px 0 10px; }
+.ne-bar span { display: block; height: 100%; background: var(--primary); border-radius: 999px; min-width: 2px; }
+.ne-empty { text-align: center; color: var(--text-muted); padding: 18px 8px; margin: 0; }
+.ne-empty i { display: block; font-size: 24px; margin-bottom: 8px; color: #94a3b8; }
+.ne-code { background: #0f172a; color: #e2e8f0; padding: 12px 14px; border-radius: 10px; font-family: Consolas, monospace; font-size: 13px; overflow-x: auto; margin: 8px 0; white-space: pre-wrap; word-break: break-all; }
+.stat-card small { display: block; color: var(--text-muted); font-size: 12px; margin-top: 2px; }

@@ -6,9 +6,17 @@
 
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/news-helpers.php';
+require_once __DIR__ . '/includes/news-email.php';
 
 $loggedInCitizen = isLoggedIn() && $_SESSION['role'] === 'user';
 $activePage = 'news';
+newsEmailFallbackTick(); // sends waiting news emails if the scheduled job is not set up
+
+// Citizens can ask for emails about new posts; the card below shows their current choice.
+$emailTypes = getNewsTypes(true);
+$subscription = $loggedInCitizen ? getNewsSubscription((int) $_SESSION['user_id']) : null;
+$subscribedTypes = $subscription && $subscription['is_active'] ? $subscription['types'] : [];
+$emailFlash = ['saved' => 'Your email choices are saved.', 'stopped' => 'You will no longer get news by email.', 'error' => 'Something went wrong. Please try again.'][$_GET['email'] ?? ''] ?? '';
 
 const NEWS_PAGE_SIZE = 9;
 
@@ -67,6 +75,58 @@ function newsPageUrl(array $changes): string
         <p>Updates, advisories and activities from the Municipality of Norzagaray and its offices.</p>
       </div>
     </div>
+
+    <?php if ($loggedInCitizen && $emailTypes): ?>
+      <details class="news-email-card" id="emailMe" <?= isset($_GET['email']) ? 'open' : '' ?>>
+        <summary>
+          <i class="fa-solid fa-envelope-open-text"></i>
+          <span class="news-email-title">
+            <?php if ($subscribedTypes): ?>
+              <strong>You get news by email</strong>
+              <small>
+                <?= htmlspecialchars(implode(', ', array_map(fn($slug) => $emailTypes[$slug]['label'] ?? $slug, $subscribedTypes))) ?>
+              </small>
+            <?php else: ?>
+              <strong>Get news and announcements by email</strong>
+              <small>Choose what you want to receive, and we will email you when it is posted.</small>
+            <?php endif; ?>
+          </span>
+          <span class="news-email-action"><?= $subscribedTypes ? 'Change' : 'Set up' ?> <i class="fa-solid fa-chevron-down"></i></span>
+        </summary>
+        <form method="post" action="/LGU-Link/user/news-subscription-save.php" class="news-email-form">
+          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
+          <p class="news-email-to">Emails go to <strong><?= htmlspecialchars((string) ($_SESSION['email'] ?? '')) ?></strong>, the address on your account.</p>
+          <div class="news-email-types">
+            <?php foreach ($emailTypes as $slug => $type): ?>
+              <label class="news-email-type">
+                <input type="checkbox" name="types[]" value="<?= htmlspecialchars($slug) ?>" <?= in_array($slug, $subscribedTypes, true) ? 'checked' : '' ?>>
+                <span>
+                  <strong><?= htmlspecialchars($type['label']) ?></strong>
+                  <?php if (!empty($type['description'])): ?><small><?= htmlspecialchars($type['description']) ?></small><?php endif; ?>
+                </span>
+              </label>
+            <?php endforeach; ?>
+          </div>
+          <div class="news-email-buttons">
+            <button type="submit" name="action" value="save" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save my choice</button>
+            <?php if ($subscribedTypes): ?>
+              <button type="submit" name="action" value="stop" class="btn-action edit" formnovalidate>Stop all emails</button>
+            <?php endif; ?>
+          </div>
+          <p class="row-note">Each email has an unsubscribe link, and you can change this any time. Leave all boxes empty and press Save to turn emails off.</p>
+        </form>
+      </details>
+    <?php elseif (!$loggedInCitizen && $emailTypes): ?>
+      <div class="news-email-card news-email-guest">
+        <i class="fa-solid fa-envelope-open-text"></i>
+        <span class="news-email-title">
+          <strong>Get news and announcements by email</strong>
+          <small>Log in or create a free account, then choose what you want to receive.</small>
+        </span>
+        <a class="btn-primary" href="/LGU-Link/auth/login.php">Log in</a>
+        <a class="btn-action edit" href="/LGU-Link/auth/register.php">Register</a>
+      </div>
+    <?php endif; ?>
 
     <form class="news-filters" method="get" action="/LGU-Link/news.php">
       <div class="search-box">
@@ -134,6 +194,9 @@ function newsPageUrl(array $changes): string
   <?php endif; ?>
 
   <script src="/LGU-Link/assets/js/main.js"></script>
+  <?php if ($loggedInCitizen && $emailFlash !== ''): ?>
+    <script>document.addEventListener('DOMContentLoaded', () => showToast(<?= json_encode($emailFlash) ?>, <?= ($_GET['email'] ?? '') === 'error' ? 'true' : 'false' ?>));</script>
+  <?php endif; ?>
   <?php if ($loggedInCitizen): ?>
     <script src="/LGU-Link/assets/js/chatbot.js?v=<?= filemtime(__DIR__ . '/assets/js/chatbot.js') ?>"></script>
   <?php endif; ?>
