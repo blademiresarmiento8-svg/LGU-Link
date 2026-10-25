@@ -77,7 +77,7 @@ function newsPageUrl(array $changes): string
     </div>
 
     <?php if ($loggedInCitizen && $emailTypes): ?>
-      <details class="news-email-card" id="emailMe" <?= isset($_GET['email']) ? 'open' : '' ?>>
+      <details class="news-email-card" id="emailMe">
         <summary>
           <i class="fa-solid fa-envelope-open-text"></i>
           <span class="news-email-title">
@@ -194,8 +194,26 @@ function newsPageUrl(array $changes): string
   <?php endif; ?>
 
   <script src="/LGU-Link/assets/js/main.js"></script>
+  <?php if ($loggedInCitizen && $emailTypes): ?>
+    <script>
+      // A link ending in #emailMe (the one in the emails) opens the card; saving never scrolls the page.
+      document.addEventListener('DOMContentLoaded', () => {
+        const card = document.getElementById('emailMe');
+        if (card && window.location.hash === '#emailMe') card.open = true;
+      });
+    </script>
+  <?php endif; ?>
   <?php if ($loggedInCitizen && $emailFlash !== ''): ?>
-    <script>document.addEventListener('DOMContentLoaded', () => showToast(<?= json_encode($emailFlash) ?>, <?= ($_GET['email'] ?? '') === 'error' ? 'true' : 'false' ?>));</script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        showToast(<?= json_encode($emailFlash) ?>, <?= ($_GET['email'] ?? '') === 'error' ? 'true' : 'false' ?>);
+        // Drop ?email=... from the address, so refreshing the page does not show the message again.
+        const params = new URLSearchParams(window.location.search);
+        params.delete('email');
+        const rest = params.toString();
+        history.replaceState(null, '', window.location.pathname + (rest ? '?' + rest : '') + window.location.hash);
+      });
+    </script>
   <?php endif; ?>
   <?php if ($loggedInCitizen): ?>
     <script src="/LGU-Link/assets/js/chatbot.js?v=<?= filemtime(__DIR__ . '/assets/js/chatbot.js') ?>"></script>

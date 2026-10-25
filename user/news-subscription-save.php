@@ -7,7 +7,7 @@ require_once __DIR__ . '/../includes/news-email.php';
 
 function backToNews(string $result): void
 {
-    header('Location: /LGU-Link/news.php?email=' . $result . '#emailMe');
+    header('Location: /LGU-Link/news.php?email=' . $result);
     exit;
 }
 
