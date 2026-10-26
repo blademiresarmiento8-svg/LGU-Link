@@ -87,3 +87,7 @@
   border-radius: 8px;
   background: #eff6ff;
 }
+
+/* A citizen's name in the administrator's table: click to see their details. */
+.citizen-link { background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--primary); cursor: pointer; text-align: left; }
+.citizen-link:hover { text-decoration: underline; }

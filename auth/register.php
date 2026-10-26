@@ -121,6 +121,7 @@ $resendWait = $step === 2 ? secondsUntilResend((string) $reg['email']) : 0;
   </div>
 
   <header class="auth-top-bar">
+    <a href="/LGU-Link/index.php" class="auth-back"><i class="fa-solid fa-arrow-left"></i> Back to home</a>
     <a href="/LGU-Link/auth/login.php" class="auth-top-link">Already have an account? <strong>Sign in</strong></a>
   </header>
 

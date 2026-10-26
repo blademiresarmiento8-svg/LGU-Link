@@ -390,3 +390,20 @@
 .auth-link-btn { background: none; border: none; padding: 0; color: var(--primary); font-size: 13px; cursor: pointer; text-decoration: underline; }
 .auth-link-btn:disabled { color: var(--text-muted); cursor: not-allowed; text-decoration: none; }
 @media (max-width: 480px) { .auth-row { flex-direction: column; gap: 0; } .auth-row .auth-row-narrow { flex: 1; } }
+
+/* "Back to home" at the left of the top bar (login and registration). */
+.auth-back {
+  margin-right: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 0 12px 0 0;
+}
+.auth-top-bar { align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.auth-back:hover { color: var(--primary); }
+.auth-back i { font-size: 12px; transition: transform .15s; }
+.auth-back:hover i { transform: translateX(-3px); }

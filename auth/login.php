@@ -96,6 +96,7 @@ if ($error === '' && isset($_GET['expired'])) {
   </div>
 
   <header class="auth-top-bar">
+    <a href="/LGU-Link/index.php" class="auth-back"><i class="fa-solid fa-arrow-left"></i> Back to home</a>
     <a href="/LGU-Link/auth/register.php" class="auth-top-link">New here? <strong>Create an account</strong></a>
   </header>
 

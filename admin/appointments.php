@@ -138,6 +138,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
               $apptJson = json_encode([
                   'id' => $appt['id'],
+                  'user_id' => (int) $appt['user_id'],
                   'status' => $appt['status'],
                   'citizen_name' => $appt['citizen_name'],
                   'title' => $appt['title'],
@@ -161,7 +162,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
               ?>
               <tr data-status="<?= htmlspecialchars($appt['status']) ?>" data-category="<?= htmlspecialchars($appt['category']) ?>">
                 <td><?= htmlspecialchars(date('M j, Y', strtotime($appt['created_at']))) ?></td>
-                <td><?= htmlspecialchars($appt['citizen_name']) ?></td>
+                <td><button type="button" class="citizen-link" title="View this citizen's details" onclick="openCitizenDetails(<?= (int) $appt['user_id'] ?>)"><?= htmlspecialchars($appt['citizen_name']) ?></button></td>
                 <td><?= htmlspecialchars($appt['category']) ?></td>
                 <td><strong><?= htmlspecialchars($appt['title']) ?></strong></td>
                 <td><span class="badge <?= htmlspecialchars($statusMeta['badgeClass']) ?>"><?= htmlspecialchars($statusMeta['label']) ?></span></td>
@@ -200,6 +201,21 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
       <div id="appointmentDetailBody" class="appointment-detail-body"></div>
       <div class="modal-actions" id="appointmentDetailActions">
         <button type="button" class="btn-modal btn-cancel" onclick="closeModal('appointmentDetailModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CITIZEN DETAILS MODAL -->
+  <div class="modal-overlay" id="citizenDetailModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Citizen Details</h3>
+        <i class="fa-solid fa-xmark close-btn" onclick="closeModal('citizenDetailModal')"></i>
+      </div>
+      <div id="citizenDetailBody" class="appointment-detail-body"></div>
+      <p class="row-note" style="margin-top: 12px;">These are the details the citizen gave when registering. Looking at them is recorded in the Activity Log.</p>
+      <div class="modal-actions" id="citizenDetailActions">
+        <button type="button" class="btn-modal btn-cancel" onclick="closeModal('citizenDetailModal')">Close</button>
       </div>
     </div>
   </div>

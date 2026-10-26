@@ -20,6 +20,7 @@ $actionLabels = [
     'news_options_changed' => 'News options changed',
     'news_email_changed' => 'News emails changed',
     'queue_qr_renewed' => 'Queue QR code renewed',
+    'citizen_details_viewed' => 'Citizen details viewed',
     'queue_event_created' => 'Queue event created',
     'analytics_targets_changed' => 'Analytics targets changed',
     'queue_event_changed' => 'Queue event changed',
