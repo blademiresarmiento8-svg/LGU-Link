@@ -126,6 +126,31 @@
     return select;
   }
 
+  /* ---------- the date can be picked, not typed ---------- */
+
+  /**
+   * Makes the visible date box pick-only: clicking opens the calendar, but typing, pasting, cutting,
+   * dragging text in, and Backspace/Delete do nothing. The box is not made read-only, because browsers
+   * skip the "required" check on read-only fields (an empty date would be submitted); this stops the
+   * editing instead and leaves that check working. The server checks the date again anyway.
+   */
+  function lockTyping(picker) {
+    const box = picker.altInput;
+    box.setAttribute('inputmode', 'none'); // no on-screen keyboard on phones
+    box.setAttribute('autocomplete', 'off');
+    box.style.caretColor = 'transparent';
+    box.style.cursor = 'pointer';
+    // beforeinput covers every way text can change: typing, paste, cut, drop, Backspace, Delete.
+    box.addEventListener('beforeinput', (e) => e.preventDefault());
+    box.addEventListener('keydown', (e) => {
+      // Enter or Space opens the calendar (keyboard users); Tab and Escape keep working as usual.
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        picker.open();
+      }
+    });
+  }
+
   /* ---------- per-form setup ---------- */
 
   function revalidate(form) {
@@ -171,6 +196,7 @@
         });
         dateEl._flatpickr.altInput.placeholder = 'Choose a working day';
         dateEl._flatpickr.altInput.required = dateEl.required; // the hidden real input can't enforce it
+        lockTyping(dateEl._flatpickr);
       }
     }
 

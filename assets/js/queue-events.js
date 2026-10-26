@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
       plugins: [new window.confirmDatePlugin({ confirmText: 'Done', showAlways: false })],
     });
     picker.altInput.placeholder = 'Choose a date and time';
+    if (window.lockPickerTyping) window.lockPickerTyping(picker); // pick from the calendar; the x empties it
 
     const wrap = document.createElement('span');
     wrap.className = 'dt-wrap';
