@@ -2,10 +2,20 @@
 /**
  * Floating FAQ chatbot widget. Paired with assets/css/chatbot.css,
  * assets/js/chatbot.js, and user/chatbot-api.php.
+ *
+ * The conversation so far is kept in the citizen's login session (user/chatbot-api.php), so every
+ * page can draw it again: it is handed to the script in data-history. It ends with the session
+ * (log out or idle time-out).
  */
+$chatHistory = [];
+foreach ((array) ($_SESSION['chatbot_history'] ?? []) as $turn) {
+    if (is_array($turn) && in_array($turn['role'] ?? '', ['user', 'assistant'], true) && is_string($turn['content'] ?? null)) {
+        $chatHistory[] = ['role' => $turn['role'], 'content' => $turn['content']];
+    }
+}
 ?>
   <meta name="csrf-token" content="<?= htmlspecialchars(csrfToken()) ?>">
-  <div class="chatbot-widget">
+  <div class="chatbot-widget" data-history="<?= htmlspecialchars(json_encode($chatHistory, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES) ?>">
     <div class="chatbot-panel" id="chatbotPanel">
       <div class="chatbot-panel-header">
         <div class="chatbot-panel-title">

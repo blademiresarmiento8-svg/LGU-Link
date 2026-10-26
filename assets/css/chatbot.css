@@ -253,3 +253,6 @@
   background: var(--primary);
   color: white;
 }
+
+/* Links to news posts inside the bot's answers */
+.chatbot-bubble.bot a { color: var(--primary, #2563eb); font-weight: 600; text-decoration: underline; }

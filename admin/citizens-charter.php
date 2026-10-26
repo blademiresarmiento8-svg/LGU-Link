@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('admin');
 require_once __DIR__ . '/../includes/charter-helpers.php';
+require_once __DIR__ . '/../includes/department-helpers.php';
 
 $activePage = 'charter';
 
@@ -9,6 +10,7 @@ $services = getCharterServicesWithSlugs();
 usort($services, fn($a, $b) => strcasecmp($a['office'], $b['office']) ?: strcasecmp($a['title'], $b['title']));
 
 $officeNames = getCharterAllOfficeNames();
+$departments = getAllDepartments();
 sort($officeNames, SORT_STRING | SORT_FLAG_CASE);
 
 $flashSaved = isset($_GET['saved']);
@@ -99,6 +101,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
               <?php
               $serviceJson = json_encode([
                   'id' => $service['id'],
+                  'department_id' => $service['department_id'],
                   'office' => $service['office'],
                   'title' => $service['title'],
                   'keywords' => implode("\n", $service['keywords']),
@@ -140,13 +143,13 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
         <input type="hidden" name="id" id="charterId" value="">
 
         <div class="form-group">
-          <label>Office / Department</label>
-          <input type="text" name="office" id="charterOffice" list="charterOfficeList" placeholder="e.g. Municipal Treasurer's Office" required>
-          <datalist id="charterOfficeList">
-            <?php foreach ($officeNames as $name): ?>
-              <option value="<?= htmlspecialchars($name) ?>">
+          <label for="charterOffice">Office / Department</label>
+          <select name="department_id" id="charterOffice" required>
+            <option value="" disabled selected>Choose the office</option>
+            <?php foreach ($departments as $department): ?>
+              <option value="<?= (int) $department['id'] ?>"><?= htmlspecialchars($department['name']) ?></option>
             <?php endforeach; ?>
-          </datalist>
+          </select>
         </div>
 
         <div class="form-group">

@@ -35,3 +35,6 @@ foreach ($services as $index => $service) {
 }
 
 echo 'Migrated ' . count($services) . " services into citizens_charter_services.\n";
+
+// Link every seeded service to its department.
+require __DIR__ . '/migrate-charter-departments.php';

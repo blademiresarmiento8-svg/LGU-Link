@@ -45,7 +45,7 @@ INSERT IGNORE INTO departments (code, name, sector, department_head) VALUES
   ('PESO', 'Public Employment Service Office', 'Social', 'Atty. Rochelle Marie G. Torres'),
   ('ENGR', 'Engineering Office', 'Infrastructure', NULL),
   ('AGRIC', 'Agriculture Office', 'Social', NULL),
-  ('NMH', 'Norzagaray Municipal Hostpital', 'Social', 'Dr. Joselito C. Santiago'),
+  ('NMH', 'Norzagaray Municipal Hospital', 'Social', 'Dr. Joselito C. Santiago'),
   ('MHO', 'Municipal Health Office', 'Social', 'Dr. George Peppard C. Paitim'),
   ('NC', 'Norzagaray College', 'Social', 'Dr. Maria Liberty DG. Pascual');
 
@@ -173,7 +173,8 @@ CREATE TABLE IF NOT EXISTS appointments (
 -- keywords/requirements are stored one item per line.
 CREATE TABLE IF NOT EXISTS citizens_charter_services (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  office VARCHAR(150) NOT NULL,
+  department_id INT UNSIGNED NULL, -- the office this service belongs to; its name is what citizens see
+  office VARCHAR(150) NOT NULL, -- the name typed in the past; kept so old links still work
   title VARCHAR(200) NOT NULL,
   keywords TEXT NOT NULL,
   requirements TEXT NOT NULL,
@@ -181,7 +182,8 @@ CREATE TABLE IF NOT EXISTS citizens_charter_services (
   processing_time VARCHAR(255) NOT NULL,
   sort_order INT UNSIGNED NOT NULL DEFAULT 0,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_charter_department FOREIGN KEY (department_id) REFERENCES departments(id)
 ) ENGINE=InnoDB;
 
 -- After importing this schema, seed the table above from the original

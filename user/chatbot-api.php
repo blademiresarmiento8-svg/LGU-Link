@@ -2,11 +2,13 @@
 /**
  * Chatbot backend for the citizen portal.
  *
- * Primary path: calls an LLM with the full Citizen's Charter data and the
- * office/department list as system-prompt context, plus this session's
+ * Primary path: calls an LLM with the full Citizen's Charter data, the
+ * office/department list and the news and announcements that fit the question
+ * (includes/chatbot-news.php) as system-prompt context, plus this session's
  * conversation history, so it understands natural phrasing and remembers
  * earlier turns. Google Gemini is used when config/gemini-key.local.php has a
- * key; otherwise Claude (Anthropic) when config/anthropic-key.local.php does.
+ * key; Claude (Anthropic) when config/anthropic-key.local.php has one, either as the
+ * only AI or as the backup when Gemini is unavailable.
  *
  * Fallback path: if neither key is configured or the API call fails,
  * degrades to the original rule-based keyword matcher below so the widget
@@ -18,6 +20,7 @@ requireLogin();
 require_once __DIR__ . '/../includes/charter-helpers.php';
 require_once __DIR__ . '/../includes/rate-limit.php';
 require_once __DIR__ . '/../includes/department-helpers.php';
+require_once __DIR__ . '/../includes/chatbot-news.php';
 
 header('Content-Type: application/json');
 
@@ -53,6 +56,12 @@ $lang = ($input['lang'] ?? 'en') === 'tl' ? 'tl' : 'en';
 $reply = getAiReply($message, $lang);
 if ($reply === null) {
     $reply = getRuleBasedReply($message);
+    // The AI path saves its own turns; an answer from the backup matcher is saved here, so the
+    // conversation looks the same on every page.
+    $_SESSION['chatbot_history'] = array_slice(array_merge(
+        is_array($_SESSION['chatbot_history'] ?? null) ? $_SESSION['chatbot_history'] : [],
+        [['role' => 'user', 'content' => $message], ['role' => 'assistant', 'content' => $reply]]
+    ), -20);
 }
 
 echo json_encode(['reply' => $reply]);
@@ -79,10 +88,18 @@ function getAiReply(string $message, string $lang = 'en'): ?string
     $history = $_SESSION['chatbot_history'];
     $history[] = ['role' => 'user', 'content' => $message];
 
-    $systemPrompt = getCharterSystemPrompt() . "\n\n" . getLanguageInstruction($lang);
-    $reply = GEMINI_API_KEY !== ''
-        ? requestGeminiReply($systemPrompt, $history)
-        : requestClaudeReply($systemPrompt, $history);
+    // The news that fit this question, and the last two things the citizen asked before it (so "when is it?" finds the post).
+    $earlier = array_values(array_reverse(array_column(array_filter($_SESSION['chatbot_history'], fn($t) => $t['role'] === 'user'), 'content')));
+    $systemPrompt = getCharterSystemPrompt() . "\n\n" . chatbotNewsSection(array_merge([$message], array_slice($earlier, 0, 2))) . "\n\n" . getLanguageInstruction($lang);
+    // Gemini first when it has a key. If it is down or busy (it sometimes answers "high demand"), the
+    // Claude key, when there is one, answers instead, so the chatbot keeps working.
+    $reply = null;
+    if (GEMINI_API_KEY !== '') {
+        $reply = requestGeminiReply($systemPrompt, $history);
+    }
+    if (($reply === null || $reply === '') && ANTHROPIC_API_KEY !== '') {
+        $reply = requestClaudeReply($systemPrompt, $history);
+    }
 
     if ($reply === null || $reply === '') {
         return null;
@@ -125,22 +142,31 @@ function requestGeminiReply(string $systemPrompt, array $history): ?string
         ];
     }
 
-    $ch = curl_init('https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode(GEMINI_MODEL) . ':generateContent');
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_HTTPHEADER => ['x-goog-api-key: ' . GEMINI_API_KEY, 'Content-Type: application/json'],
-        CURLOPT_POSTFIELDS => json_encode([
-            'system_instruction' => ['parts' => [['text' => $systemPrompt]]],
-            'contents' => $contents,
-            'generationConfig' => ['maxOutputTokens' => 1024, 'temperature' => 0.3],
-        ]),
-    ]);
-    $body = curl_exec($ch);
-    $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $curlError = curl_error($ch);
-    curl_close($ch);
+    // "High demand" (503) and "too many requests" (429) are usually over in a second or two: try once more.
+    for ($attempt = 1; $attempt <= 2; $attempt++) {
+        $ch = curl_init('https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode(GEMINI_MODEL) . ':generateContent');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTPHEADER => ['x-goog-api-key: ' . GEMINI_API_KEY, 'Content-Type: application/json'],
+            CURLOPT_POSTFIELDS => json_encode([
+                'system_instruction' => ['parts' => [['text' => $systemPrompt]]],
+                'contents' => $contents,
+                'generationConfig' => ['maxOutputTokens' => 1024, 'temperature' => 0.3],
+            ]),
+        ]);
+        $body = curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        if ($body !== false && in_array($status, [429, 503], true) && $attempt === 1) {
+            sleep(2);
+            continue;
+        }
+        break;
+    }
 
     if ($body === false || $status !== 200) {
         $detail = $body === false ? $curlError : (json_decode($body, true)['error']['message'] ?? ('HTTP ' . $status));
@@ -266,12 +292,22 @@ function getRuleBasedReply(string $message): string
         return formatServiceReply($service);
     }
 
+    // A question about the news, programs or events: answer from the posted news.
+    if (($newsReply = chatbotNewsFallbackReply($message)) !== null) {
+        return $newsReply;
+    }
+
     foreach (getGeneralRules() as $rule) {
         foreach ($rule['keywords'] as $keyword) {
             if (hasWordMatch($text, $keyword)) {
                 return $rule['reply'];
             }
         }
+    }
+
+    // Not a service either: maybe a word that appears in a posted program or announcement.
+    if (($newsReply = chatbotNewsFallbackReply($message, true)) !== null) {
+        return $newsReply;
     }
 
     return "I couldn't find that exact service in the Citizen's Charter. Try naming the document or service directly — for example \"business permit requirements\", \"senior citizen ID\", \"birth certificate copy\", or \"real property tax\". You can also ask me about office hours, departments, or how to file a complaint.";

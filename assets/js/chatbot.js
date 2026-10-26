@@ -30,9 +30,9 @@ document.addEventListener('DOMContentLoaded', function () {
   };
 
   let lang = 'en';
-  // Every fresh page load starts a fresh conversation, so the welcome message
-  // always asks for the language again. The last choice is only used to
-  // highlight the header switch until the citizen picks.
+  // A page with no earlier conversation starts with the welcome message, which asks for the language.
+  // The last choice is only used to highlight the header switch until the citizen picks. A page that
+  // has a conversation (see restoreConversation below) skips the welcome and shows it again.
   let langChosen = false;
   try {
     if (localStorage.getItem('chatbotLang') === 'tl') lang = 'tl';
@@ -103,7 +103,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   toggle.addEventListener('click', function () {
     panel.classList.toggle('open');
+    rememberOpen(panel.classList.contains('open'));
     if (panel.classList.contains('open')) {
+      messages.scrollTop = messages.scrollHeight;
       if (!greeted) {
         greeted = true;
         if (langChosen) {
@@ -118,7 +120,50 @@ document.addEventListener('DOMContentLoaded', function () {
 
   closeBtn.addEventListener('click', function () {
     panel.classList.remove('open');
+    rememberOpen(false);
   });
+
+  /**
+   * The conversation lives on the server (in the login session), so every page can draw it again.
+   * The page hands it over in data-history. Whether the chat window was open is remembered for this
+   * browser tab, so moving between pages feels like one continuous chat.
+   */
+  function rememberOpen(open) {
+    try {
+      if (open) sessionStorage.setItem('chatbotOpen', '1');
+      else sessionStorage.removeItem('chatbotOpen');
+    } catch (e) {
+      // Storage blocked: the window simply starts closed on the next page.
+    }
+  }
+
+  function restoreConversation() {
+    let saved = [];
+    try {
+      saved = JSON.parse(document.querySelector('.chatbot-widget').dataset.history || '[]');
+    } catch (e) {
+      saved = [];
+    }
+    if (!Array.isArray(saved) || saved.length === 0) return;
+
+    greeted = true;
+    langChosen = true;
+    applyLangUi();
+    addBubble('bot', TEXT[lang].greeting);
+    saved.forEach((turn) => addBubble(turn.role === 'user' ? 'user' : 'bot', String(turn.content)));
+
+    let wasOpen = false;
+    try {
+      wasOpen = sessionStorage.getItem('chatbotOpen') === '1';
+    } catch (e) {
+      wasOpen = false;
+    }
+    if (wasOpen) {
+      panel.classList.add('open');
+      messages.scrollTop = messages.scrollHeight;
+    }
+  }
+  restoreConversation();
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -154,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function addBubble(sender, text) {
     const bubble = document.createElement('div');
     bubble.className = `chatbot-bubble ${sender}`;
-    bubble.textContent = text;
+    appendWithLinks(bubble, text);
     messages.appendChild(bubble);
     messages.scrollTop = messages.scrollHeight;
     return bubble;
@@ -169,3 +214,31 @@ document.addEventListener('DOMContentLoaded', function () {
     return bubble;
   }
 });
+
+/**
+ * Puts the text in the bubble as plain text, except that a link to a news post on this same site
+ * (a full address, or a path like /LGU-Link/news-post.php?id=12) becomes a clickable link. A link
+ * to any other site is left as plain text, so the bot can never send a citizen elsewhere.
+ */
+function appendWithLinks(bubble, text) {
+  const pattern = /(https?:\/\/[^\s)]+|\/[A-Za-z0-9_\-\/]*(?:news-post|news)\.php(?:\?id=\d+)?)/g;
+  let last = 0;
+  let match;
+  while ((match = pattern.exec(text)) !== null) {
+    bubble.appendChild(document.createTextNode(text.slice(last, match.index)));
+    let url = null;
+    try { url = new URL(match[0], window.location.origin); } catch (e) { url = null; }
+    if (url && url.origin === window.location.origin && /news(-post)?\.php$/.test(url.pathname)) {
+      const link = document.createElement('a');
+      link.href = url.pathname + url.search;
+      link.textContent = match[0].startsWith('/') ? (url.pathname.endsWith('news.php') ? 'News page' : 'Read the post') : match[0];
+      link.target = '_blank';
+      link.rel = 'noopener';
+      bubble.appendChild(link);
+    } else {
+      bubble.appendChild(document.createTextNode(match[0]));
+    }
+    last = match.index + match[0].length;
+  }
+  bubble.appendChild(document.createTextNode(text.slice(last)));
+}

@@ -2,21 +2,24 @@
 /**
  * Admin-only write operations for the citizens_charter_services table.
  * Requires includes/charter-helpers.php (getDbConnection(), charterSlugify(),
- * getCharterServicesWithSlugs()) to already be loaded.
+ * getCharterServicesWithSlugs()) and includes/department-helpers.php (findDepartmentById())
+ * to already be loaded.
  */
+
+require_once __DIR__ . '/department-helpers.php';
 
 /**
  * Validates and saves a service. Pass $id = null to create a new row,
  * or an existing service's id to update it in place.
  *
- * @param array<string, mixed> $data Raw $_POST fields: office, title,
+ * @param array<string, mixed> $data Raw $_POST fields: department_id (the office), title,
  *   keywords (newline-separated), requirements (newline-separated), fee,
  *   processing_time.
  * @return array{success: bool, errors: string[]}
  */
 function saveCharterService(?int $id, array $data): array
 {
-    $office = trim((string) ($data['office'] ?? ''));
+    $departmentId = (int) ($data['department_id'] ?? 0);
     $title = trim((string) ($data['title'] ?? ''));
     $fee = trim((string) ($data['fee'] ?? ''));
     $processingTime = trim((string) ($data['processing_time'] ?? ''));
@@ -24,8 +27,9 @@ function saveCharterService(?int $id, array $data): array
     $requirementLines = charterSplitLines((string) ($data['requirements'] ?? ''));
 
     $errors = [];
-    if ($office === '') {
-        $errors[] = 'Office is required.';
+    $department = $departmentId > 0 ? findDepartmentById($departmentId) : null;
+    if ($department === null) {
+        $errors[] = 'Please choose the office this service belongs to.';
     }
     if ($title === '') {
         $errors[] = 'Title is required.';
@@ -65,11 +69,12 @@ function saveCharterService(?int $id, array $data): array
     if ($id === null) {
         $maxOrder = (int) $pdo->query('SELECT COALESCE(MAX(sort_order), -1) FROM citizens_charter_services')->fetchColumn();
         $stmt = $pdo->prepare(
-            'INSERT INTO citizens_charter_services (office, title, keywords, requirements, fee, processing_time, sort_order)
-             VALUES (:office, :title, :keywords, :requirements, :fee, :processing_time, :sort_order)'
+            'INSERT INTO citizens_charter_services (department_id, office, title, keywords, requirements, fee, processing_time, sort_order)
+             VALUES (:department_id, :office, :title, :keywords, :requirements, :fee, :processing_time, :sort_order)'
         );
         $stmt->execute([
-            'office' => $office,
+            'department_id' => $departmentId,
+            'office' => $department['name'],
             'title' => $title,
             'keywords' => implode("\n", $keywordLines),
             'requirements' => implode("\n", $requirementLines),
@@ -80,12 +85,13 @@ function saveCharterService(?int $id, array $data): array
     } else {
         $stmt = $pdo->prepare(
             'UPDATE citizens_charter_services
-             SET office = :office, title = :title, keywords = :keywords,
+             SET department_id = :department_id, office = :office, title = :title, keywords = :keywords,
                  requirements = :requirements, fee = :fee, processing_time = :processing_time
              WHERE id = :id'
         );
         $stmt->execute([
-            'office' => $office,
+            'department_id' => $departmentId,
+            'office' => $department['name'],
             'title' => $title,
             'keywords' => implode("\n", $keywordLines),
             'requirements' => implode("\n", $requirementLines),

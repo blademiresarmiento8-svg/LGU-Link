@@ -15,7 +15,7 @@ function openEditCharterModal(btn) {
 
   document.getElementById('charterModalTitle').textContent = 'Edit Service';
   document.getElementById('charterId').value = service.id;
-  document.getElementById('charterOffice').value = service.office;
+  document.getElementById('charterOffice').value = service.department_id || '';
   document.getElementById('charterTitle').value = service.title;
   document.getElementById('charterKeywords').value = service.keywords;
   document.getElementById('charterRequirements').value = service.requirements;

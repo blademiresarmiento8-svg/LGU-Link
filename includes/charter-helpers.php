@@ -17,12 +17,20 @@ function getCharterServices(): array
     static $services = null;
     if ($services === null) {
         $pdo = getDbConnection();
-        $rows = $pdo->query('SELECT * FROM citizens_charter_services ORDER BY sort_order ASC, id ASC')->fetchAll();
+        $rows = $pdo->query(
+            'SELECT s.*, d.name AS department_name, d.code AS department_code
+             FROM citizens_charter_services s LEFT JOIN departments d ON d.id = s.department_id
+             ORDER BY s.sort_order ASC, s.id ASC'
+        )->fetchAll();
 
         $services = array_map(static function (array $row): array {
             return [
                 'id' => (int) $row['id'],
-                'office' => $row['office'],
+                // The department's own name; the typed name only for a service not linked to one.
+                'office' => $row['department_name'] ?? $row['office'],
+                'office_legacy' => $row['office'],
+                'department_id' => $row['department_id'] === null ? null : (int) $row['department_id'],
+                'office_code' => $row['department_code'],
                 'title' => $row['title'],
                 'keywords' => charterSplitLines($row['keywords']),
                 'requirements' => charterSplitLines($row['requirements']),
@@ -57,22 +65,30 @@ function charterSlugify(string $text): string
     return trim($slug, '-');
 }
 
+/** Icon for an office, by department code (so it survives renaming). */
+const CHARTER_OFFICE_ICONS = [
+    'BPLO' => 'fa-store', 'ASS' => 'fa-map-location-dot', 'LCR' => 'fa-file-signature', 'ENGR' => 'fa-drafting-compass',
+    'MHO' => 'fa-briefcase-medical', 'MPDO' => 'fa-city', 'MENRO' => 'fa-leaf', 'MSWDO' => 'fa-hand-holding-heart',
+    'TREAS' => 'fa-coins', 'NMH' => 'fa-hospital', 'ACCT' => 'fa-calculator', 'AGRIC' => 'fa-wheat-awn',
+    'BUDGET' => 'fa-wallet', 'GSO' => 'fa-boxes-stacked', 'LYDO' => 'fa-people-group', 'MO' => 'fa-landmark',
+    'MAO' => 'fa-user-tie', 'MDRRMO' => 'fa-triangle-exclamation', 'MHRMO' => 'fa-users', 'NC' => 'fa-graduation-cap',
+    'NTMPSO' => 'fa-traffic-light', 'NUTR' => 'fa-apple-whole', 'OSCA' => 'fa-person-cane', 'PDAO' => 'fa-wheelchair',
+    'POP' => 'fa-people-roof', 'PESO' => 'fa-briefcase', 'PIO' => 'fa-bullhorn', 'SB' => 'fa-gavel', 'TOUR' => 'fa-umbrella-beach',
+];
+
 function getCharterOfficeIcon(string $office): string
 {
-    $icons = [
-        "Business Permits & Licensing Office" => 'fa-store',
-        "Municipal Assessor's Office" => 'fa-map-location-dot',
-        "Municipal Civil Registrar's Office" => 'fa-file-signature',
-        "Municipal Engineering Office" => 'fa-drafting-compass',
-        "Municipal Health Office" => 'fa-briefcase-medical',
-        "Municipal Planning & Development Office" => 'fa-city',
-        "Municipal Environment & Natural Resources Office" => 'fa-leaf',
-        "Municipal Social Welfare & Development Office" => 'fa-hand-holding-heart',
-        "Municipal Treasurer's Office" => 'fa-coins',
-        "Norzagaray Municipal Hospital" => 'fa-hospital',
-    ];
+    static $codeByName = null;
+    if ($codeByName === null) {
+        $codeByName = [];
+        foreach (getCharterServices() as $service) {
+            if (!empty($service['office_code'])) {
+                $codeByName[$service['office']] = $service['office_code'];
+            }
+        }
+    }
 
-    return $icons[$office] ?? 'fa-building';
+    return CHARTER_OFFICE_ICONS[$codeByName[$office] ?? ''] ?? 'fa-building';
 }
 
 /**
@@ -119,8 +135,29 @@ function getCharterOffices(): array
     return array_values($offices);
 }
 
+/**
+ * The office page address uses the office name, which is now the department's name. A link made
+ * with the old typed name (a bookmark, a shared link) still finds the right office.
+ */
+function resolveCharterOfficeSlug(string $officeSlug): string
+{
+    foreach (getCharterServicesWithSlugs() as $service) {
+        if ($service['office_slug'] === $officeSlug) {
+            return $officeSlug;
+        }
+    }
+    foreach (getCharterServicesWithSlugs() as $service) {
+        if (charterSlugify($service['office_legacy']) === $officeSlug) {
+            return $service['office_slug'];
+        }
+    }
+
+    return $officeSlug;
+}
+
 function getCharterOfficeBySlug(string $officeSlug): ?array
 {
+    $officeSlug = resolveCharterOfficeSlug($officeSlug);
     foreach (getCharterOffices() as $office) {
         if ($office['slug'] === $officeSlug) {
             return $office;
@@ -133,6 +170,8 @@ function getCharterOfficeBySlug(string $officeSlug): ?array
 /** All services belonging to one office, matched by office slug. */
 function getCharterServicesByOfficeSlug(string $officeSlug): array
 {
+    $officeSlug = resolveCharterOfficeSlug($officeSlug);
+
     return array_values(array_filter(
         getCharterServicesWithSlugs(),
         fn($service) => $service['office_slug'] === $officeSlug

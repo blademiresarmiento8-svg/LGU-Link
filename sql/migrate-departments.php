@@ -38,7 +38,7 @@ $offices = [
     ['PESO', "Public Employment Service Office", 'Social'],
     ['ENGR', "Engineering Office", 'Infrastructure'],
     ['AGRIC', "Agriculture Office", 'Social'],
-    ['NMH', "Norzagaray Municipal Hostpital", 'Social'],
+    ['NMH', "Norzagaray Municipal Hospital", 'Social'],
     ['MHO', "Municipal Health Office", 'Social'],
     ['NC', "Norzagaray College", 'Social'],
 ];
