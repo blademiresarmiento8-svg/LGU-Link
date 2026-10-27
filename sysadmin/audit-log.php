@@ -39,7 +39,21 @@ $perPage = 25;
 $filters = [
     'q' => trim((string) ($_GET['q'] ?? '')),
     'action' => (string) ($_GET['action'] ?? ''),
+    'from' => (string) ($_GET['from'] ?? ''),
+    'to' => (string) ($_GET['to'] ?? ''),
 ];
+
+// Dates must be real days that are not in the future, and the range must run forwards.
+$today = date('Y-m-d');
+foreach (['from', 'to'] as $key) {
+    $day = DateTime::createFromFormat('!Y-m-d', $filters[$key]);
+    if ($day === false || $day->format('Y-m-d') !== $filters[$key] || $filters[$key] > $today) {
+        $filters[$key] = '';
+    }
+}
+if ($filters['from'] !== '' && $filters['to'] !== '' && $filters['from'] > $filters['to']) {
+    $filters['to'] = '';
+}
 // The dropdown lists only the actions that have happened at least once.
 $actionCounts = auditActionCounts();
 $actionChoices = [];
@@ -58,7 +72,7 @@ if ($page > $pages) {
     $result = searchAuditLog($filters, $page, $perPage);
 }
 $entries = $result['rows'];
-$filtered = $filters['q'] !== '' || $filters['action'] !== '';
+$filtered = $filters['q'] !== '' || $filters['action'] !== '' || $filters['from'] !== '' || $filters['to'] !== '';
 $pageLink = fn(int $n) => '?' . http_build_query(array_filter($filters + ['page' => $n > 1 ? $n : null], fn($v) => $v !== '' && $v !== null));
 ?>
 <!DOCTYPE html>
@@ -98,6 +112,11 @@ $pageLink = fn(int $n) => '?' . http_build_query(array_filter($filters + ['page'
             <option value="<?= htmlspecialchars($key) ?>" <?= $filters['action'] === $key ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
           <?php endforeach; ?>
         </select>
+        <label class="audit-date">From <input type="date" name="from" value="<?= htmlspecialchars($filters['from']) ?>" max="<?= $today ?>"></label>
+        <label class="audit-date">To <input type="date" name="to" value="<?= htmlspecialchars($filters['to']) ?>" min="<?= htmlspecialchars($filters['from']) ?>" max="<?= $today ?>"></label>
+        <?php if ($filtered): ?>
+          <a href="audit-log.php" class="btn-modal btn-cancel" style="text-decoration: none;">Clear</a>
+        <?php endif; ?>
       </form>
 
       <div class="table-container">
@@ -187,10 +206,40 @@ $pageLink = fn(int $n) => '?' . http_build_query(array_filter($filters + ['page'
 
   <script src="/LGU-Link/assets/js/main.js"></script>
   <script>
-    // Picking an action applies the filter straight away (the search applies when you press Enter).
-    document.querySelectorAll('.audit-filters select').forEach((el) => {
-      el.addEventListener('change', () => el.form.requestSubmit());
-    });
+    // Picking an action or a date applies the filter straight away (the search applies when you press Enter).
+    (() => {
+      const form = document.querySelector('.audit-filters');
+      const action = form.elements.action;
+      const from = form.elements.from;
+      const to = form.elements.to;
+      const today = from.max;
+      let timer = null;
+
+      // A typed date fires "change" while the year is still being entered, so wait a moment and skip half-typed years.
+      const apply = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          const half = [from, to].some((el) => el.value !== '' && el.value < '2000-01-01');
+          if (!half) form.requestSubmit();
+        }, 600);
+      };
+
+      action.addEventListener('change', () => form.requestSubmit());
+
+      from.addEventListener('change', () => {
+        if (from.value > today) from.value = '';
+        if (to.value !== '' && from.value !== '' && from.value > to.value) to.value = ''; // the range would run backwards
+        to.min = from.value;
+        apply();
+      });
+
+      to.addEventListener('change', () => {
+        if (to.value > today) to.value = '';
+        if (from.value !== '' && to.value !== '' && to.value < from.value) from.value = ''; // the range would run backwards
+        to.min = from.value;
+        apply();
+      });
+    })();
   </script>
 </body>
 
