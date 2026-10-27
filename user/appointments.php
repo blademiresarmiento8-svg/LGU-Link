@@ -61,6 +61,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
               <th>Category</th>
               <th>Title</th>
               <th>Status</th>
+              <th>Office</th>
               <th>Schedule</th>
               <th>Actions</th>
             </tr>
@@ -68,7 +69,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
           <tbody>
             <?php if (empty($appointments)): ?>
               <tr>
-                <td colspan="6" class="row-note">You haven't submitted any appointment requests yet.</td>
+                <td colspan="7" class="row-note">You haven't submitted any appointment requests yet.</td>
               </tr>
             <?php endif; ?>
             <?php foreach ($appointments as $appt): ?>
@@ -113,6 +114,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
                 <td><?= htmlspecialchars($appt['category']) ?></td>
                 <td><strong><?= htmlspecialchars($appt['title']) ?></strong></td>
                 <td><span class="badge <?= htmlspecialchars($statusMeta['badgeClass']) ?>"><?= htmlspecialchars($statusMeta['label']) ?></span></td>
+                <td><?= $appt['department_name'] !== null ? htmlspecialchars($appt['department_name']) : '<span class="row-note">—</span>' ?></td>
                 <td><?= htmlspecialchars($scheduleText) ?></td>
                 <td>
                   <div class="action-btns">
