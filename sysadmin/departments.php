@@ -9,6 +9,7 @@ $departments = getAllDepartments();
 $withHead = count(array_filter($departments, fn($d) => trim((string) $d['department_head']) !== ''));
 
 $flashSaved = isset($_GET['saved']);
+$flashAdded = isset($_GET['added']);
 $flashError = trim((string) ($_GET['error'] ?? ''));
 ?>
 <!DOCTYPE html>
@@ -34,6 +35,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
         <h1><?= count($departments) ?> LGU Offices & Departments</h1>
         <p>The municipal offices and their department heads. Use Change Head when an office gets a new head.</p>
       </div>
+      <button class="btn-primary" onclick="openAddOfficeModal()"><i class="fa-solid fa-plus"></i> Add Office</button>
     </div>
 
     <!-- STATS CARDS -->
@@ -75,11 +77,9 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <select id="sectorSelect" onchange="applyFilters()">
           <option value="all">All Sectors</option>
-          <option value="Executive">Executive & Administrative</option>
-          <option value="Finance">Finance & Revenue</option>
-          <option value="Social">Social & Health Services</option>
-          <option value="Infrastructure">Infrastructure & Environment</option>
-          <option value="Public Safety">Public Safety & Legislative</option>
+          <?php foreach (DEPARTMENT_SECTORS as $key => $label): ?>
+            <option value="<?= htmlspecialchars($key) ?>"><?= htmlspecialchars($label) ?></option>
+          <?php endforeach; ?>
         </select>
       </div>
 
@@ -114,6 +114,53 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
     </section>
 
   </main>
+
+  <!-- ADD OFFICE MODAL -->
+  <div class="modal-overlay" id="addOfficeModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Add Office</h3>
+        <i class="fa-solid fa-xmark close-btn" onclick="closeModal('addOfficeModal')"></i>
+      </div>
+      <form id="addOfficeForm" action="departments-add.php" method="post">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
+
+        <div class="form-group">
+          <label for="officeName">Office Name</label>
+          <input type="text" name="name" id="officeName" maxlength="150" required placeholder="e.g. Municipal Cooperative Office" oninput="suggestOfficeCode()">
+        </div>
+
+        <div class="form-group">
+          <label for="officeCode">Short Code</label>
+          <input type="text" name="code" id="officeCode" maxlength="20" required pattern="[A-Za-z0-9]{2,20}" placeholder="e.g. MCO" style="text-transform: uppercase;" oninput="this.dataset.edited = '1'">
+          <small class="row-note">2 to 20 letters or numbers. It must be different from every other office's code, and it labels the office's queue tickets.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="officeSector">Sector</label>
+          <select name="sector" id="officeSector" required>
+            <option value="">Choose a sector...</option>
+            <?php foreach (DEPARTMENT_SECTORS as $key => $label): ?>
+              <option value="<?= htmlspecialchars($key) ?>"><?= htmlspecialchars($label) ?></option>
+            <?php endforeach; ?>
+          </select>
+          <small class="row-note">Only used to group offices in this list.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="officeHead">Department Head <span class="row-note">(optional)</span></label>
+          <input type="text" name="department_head" id="officeHead" maxlength="150" placeholder="Full name of the department head">
+        </div>
+
+        <p class="row-note">After adding it, create the office's account under Office Accounts. Its Citizen's Charter services and queue are set up separately.</p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-modal btn-cancel" onclick="closeModal('addOfficeModal')">Cancel</button>
+          <button type="submit" class="btn-modal btn-submit">Add Office</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- CHANGE DEPARTMENT HEAD MODAL -->
   <div class="modal-overlay" id="deptModal">
@@ -153,6 +200,8 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
   <?php if ($flashSaved): ?>
     <script>document.addEventListener('DOMContentLoaded', () => showToast('Department head updated.'));</script>
+  <?php elseif ($flashAdded): ?>
+    <script>document.addEventListener('DOMContentLoaded', () => showToast('Office added. You can now create its account under Office Accounts.'));</script>
   <?php elseif ($flashError !== ''): ?>
     <script>document.addEventListener('DOMContentLoaded', () => showToast(<?= json_encode($flashError) ?>, true));</script>
   <?php endif; ?>

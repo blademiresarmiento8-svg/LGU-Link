@@ -52,3 +52,64 @@ function updateDepartmentHead(int $departmentId, string $head): array
 
     return ['success' => true, 'errors' => []];
 }
+
+/** The groups offices are listed under on the Departments page (stored name => full label). Only for grouping and filtering. */
+const DEPARTMENT_SECTORS = [
+    'Executive' => 'Executive & Administrative',
+    'Finance' => 'Finance & Revenue',
+    'Social' => 'Social & Health Services',
+    'Infrastructure' => 'Infrastructure & Environment',
+    'Public Safety' => 'Public Safety & Legislative',
+];
+
+/**
+ * Adds a new office. System-admin only: callers must have already checked the role and CSRF token.
+ * The new office starts with no office account, no charter services and the queue turned off.
+ *
+ * @return array{success: bool, errors: string[]}
+ */
+function createDepartment(string $code, string $name, string $sector, string $head): array
+{
+    require_once __DIR__ . '/audit-helpers.php';
+
+    $code = strtoupper(trim($code));
+    $name = trim((string) preg_replace('/\s+/', ' ', $name));
+    $head = trim((string) preg_replace('/\s+/', ' ', $head));
+
+    $errors = [];
+    if ($name === '' || mb_strlen($name) > 150) {
+        $errors[] = 'Enter the office name (up to 150 characters).';
+    }
+    if (!preg_match('/^[A-Z0-9]{2,20}$/', $code)) {
+        $errors[] = 'The short code must be 2 to 20 letters or numbers, with no spaces.';
+    }
+    if (!isset(DEPARTMENT_SECTORS[$sector])) {
+        $errors[] = 'Choose a sector.';
+    }
+    if (mb_strlen($head) > 150) {
+        $errors[] = 'Department head name must be 150 characters or fewer.';
+    }
+    if ($errors) {
+        return ['success' => false, 'errors' => $errors];
+    }
+
+    $pdo = getDbConnection();
+    $taken = $pdo->prepare('SELECT code, name FROM departments WHERE code = :code OR name = :name LIMIT 1');
+    $taken->execute(['code' => $code, 'name' => $name]);
+    if ($existing = $taken->fetch()) {
+        return ['success' => false, 'errors' => [strcasecmp($existing['code'], $code) === 0
+            ? 'The code ' . $code . ' is already used by ' . $existing['name'] . '.'
+            : 'An office named ' . $existing['name'] . ' already exists.']];
+    }
+
+    try {
+        $pdo->prepare('INSERT INTO departments (code, name, sector, department_head) VALUES (:code, :name, :sector, :head)')
+            ->execute(['code' => $code, 'name' => $name, 'sector' => $sector, 'head' => $head === '' ? null : $head]);
+    } catch (PDOException $e) {
+        // Someone else added the same code or name a moment ago.
+        return ['success' => false, 'errors' => ['That code or office name is already used.']];
+    }
+    logAudit('department_added', null, $name, 'Code ' . $code . ', ' . DEPARTMENT_SECTORS[$sector]);
+
+    return ['success' => true, 'errors' => []];
+}

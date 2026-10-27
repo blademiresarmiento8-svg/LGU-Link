@@ -13,6 +13,7 @@ $actionLabels = [
     'password_reset' => 'Password reset',
     'account_suspended' => 'Account suspended',
     'account_unsuspended' => 'Account unsuspended',
+    'department_added' => 'Office added',
     'news_archived' => 'News post archived',
     'news_restored' => 'News post restored',
     'news_deleted' => 'News post permanently deleted',
