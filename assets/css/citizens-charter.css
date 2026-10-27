@@ -348,6 +348,56 @@
   flex-shrink: 0;
 }
 
+.charter-who {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 20px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.charter-who i {
+  color: var(--primary);
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.charter-steps-list {
+  list-style: none;
+  counter-reset: charter-step;
+  margin: 0 0 24px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.charter-steps-list li {
+  counter-increment: charter-step;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.charter-steps-list li::before {
+  content: counter(charter-step);
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
 .charter-disclaimer {
   display: flex;
   align-items: flex-start;

@@ -71,6 +71,10 @@ $officeIcon = $office['icon'] ?? getCharterOfficeIcon($service['office']);
         </div>
       </div>
 
+      <?php if ($service['who_may_avail'] !== ''): ?>
+        <p class="charter-who"><i class="fa-solid fa-user-check"></i><span><strong>Who may avail:</strong> <?= htmlspecialchars($service['who_may_avail']) ?></span></p>
+      <?php endif; ?>
+
       <h3 class="charter-detail-subhead">Requirements</h3>
       <ul class="charter-requirements-list">
         <?php foreach ($service['requirements'] as $requirement): ?>
@@ -78,9 +82,18 @@ $officeIcon = $office['icon'] ?? getCharterOfficeIcon($service['office']);
         <?php endforeach; ?>
       </ul>
 
+      <?php if (!empty($service['steps'])): ?>
+        <h3 class="charter-detail-subhead">How to apply</h3>
+        <ol class="charter-steps-list">
+          <?php foreach ($service['steps'] as $step): ?>
+            <li><span><?= htmlspecialchars($step) ?></span></li>
+          <?php endforeach; ?>
+        </ol>
+      <?php endif; ?>
+
       <p class="charter-disclaimer">
         <i class="fa-solid fa-circle-info"></i>
-        From the Norzagaray Citizen's Charter 2025. Bring originals plus the noted photocopies, and confirm at the counter since requirements can change.
+        From the Norzagaray Citizen's Charter 2025. Bring originals plus the noted photocopies, and confirm at the counter since requirements and steps can change.
       </p>
 
     </section>

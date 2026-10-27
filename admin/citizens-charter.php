@@ -105,7 +105,9 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
                   'office' => $service['office'],
                   'title' => $service['title'],
                   'keywords' => implode("\n", $service['keywords']),
+                  'who_may_avail' => $service['who_may_avail'],
                   'requirements' => implode("\n", $service['requirements']),
+                  'steps' => implode("\n", $service['steps']),
                   'fee' => $service['fee'],
                   'processing_time' => $service['processing_time'],
               ]);
@@ -158,6 +160,11 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
         </div>
 
         <div class="form-group">
+          <label>Who may avail <span class="row-note">— optional, e.g. "Property owner or authorized representative"</span></label>
+          <input type="text" name="who_may_avail" id="charterWho" maxlength="500">
+        </div>
+
+        <div class="form-group">
           <label>Keywords <span class="row-note">— one phrase per line; phrases citizens might type. Used by search and the chatbot.</span></label>
           <textarea name="keywords" id="charterKeywords" rows="3" placeholder="cedula&#10;community tax certificate&#10;ctc"></textarea>
         </div>
@@ -165,6 +172,11 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
         <div class="form-group">
           <label>Requirements <span class="row-note">— one requirement per line</span></label>
           <textarea name="requirements" id="charterRequirements" rows="5" required placeholder="Valid government-issued ID&#10;Previous Official Receipt"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Steps <span class="row-note">— optional; how to apply, one step per line, in order (the citizen sees them numbered)</span></label>
+          <textarea name="steps" id="charterSteps" rows="6" placeholder="Submit the complete documents&#10;Pay the fee at the Treasurer's Office&#10;Claim your document"></textarea>
         </div>
 
         <div class="form-group">

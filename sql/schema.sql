@@ -170,14 +170,16 @@ CREATE TABLE IF NOT EXISTS appointments (
 -- Citizen's Charter services: requirements/fee/processing time per LGU
 -- office, editable by admins (admin/citizens-charter.php). Read by the
 -- citizen-facing charter pages, the site search, and the chatbot.
--- keywords/requirements are stored one item per line.
+-- keywords/requirements/steps are stored one item per line.
 CREATE TABLE IF NOT EXISTS citizens_charter_services (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   department_id INT UNSIGNED NULL, -- the office this service belongs to; its name is what citizens see
   office VARCHAR(150) NOT NULL, -- the name typed in the past; kept so old links still work
   title VARCHAR(200) NOT NULL,
+  who_may_avail VARCHAR(500) NULL, -- who can apply, from the Citizen's Charter
   keywords TEXT NOT NULL,
   requirements TEXT NOT NULL,
+  steps TEXT NULL, -- how to apply, one step per line
   fee VARCHAR(255) NOT NULL,
   processing_time VARCHAR(255) NOT NULL,
   sort_order INT UNSIGNED NOT NULL DEFAULT 0,

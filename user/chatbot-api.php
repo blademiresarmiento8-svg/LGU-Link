@@ -90,7 +90,8 @@ function getAiReply(string $message, string $lang = 'en'): ?string
 
     // The news that fit this question, and the last two things the citizen asked before it (so "when is it?" finds the post).
     $earlier = array_values(array_reverse(array_column(array_filter($_SESSION['chatbot_history'], fn($t) => $t['role'] === 'user'), 'content')));
-    $systemPrompt = getCharterSystemPrompt() . "\n\n" . chatbotNewsSection(array_merge([$message], array_slice($earlier, 0, 2))) . "\n\n" . getLanguageInstruction($lang);
+    $recent = array_merge([$message], array_slice($earlier, 0, 2));
+    $systemPrompt = getCharterSystemPrompt() . "\n\n" . chatbotStepsSection($recent) . "\n\n" . chatbotNewsSection($recent) . "\n\n" . getLanguageInstruction($lang);
     // Gemini first when it has a key. If it is down or busy (it sometimes answers "high demand"), the
     // Claude key, when there is one, answers instead, so the chatbot keeps working.
     $reply = null;
@@ -236,6 +237,7 @@ function getCharterSystemPrompt(): string
         "",
         "How to answer:",
         "- If the question matches one of the listed services, answer using exactly that data — title, requirements, fee, and processing time. Do not invent or guess figures that aren't listed.",
+        "- When someone asks how to apply, what the steps or process are, or who may apply, answer from the \"How to apply\" section for that service, in order, one short numbered line per step. If that section is missing for the service, say the steps aren't on record and suggest asking at the office.",
         "- Remember the conversation. Resolve follow-ups like \"how much is that\" or \"what about the renewal\" using whichever service was just discussed.",
         "- If nothing below matches, say so plainly and suggest the citizen contact the relevant office, or visit the Municipal Compound, A. Payumo St., Barangay Poblacion, Norzagaray, Bulacan.",
         "- For general questions (office hours, location, departments, filing a complaint, appointments) answer briefly: offices are open Monday-Friday 8:00 AM-5:00 PM except holidays; complaints/feedback go to the Office of the Mayor at 0965-377-5267 or officeofthemayor.norzagaray@gmail.com (also ARTA at complaints@arta.gov.ph); the LGU's offices and their heads are listed below.",
@@ -289,7 +291,8 @@ function getRuleBasedReply(string $message): string
 
     $service = findMatchingService($text);
     if ($service !== null) {
-        return formatServiceReply($service);
+        // The steps are added when the citizen asks how to apply; the plain answer stays short.
+        return formatServiceReply($service, (bool) preg_match('/\b(steps?|process|procedure|how (do|to|can)|apply|paano|hakbang)\b/i', $text));
     }
 
     // A question about the news, programs or events: answer from the posted news.
@@ -373,7 +376,46 @@ function findMatchingService(string $text): ?array
     return $bestMatch;
 }
 
-function formatServiceReply(array $service): string
+/**
+ * The "how to apply" steps and who may avail for the services the citizen is asking about (this question
+ * and the two before it). Only these are sent, so the always-on prompt stays small.
+ */
+function chatbotStepsSection(array $texts): string
+{
+    $found = [];
+    foreach ($texts as $text) {
+        $service = findMatchingService(strtolower((string) $text));
+        if ($service !== null) {
+            $found[$service['id']] = $service;
+        }
+        if (count($found) >= 2) {
+            break;
+        }
+    }
+
+    $lines = ['=== How to apply (steps) for the services being discussed ==='];
+    foreach ($found as $service) {
+        $lines[] = '';
+        $lines[] = $service['title'] . ' (' . $service['office'] . ')';
+        if ($service['who_may_avail'] !== '') {
+            $lines[] = 'Who may avail: ' . $service['who_may_avail'];
+        }
+        if (empty($service['steps'])) {
+            $lines[] = 'No steps on record for this service.';
+            continue;
+        }
+        foreach ($service['steps'] as $i => $step) {
+            $lines[] = ($i + 1) . '. ' . $step;
+        }
+    }
+    if (empty($found)) {
+        $lines[] = '(No specific service is being discussed right now.)';
+    }
+
+    return implode("\n", $lines);
+}
+
+function formatServiceReply(array $service, bool $withSteps = false): string
 {
     $lines = [];
     $lines[] = $service['title'] . ' — ' . $service['office'];
@@ -385,8 +427,15 @@ function formatServiceReply(array $service): string
     $lines[] = '';
     $lines[] = 'Fee: ' . $service['fee'];
     $lines[] = 'Processing time: ' . $service['processing_time'];
+    if ($withSteps && !empty($service['steps'])) {
+        $lines[] = '';
+        $lines[] = 'How to apply:';
+        foreach ($service['steps'] as $i => $step) {
+            $lines[] = ($i + 1) . '. ' . $step;
+        }
+    }
     $lines[] = '';
-    $lines[] = '(From the Norzagaray Citizen\'s Charter 2025. Bring originals plus the noted photocopies, and confirm at the counter since requirements can change.)';
+    $lines[] = '(From the Norzagaray Citizen\'s Charter 2025. Bring originals plus the noted photocopies, and confirm at the counter since requirements and steps can change.)';
 
     return implode("\n", $lines);
 }

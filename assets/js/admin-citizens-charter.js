@@ -18,7 +18,9 @@ function openEditCharterModal(btn) {
   document.getElementById('charterOffice').value = service.department_id || '';
   document.getElementById('charterTitle').value = service.title;
   document.getElementById('charterKeywords').value = service.keywords;
+  document.getElementById('charterWho').value = service.who_may_avail;
   document.getElementById('charterRequirements').value = service.requirements;
+  document.getElementById('charterSteps').value = service.steps;
   document.getElementById('charterFee').value = service.fee;
   document.getElementById('charterProcessingTime').value = service.processing_time;
 

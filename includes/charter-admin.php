@@ -13,7 +13,8 @@ require_once __DIR__ . '/department-helpers.php';
  * or an existing service's id to update it in place.
  *
  * @param array<string, mixed> $data Raw $_POST fields: department_id (the office), title,
- *   keywords (newline-separated), requirements (newline-separated), fee,
+ *   who_may_avail, keywords (newline-separated), requirements (newline-separated),
+ *   steps (newline-separated), fee,
  *   processing_time.
  * @return array{success: bool, errors: string[]}
  */
@@ -25,6 +26,8 @@ function saveCharterService(?int $id, array $data): array
     $processingTime = trim((string) ($data['processing_time'] ?? ''));
     $keywordLines = charterSplitLines((string) ($data['keywords'] ?? ''));
     $requirementLines = charterSplitLines((string) ($data['requirements'] ?? ''));
+    $stepLines = charterSplitLines((string) ($data['steps'] ?? ''));
+    $whoMayAvail = trim((string) ($data['who_may_avail'] ?? ''));
 
     $errors = [];
     $department = $departmentId > 0 ? findDepartmentById($departmentId) : null;
@@ -42,6 +45,9 @@ function saveCharterService(?int $id, array $data): array
     }
     if (empty($requirementLines)) {
         $errors[] = 'At least one requirement is required.';
+    }
+    if (mb_strlen($whoMayAvail) > 500) {
+        $errors[] = 'Who may avail must be 500 characters or fewer.';
     }
 
     if (!empty($errors)) {
@@ -69,15 +75,17 @@ function saveCharterService(?int $id, array $data): array
     if ($id === null) {
         $maxOrder = (int) $pdo->query('SELECT COALESCE(MAX(sort_order), -1) FROM citizens_charter_services')->fetchColumn();
         $stmt = $pdo->prepare(
-            'INSERT INTO citizens_charter_services (department_id, office, title, keywords, requirements, fee, processing_time, sort_order)
-             VALUES (:department_id, :office, :title, :keywords, :requirements, :fee, :processing_time, :sort_order)'
+            'INSERT INTO citizens_charter_services (department_id, office, title, who_may_avail, keywords, requirements, steps, fee, processing_time, sort_order)
+             VALUES (:department_id, :office, :title, :who_may_avail, :keywords, :requirements, :steps, :fee, :processing_time, :sort_order)'
         );
         $stmt->execute([
             'department_id' => $departmentId,
             'office' => $department['name'],
             'title' => $title,
+            'who_may_avail' => $whoMayAvail === '' ? null : $whoMayAvail,
             'keywords' => implode("\n", $keywordLines),
             'requirements' => implode("\n", $requirementLines),
+            'steps' => empty($stepLines) ? null : implode("\n", $stepLines),
             'fee' => $fee,
             'processing_time' => $processingTime,
             'sort_order' => $maxOrder + 1,
@@ -85,16 +93,18 @@ function saveCharterService(?int $id, array $data): array
     } else {
         $stmt = $pdo->prepare(
             'UPDATE citizens_charter_services
-             SET department_id = :department_id, office = :office, title = :title, keywords = :keywords,
-                 requirements = :requirements, fee = :fee, processing_time = :processing_time
+             SET department_id = :department_id, office = :office, title = :title, who_may_avail = :who_may_avail,
+                 keywords = :keywords, requirements = :requirements, steps = :steps, fee = :fee, processing_time = :processing_time
              WHERE id = :id'
         );
         $stmt->execute([
             'department_id' => $departmentId,
             'office' => $department['name'],
             'title' => $title,
+            'who_may_avail' => $whoMayAvail === '' ? null : $whoMayAvail,
             'keywords' => implode("\n", $keywordLines),
             'requirements' => implode("\n", $requirementLines),
+            'steps' => empty($stepLines) ? null : implode("\n", $stepLines),
             'fee' => $fee,
             'processing_time' => $processingTime,
             'id' => $id,

@@ -9,7 +9,7 @@
 require_once __DIR__ . '/../config/database.php';
 
 /**
- * Every service row from the DB, each with `keywords` and `requirements`
+ * Every service row from the DB, each with `keywords`, `requirements` and `steps`
  * split back into arrays (stored one item per line). Cached per-request.
  */
 function getCharterServices(): array
@@ -34,6 +34,8 @@ function getCharterServices(): array
                 'title' => $row['title'],
                 'keywords' => charterSplitLines($row['keywords']),
                 'requirements' => charterSplitLines($row['requirements']),
+                'steps' => charterSplitLines((string) ($row['steps'] ?? '')),
+                'who_may_avail' => trim((string) ($row['who_may_avail'] ?? '')),
                 'fee' => $row['fee'],
                 'processing_time' => $row['processing_time'],
             ];
@@ -223,7 +225,7 @@ function charterSearchTerms(string $query): array
 
 /**
  * Site search across the Citizen's Charter: matches the query against
- * title, office, keyword phrases, requirements, fee, and processing time.
+ * title, office, keyword phrases, requirements, steps, fee, and processing time.
  * Returns matching services ordered by relevance, each carrying a
  * `_snippet` (the matched line) and `_snippet_label` (where it was found)
  * so the results page can show citizens exactly why a page matched.
@@ -266,6 +268,15 @@ function searchCharterServices(string $query): array
                     $score += 2;
                     $snippet ??= $requirement;
                     $snippetLabel ??= 'Requirement';
+                    break;
+                }
+            }
+
+            foreach ($service['steps'] as $step) {
+                if (str_contains(strtolower($step), $term)) {
+                    $score += 1;
+                    $snippet ??= $step;
+                    $snippetLabel ??= 'Step';
                     break;
                 }
             }
