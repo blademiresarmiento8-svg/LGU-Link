@@ -1,7 +1,7 @@
 <?php
 /**
  * Site root — the "Home" page.
- * Logged in admin    -> straight to the admin dashboard (unchanged).
+ * Logged in admin    -> straight to the admin dashboard, unless they used the Home tab (?site=1).
  * Logged in citizen  -> this same homepage, but with the citizen portal
  *                       header (Home / Dashboard / Citizen's Charter tabs)
  *                       instead of the guest header.
@@ -12,7 +12,8 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/news-email.php';
 newsEmailFallbackTick(); // sends waiting news emails if the scheduled job is not set up
 
-if (isLoggedIn() && isAdminRole($_SESSION['role'])) {
+// Staff go to their dashboard unless they asked for the public site (the Home tab adds ?site=1).
+if (isLoggedIn() && isAdminRole($_SESSION['role']) && !isset($_GET['site'])) {
     header('Location: ' . dashboardUrlFor($_SESSION['role']));
     exit;
 }

@@ -10,6 +10,7 @@ $activePage = $activePage ?? '';
 $officeUser = currentUser();
 
 $navItems = [
+    'home'              => ['label' => 'Home',               'icon' => 'fa-house',           'href' => '/LGU-Link/index.php?site=1'],
     'dashboard' => ['label' => 'Dashboard', 'icon' => 'fa-chart-pie', 'href' => 'dashboard.php'],
     'meetings'  => ['label' => 'Meetings',  'icon' => 'fa-people-group', 'href' => 'meetings.php'],
     'news'      => ['label' => 'News',      'icon' => 'fa-newspaper',    'href' => 'news.php'],

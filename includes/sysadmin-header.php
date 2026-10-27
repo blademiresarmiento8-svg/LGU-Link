@@ -9,6 +9,7 @@ $activePage = $activePage ?? '';
 $admin = currentUser();
 
 $navItems = [
+    'home'              => ['label' => 'Home',               'icon' => 'fa-house',           'href' => '/LGU-Link/index.php?site=1'],
     'dashboard'         => ['label' => 'Dashboard',          'icon' => 'fa-chart-pie',       'href' => 'dashboard.php'],
     'departments'       => ['label' => 'Departments',        'icon' => 'fa-building-columns', 'href' => 'departments.php'],
     'office-accounts'   => ['label' => 'Office Accounts',    'icon' => 'fa-building-user',   'href' => 'office-accounts.php'],
