@@ -12,7 +12,6 @@ $availableDepartments = getDepartmentsWithoutOfficeAccount();
 $suspendedCount = count(array_filter($accounts, fn($a) => $a['status'] === 'suspended'));
 
 $flashSaved = isset($_GET['saved']);
-$flashDeleted = isset($_GET['deleted']);
 $flashReset = isset($_GET['reset']);
 $flashSuspended = isset($_GET['suspended']);
 $flashUnsuspended = isset($_GET['unsuspended']);
@@ -125,7 +124,6 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
                     <?php else: ?>
                       <button class="btn-action toggle" onclick="openSuspendModal(<?= (int) $account['id'] ?>, <?= htmlspecialchars(json_encode($account['department_name']), ENT_QUOTES) ?>)">Suspend</button>
                     <?php endif; ?>
-                    <button class="btn-action reject" onclick="confirmDeleteOfficeAccount(<?= (int) $account['id'] ?>, <?= htmlspecialchars(json_encode($account['full_name']), ENT_QUOTES) ?>)">Delete</button>
                   </div>
                 </td>
               </tr>
@@ -250,12 +248,6 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
     <input type="hidden" name="id" id="officeAccountUnsuspendId" value="">
   </form>
 
-  <!-- Hidden delete form -- submitted after the shared confirm modal is accepted -->
-  <form id="officeAccountDeleteForm" action="office-accounts-delete.php" method="post" style="display:none;">
-    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
-    <input type="hidden" name="id" id="officeAccountDeleteId" value="">
-  </form>
-
   <?php require __DIR__ . '/../includes/toast.php'; ?>
   <?php require __DIR__ . '/../includes/confirm-modal.php'; ?>
 
@@ -270,8 +262,6 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
     <script>document.addEventListener('DOMContentLoaded', () => showToast('Account suspended.'));</script>
   <?php elseif ($flashUnsuspended): ?>
     <script>document.addEventListener('DOMContentLoaded', () => showToast('Account reactivated.'));</script>
-  <?php elseif ($flashDeleted): ?>
-    <script>document.addEventListener('DOMContentLoaded', () => showToast('Office account deleted.'));</script>
   <?php elseif ($flashError !== ''): ?>
     <script>document.addEventListener('DOMContentLoaded', () => showToast(<?= json_encode($flashError) ?>, true));</script>
   <?php endif; ?>

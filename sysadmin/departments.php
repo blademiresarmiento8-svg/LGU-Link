@@ -74,13 +74,6 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="searchInput" placeholder="Search department name or office head..." onkeyup="applyFilters()">
         </div>
-
-        <select id="sectorSelect" onchange="applyFilters()">
-          <option value="all">All Sectors</option>
-          <?php foreach (DEPARTMENT_SECTORS as $key => $label): ?>
-            <option value="<?= htmlspecialchars($key) ?>"><?= htmlspecialchars($label) ?></option>
-          <?php endforeach; ?>
-        </select>
       </div>
 
       <!-- DATA TABLE FOR DEPARTMENTS -->
@@ -90,7 +83,6 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
             <tr>
               <th>Code</th>
               <th>Department Name</th>
-              <th>Sector</th>
               <th>Department Head</th>
               <th>Actions</th>
             </tr>
@@ -100,7 +92,6 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
               <tr>
                 <td><strong><?= htmlspecialchars($department['code']) ?></strong></td>
                 <td><?= htmlspecialchars($department['name']) ?></td>
-                <td><?= htmlspecialchars($department['sector']) ?></td>
                 <td><?= trim((string) $department['department_head']) !== '' ? htmlspecialchars($department['department_head']) : '<span class="row-note">Not assigned</span>' ?></td>
                 <td>
                   <button class="btn-action edit" onclick="openChangeHeadModal(<?= (int) $department['id'] ?>, <?= htmlspecialchars(json_encode($department['name']), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode((string) $department['department_head']), ENT_QUOTES) ?>)">Change Head</button>
@@ -134,17 +125,6 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
           <label for="officeCode">Short Code</label>
           <input type="text" name="code" id="officeCode" maxlength="20" required pattern="[A-Za-z0-9]{2,20}" placeholder="e.g. MCO" style="text-transform: uppercase;" oninput="this.dataset.edited = '1'">
           <small class="row-note">2 to 20 letters or numbers. It must be different from every other office's code, and it labels the office's queue tickets.</small>
-        </div>
-
-        <div class="form-group">
-          <label for="officeSector">Sector</label>
-          <select name="sector" id="officeSector" required>
-            <option value="">Choose a sector...</option>
-            <?php foreach (DEPARTMENT_SECTORS as $key => $label): ?>
-              <option value="<?= htmlspecialchars($key) ?>"><?= htmlspecialchars($label) ?></option>
-            <?php endforeach; ?>
-          </select>
-          <small class="row-note">Only used to group offices in this list.</small>
         </div>
 
         <div class="form-group">

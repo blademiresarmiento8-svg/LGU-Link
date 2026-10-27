@@ -80,23 +80,6 @@ function saveOfficeAccount(array $data): array
     return ['success' => true, 'errors' => []];
 }
 
-function deleteOfficeAccount(int $id): bool
-{
-    $account = findOfficeAccountById($id);
-    if ($account === null) {
-        return false;
-    }
-
-    $stmt = getDbConnection()->prepare("DELETE FROM users WHERE id = :id AND role = 'office'");
-    $stmt->execute(['id' => $id]);
-
-    if ($stmt->rowCount() > 0) {
-        logAudit('account_deleted', $id, $account['full_name'], 'Office account for ' . $account['department_name']);
-    }
-
-    return $stmt->rowCount() > 0;
-}
-
 /**
  * Sets a temporary password on an office account and forces the user to pick
  * their own at next login. The system admin hands the temporary password over

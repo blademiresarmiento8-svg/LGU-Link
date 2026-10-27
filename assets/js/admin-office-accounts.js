@@ -1,23 +1,10 @@
-// System admin Office Accounts page logic - add/delete/suspend office logins, reset passwords, search filter.
+// System admin Office Accounts page logic - add/suspend office logins, reset passwords, search filter.
 // Every action is a real form submission to an office-accounts-*.php endpoint
 // (server persists to the DB), not a DOM-only mockup.
 
 function openAddOfficeAccountModal() {
   document.getElementById('officeAccountForm').reset();
   openModal('officeAccountModal');
-}
-
-function confirmDeleteOfficeAccount(id, name) {
-  confirmAction({
-    title: 'Delete Office Account',
-    message: `Are you sure you want to delete the office account for "${name}"? They will no longer be able to log in.`,
-    confirmLabel: 'Delete',
-    danger: true,
-    onConfirm: () => {
-      document.getElementById('officeAccountDeleteId').value = id;
-      document.getElementById('officeAccountDeleteForm').submit();
-    },
-  });
 }
 
 /* Reset password */

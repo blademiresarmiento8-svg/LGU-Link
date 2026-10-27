@@ -1,4 +1,4 @@
-// Admin Departments page logic - change an office's department head, filters.
+// Admin Departments page logic - add an office, change an office's department head, search.
 // Saving is a real form submission to departments-save.php (server persists
 // to the DB), not a DOM-only mockup.
 
@@ -31,19 +31,10 @@ function suggestOfficeCode() {
   code.value = initials.slice(0, 20);
 }
 
-/* Search and Filter */
+/* Search */
 function applyFilters() {
   const query = document.getElementById('searchInput').value.toLowerCase();
-  const sector = document.getElementById('sectorSelect').value;
-  const rows = document.querySelectorAll('#deptTable tbody tr');
-
-  rows.forEach((row) => {
-    const text = row.textContent.toLowerCase();
-    const rowSector = row.cells[2].textContent.trim();
-
-    const matchesQuery = text.includes(query);
-    const matchesSector = sector === 'all' || rowSector === sector;
-
-    row.style.display = matchesQuery && matchesSector ? '' : 'none';
+  document.querySelectorAll('#deptTable tbody tr').forEach((row) => {
+    row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
   });
 }

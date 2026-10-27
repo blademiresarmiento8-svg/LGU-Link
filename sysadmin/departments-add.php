@@ -15,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verifyCsrfToken($_POST['csrf_token
 $result = createDepartment(
     (string) ($_POST['code'] ?? ''),
     (string) ($_POST['name'] ?? ''),
-    (string) ($_POST['sector'] ?? ''),
     (string) ($_POST['department_head'] ?? '')
 );
 
