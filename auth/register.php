@@ -253,7 +253,7 @@ $resendWait = $step === 2 ? secondsUntilResend((string) $reg['email']) : 0;
 
             <div class="form-group">
               <label for="mobile">Mobile Number</label>
-              <input type="tel" id="mobile" name="mobile" required inputmode="tel" autocomplete="tel" placeholder="09123456789" value="<?= htmlspecialchars($old['mobile']) ?>">
+              <input type="tel" id="mobile" name="mobile" maxlength="20" required inputmode="tel" autocomplete="tel" placeholder="09123456789" value="<?= htmlspecialchars($old['mobile']) ?>">
             </div>
 
             <div class="auth-row">
@@ -307,6 +307,7 @@ $resendWait = $step === 2 ? secondsUntilResend((string) $reg['email']) : 0;
   </main>
 
   <script src="/LGU-Link/assets/js/auth.js"></script>
+  <script src="/LGU-Link/assets/js/phone-input.js"></script>
 </body>
 
 </html>

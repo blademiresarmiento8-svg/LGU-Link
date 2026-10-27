@@ -139,6 +139,7 @@ if ($open && !$expired && $closedReason === '' && $_SERVER['REQUEST_METHOD'] ===
     <?php endif; ?>
 
   </div>
+  <script src="/LGU-Link/assets/js/phone-input.js"></script>
   <script>
     // Stop a double tap from taking two numbers.
     (function () {

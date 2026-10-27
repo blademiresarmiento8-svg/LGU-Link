@@ -168,7 +168,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <div class="form-group">
           <label>Contact Number</label>
-          <input type="tel" name="contact_number" placeholder="09XXXXXXXXX" value="<?= htmlspecialchars($savedMobile) ?>" required>
+          <input type="tel" name="contact_number" inputmode="numeric" maxlength="20" placeholder="09123456789" value="<?= htmlspecialchars($savedMobile) ?>" required>
         </div>
 
         <div class="form-group">
@@ -228,6 +228,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
   <?php require __DIR__ . '/../includes/confirm-modal.php'; ?>
   <?php require __DIR__ . '/../includes/chatbot-widget.php'; ?>
 
+  <script src="/LGU-Link/assets/js/phone-input.js"></script>
   <script src="/LGU-Link/assets/js/main.js"></script>
   <script src="/LGU-Link/assets/js/live-refresh.js" defer></script>
   <?php require __DIR__ . '/../includes/schedule-rules-script.php'; ?>

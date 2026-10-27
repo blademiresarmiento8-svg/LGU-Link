@@ -285,6 +285,7 @@ $priorityButton = function (array $t) use ($csrf, $eHidden): string {
   <?php require __DIR__ . '/../includes/confirm-modal.php'; ?>
 
   <script src="/LGU-Link/assets/js/main.js"></script>
+  <script src="/LGU-Link/assets/js/phone-input.js"></script>
   <?php if ($queue !== null): ?>
     <script src="/LGU-Link/assets/js/queue-console.js"></script>
   <?php endif; ?>

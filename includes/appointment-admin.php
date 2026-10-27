@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/schedule-helpers.php';
 require_once __DIR__ . '/organization-fields.php';
+require_once __DIR__ . '/registration-helpers.php';
 
 /**
  * Write operations for the appointments table. Requires
@@ -41,8 +42,13 @@ function insertAppointment(int $userId, array $data, array $file): array
     if ($description === '') {
         $errors[] = 'Description is required.';
     }
+    // Stored the same way as at sign-up: 09XXXXXXXXX.
     if ($contactNumber === '') {
         $errors[] = 'Contact number is required.';
+    } elseif (($mobile = normalizePhilippineMobile($contactNumber)) === null) {
+        $errors[] = 'Please enter a valid mobile number, like 09123456789.';
+    } else {
+        $contactNumber = $mobile;
     }
     if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'A valid email address is required.';
