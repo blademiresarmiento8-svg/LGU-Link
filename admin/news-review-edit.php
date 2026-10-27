@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Your session expired. Please try again.';
     } else {
         // An old posting time is not a problem when you are only editing the wording.
-        $checked = validateNewsContent($_POST, $_FILES['image'] ?? ['error' => UPLOAD_ERR_NO_FILE], $submission['image'], false);
+        $checked = validateNewsContent($_POST, $_FILES['image'] ?? ['error' => UPLOAD_ERR_NO_FILE], $submission['image'], false, newsContentOf($submission));
         $note = trim((string) ($_POST['note'] ?? ''));
 
         if (!empty($checked['errors'])) {

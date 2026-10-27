@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCsrfToken($_POST['csrf_token'] ?? null)) {
         $errors[] = 'Your session expired. Please try again.';
     } else {
-        $checked = validateNewsContent($_POST, $_FILES['image'] ?? ['error' => UPLOAD_ERR_NO_FILE], $values['image'] ?? null, $post === null);
+        $checked = validateNewsContent($_POST, $_FILES['image'] ?? ['error' => UPLOAD_ERR_NO_FILE], $values['image'] ?? null, $post === null, $post === null ? null : newsContentOf($post));
         $featured = !empty($_POST['is_featured']);
         if ($featured && empty($checked['content']['image'])) {
             $checked['errors'][] = 'A post needs a photo to appear in the homepage carousel.';

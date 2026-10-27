@@ -40,12 +40,23 @@ document.addEventListener('DOMContentLoaded', function () {
     showClear();
   });
 
-  // Stopping cannot come before starting: grey those days out.
+  // Days and times that have passed are grayed out, and stopping cannot come before starting. A box that
+  // already holds an old time (an event being edited) keeps it as the earliest it can have.
   const opens = document.getElementById('evOpens');
   const closes = document.getElementById('evCloses');
   if (opens && closes && opens._flatpickr && closes._flatpickr) {
-    const sync = () => closes._flatpickr.set('minDate', opens.value || null);
+    const initial = { evOpens: opens.value, evCloses: closes.value };
+    const sync = () => {
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const floor = (id) => (initial[id] && new Date(initial[id]) < now ? initial[id] : (id === 'evOpens' ? startOfToday : now));
+      opens._flatpickr.set('minDate', floor('evOpens'));
+      let min = floor('evCloses');
+      if (opens.value && new Date(opens.value) > new Date(min)) min = opens.value;
+      closes._flatpickr.set('minDate', min);
+    };
     opens.addEventListener('change', sync);
+    closes.addEventListener('change', sync);
     sync();
   }
 });

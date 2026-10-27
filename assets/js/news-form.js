@@ -61,17 +61,28 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // A date cannot be picked before the one it must follow (grayed out in the calendar).
-  const limits = [['nfShowUntil', 'nfGoLive'], ['nfEnds', 'nfStarts']];
+  // Days and times that have passed are grayed out, and a date cannot come before the one it must follow
+  // ("Show until" after "Post at", "Ends" after "Starts"). A box that already holds an old time (an
+  // existing post being edited) keeps it: that old time is the earliest it can have.
   if (hasPicker) {
-    limits.forEach(([later, earlier]) => {
-      const sync = () => {
-        const e = document.getElementById(earlier).value;
-        document.getElementById(later)._flatpickr.set('minDate', e || null);
-      };
-      document.getElementById(earlier).addEventListener('change', sync);
-      sync();
-    });
+    const initial = {};
+    ids.forEach((id) => { initial[id] = (document.getElementById(id) || {}).value || ''; });
+    const mustFollow = { nfShowUntil: 'nfGoLive', nfEnds: 'nfStarts' };
+    const syncMinimums = () => {
+      const now = new Date();
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el || !el._flatpickr) return;
+        // Start boxes allow earlier today; every other box needs a time still ahead.
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        let min = initial[id] && new Date(initial[id]) < now ? initial[id] : (id === 'nfStarts' ? startOfToday : now);
+        const before = mustFollow[id] ? document.getElementById(mustFollow[id]).value : '';
+        if (before && new Date(before) > new Date(min)) min = before;
+        el._flatpickr.set('minDate', min);
+      });
+    };
+    ids.forEach((id) => { const el = document.getElementById(id); if (el) el.addEventListener('change', syncMinimums); });
+    syncMinimums();
   }
 
   // The visible box (the picker's, when there is one) is what the browser validates and focuses.

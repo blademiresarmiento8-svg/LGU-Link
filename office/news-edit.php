@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Your session expired. Please try again.';
     } else {
         $send = ($_POST['action'] ?? '') === 'send' || $awaiting;
-        $checked = validateNewsContent($_POST, $_FILES['image'] ?? ['error' => UPLOAD_ERR_NO_FILE], $values['image'] ?? null, $submission === null || $submission['status'] !== 'awaiting_office');
+        $checked = validateNewsContent($_POST, $_FILES['image'] ?? ['error' => UPLOAD_ERR_NO_FILE], $values['image'] ?? null, $submission === null, $submission === null ? null : newsContentOf($submission));
         $note = trim((string) ($_POST['note'] ?? ''));
 
         if (!empty($checked['errors'])) {

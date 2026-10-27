@@ -170,6 +170,22 @@ function saveQueueEvent(int $departmentId, int $id, array $input): array
         return $fail('Giving out numbers must stop after it starts.');
     }
 
+    // A time that has already passed is a mistake when it was just set: on a new event any time counts;
+    // on an existing event only a time that was changed does, so a running event can still be edited.
+    $previous = null;
+    if ($id > 0) {
+        $stmt = $pdo->prepare("SELECT opens_at, closes_at FROM queues WHERE id = ? AND department_id = ? AND kind = 'event'");
+        $stmt->execute([$id, $departmentId]);
+        $previous = $stmt->fetch() ?: null;
+    }
+    $isNew = fn(string $key, ?string $value) => $value !== null && ($previous === null || substr((string) ($previous[$key] ?? ''), 0, 16) !== substr($value, 0, 16));
+    if ($isNew('opens_at', $opens) && $opens < date('Y-m-d 00:00:00')) {
+        return $fail('The start day has already passed. Choose today or a later day, or leave it empty to start giving out numbers right away.');
+    }
+    if ($isNew('closes_at', $closes) && $closes <= date('Y-m-d H:i:s')) {
+        return $fail('The stop time has already passed. To close the event now, use "Stop giving out numbers" on the Events page.');
+    }
+
     if ($id > 0) {
         $existing = $pdo->prepare("SELECT id FROM queues WHERE id = ? AND department_id = ? AND kind = 'event'");
         $existing->execute([$id, $departmentId]);

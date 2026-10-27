@@ -90,10 +90,12 @@ function toLocalInput(?string $dateTime): string
  * @param array<string, mixed> $input          Raw form fields.
  * @param array                $file           $_FILES['image']-shaped array.
  * @param ?string              $currentImage   The photo the post already has (kept unless replaced/removed).
- * @param bool                 $checkSchedule  Reject a go-live time that is already past (not for edits of existing schedules).
+ * @param bool                 $checkSchedule  true for a new post: every time that was set must still be in the future.
+ *                                             false for an existing post: only a time that was changed is checked.
+ * @param ?array               $previous       The existing post's content (see newsContentOf), so an unchanged old time is accepted.
  * @return array{errors: string[], content: array<string, mixed>, uploaded: ?string}
  */
-function validateNewsContent(array $input, array $file, ?string $currentImage, bool $checkSchedule = true): array
+function validateNewsContent(array $input, array $file, ?string $currentImage, bool $checkSchedule = true, ?array $previous = null): array
 {
     $errors = [];
     $clean = fn(string $key) => trim((string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', (string) ($input[$key] ?? '')));
@@ -117,17 +119,28 @@ function validateNewsContent(array $input, array $file, ?string $currentImage, b
         $errors[] = 'Write the text of the post (up to ' . NEWS_TEXT_MAX . ' characters).';
     }
 
+    // A time that has already passed is a mistake when the person has just set it: on a new post any time
+    // counts; on an existing post only a time they changed does, so an old post can still be edited.
+    $now = date('Y-m-d H:i:s');
+    $grace = date('Y-m-d H:i:s', strtotime('-5 minutes'));
+    $mustBeFuture = fn(string $key, ?string $value) => $value !== null
+        && ($checkSchedule || ($previous !== null && substr((string) ($previous[$key] ?? ''), 0, 16) !== substr($value, 0, 16)));
+
     // Schedule
     $goLive = parseLocalDateTime($clean('go_live_at'));
     $showUntil = parseLocalDateTime($clean('show_until'));
+    $showUntilChosen = $showUntil; // before an activity fills it in by itself
     if ($clean('go_live_at') !== '' && $goLive === null) {
         $errors[] = 'The posting time is not valid.';
     }
     if ($clean('show_until') !== '' && $showUntil === null) {
         $errors[] = 'The "show until" time is not valid.';
     }
-    if ($checkSchedule && $goLive !== null && $goLive < date('Y-m-d H:i:s', strtotime('-5 minutes'))) {
+    if ($mustBeFuture('go_live_at', $goLive) && $goLive < $grace) {
         $errors[] = 'The posting time is in the past. Leave it empty to post as soon as it is approved.';
+    }
+    if ($mustBeFuture('show_until', $showUntilChosen) && $showUntilChosen <= $now) {
+        $errors[] = 'The "show until" time has already passed. Choose a later time, or leave it empty.';
     }
 
     // Activity details
@@ -142,6 +155,11 @@ function validateNewsContent(array $input, array $file, ?string $currentImage, b
             $errors[] = 'Enter when the activity starts and ends.';
         } elseif ($endsAt <= $startsAt) {
             $errors[] = 'The activity must end after it starts.';
+        } elseif ($mustBeFuture('starts_at', $startsAt) && $startsAt < date('Y-m-d 00:00:00')) {
+            // Earlier today is fine ("free medical mission today, 8 AM to 4 PM", posted at 9 AM); a past day is not.
+            $errors[] = 'The activity cannot start on a day that has passed. Choose today or a later day.';
+        } elseif ($mustBeFuture('ends_at', $endsAt) && $endsAt <= $now) {
+            $errors[] = 'The activity end time has already passed. Choose a time that is still ahead.';
         }
         if ($venue === '' || mb_strlen($venue) > 150) {
             $errors[] = 'Enter where the activity is held (up to 150 characters).';
