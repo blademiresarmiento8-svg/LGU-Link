@@ -1,10 +1,9 @@
 <?php
 /**
- * The personal details of a citizen who has made an appointment request, for the Municipal
- * Administrator (the appointments page opens them in a popup). Read only. Answers with JSON.
+ * The personal details of a citizen account, for the Municipal Administrator (the Appointments and
+ * Citizens pages open them in a popup). Read only. Answers with JSON.
  *
- * Only a citizen account that has made at least one appointment request can be looked up, and only
- * the details the citizen gave when registering are returned (never the password). Every lookup is
+ * Only citizen accounts can be looked up, and only the details the citizen gave when registering are returned (never the password). Every lookup is
  * recorded in the Activity Log, so it is clear who looked at whose details.
  */
 
@@ -22,7 +21,7 @@ $stmt = $pdo->prepare(
     "SELECT u.id, u.full_name, u.first_name, u.middle_name, u.last_name, u.suffix, u.email, u.mobile, u.organization, u.position_title,
             u.status, u.created_at, u.privacy_consent_at
      FROM users u
-     WHERE u.id = :id AND u.role = 'user' AND EXISTS (SELECT 1 FROM appointments a WHERE a.user_id = u.id)"
+     WHERE u.id = :id AND u.role = 'user'"
 );
 $stmt->execute(['id' => $id]);
 $citizen = $stmt->fetch();

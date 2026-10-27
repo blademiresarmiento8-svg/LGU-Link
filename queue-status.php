@@ -18,6 +18,6 @@ if ($ticket === null) {
 
 $now = queueNowServing($ticket);
 echo json_encode(queueTicketView($ticket) + [
-    'cancellable' => in_array($ticket['status'], ['waiting', 'called'], true),
+    'cancellable' => $ticket['status'] === 'waiting', // once called, the number can no longer be given up from the phone
     'now' => $now ? $now['code'] . ($now['staff_name'] ? ' (' . $now['staff_name'] . ')' : '') : null,
 ]);

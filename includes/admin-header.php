@@ -13,6 +13,7 @@ $navItems = [
     'news'              => ['label' => 'News',               'icon' => 'fa-newspaper',       'href' => 'news.php'],
     'charter'           => ['label' => "Citizen's Charter",  'icon' => 'fa-book',            'href' => 'citizens-charter.php'],
     'appointments'      => ['label' => 'Appointments',       'icon' => 'fa-calendar-check',  'href' => 'appointments.php'],
+    'citizens'          => ['label' => 'Citizens',           'icon' => 'fa-users',           'href' => 'citizens.php'],
     'meetings'          => ['label' => 'Meetings',           'icon' => 'fa-people-group',    'href' => 'meetings.php'],
     'analytics'         => ['label' => 'Analytics',          'icon' => 'fa-chart-line',      'href' => 'analytics.php'],
 ];

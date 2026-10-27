@@ -290,6 +290,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
   <script src="/LGU-Link/assets/js/main.js"></script>
   <script src="/LGU-Link/assets/js/live-refresh.js" defer></script>
+  <script src="/LGU-Link/assets/js/citizen-details.js"></script>
   <script src="/LGU-Link/assets/js/admin-appointments.js"></script>
 
   <?php if ($flashForwarded): ?>

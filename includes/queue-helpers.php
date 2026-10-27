@@ -243,6 +243,21 @@ function createQueueTicket(int $queueId, array $input): array
     return ['success' => true, 'errors' => [], 'ticket' => $stmt->fetch()];
 }
 
+/**
+ * A citizen gives up their own number. Only possible while they are still waiting: once the number is
+ * called, the person is at the counter (or on the way), and staff use "Not here" if they never come.
+ * Returns false when it is too late, so the ticket page just shows where the number is now.
+ */
+function withdrawQueueTicket(int $ticketId): bool
+{
+    $stmt = getDbConnection()->prepare(
+        "UPDATE queue_tickets SET status = 'cancelled', finished_at = NOW(), phone_key = NULL WHERE id = :id AND status = 'waiting'"
+    );
+    $stmt->execute(['id' => $ticketId]);
+
+    return $stmt->rowCount() === 1;
+}
+
 /** Sets a queue's counter for a day to the highest number already given, so the next number is free. */
 function repairQueueCounter(int $queueId, string $day): void
 {

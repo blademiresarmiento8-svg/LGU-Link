@@ -11,7 +11,7 @@ $key = (string) ($_GET['k'] ?? '');
 $ticket = preg_match('/^[0-9a-f]{32}$/', $key) ? findQueueTicketByKey($key) : null;
 
 if ($ticket !== null && $_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrfToken($_POST['csrf_token'] ?? null) && ($_POST['action'] ?? '') === 'cancel') {
-    updateQueueTicketStatus((int) $ticket['id'], 'cancel');
+    withdrawQueueTicket((int) $ticket['id']); // only while waiting; after the call it does nothing
     header('Location: /LGU-Link/queue-ticket.php?k=' . $key);
     exit;
 }
@@ -68,7 +68,7 @@ $now = $ticket ? queueNowServing($ticket) : null;
           Now serving: <strong id="tNowText"><?= $now ? htmlspecialchars($now['code'] . ($now['staff_name'] ? ' (' . $now['staff_name'] . ')' : '')) : '' ?></strong>
         </div>
 
-        <div class="ticket-actions" id="tActions" <?= in_array($ticket['status'], ['waiting', 'called'], true) ? '' : 'hidden' ?>>
+        <div class="ticket-actions" id="tActions" <?= $ticket['status'] === 'waiting' ? '' : 'hidden' ?>>
           <form method="post" action="/LGU-Link/queue-ticket.php?k=<?= htmlspecialchars($key) ?>" data-confirm="Cancel this number? You will lose your place in line." data-confirm-title="Cancel your number" data-confirm-label="Yes, cancel it" data-confirm-danger>
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
             <input type="hidden" name="action" value="cancel">
