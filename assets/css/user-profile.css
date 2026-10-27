@@ -1,0 +1,71 @@
+/* Citizen "My Profile" page. */
+
+.profile-panel {
+  max-width: 720px;
+}
+
+.profile-row {
+  display: flex;
+  gap: 16px;
+}
+
+.profile-row .form-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-row .profile-row-narrow {
+  flex: 0 0 38%;
+}
+
+.profile-note {
+  margin: -4px 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.profile-note i {
+  color: var(--primary);
+}
+
+.profile-errors {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.profile-errors p {
+  margin: 0;
+}
+
+.profile-errors p + p {
+  margin-top: 4px;
+}
+
+.profile-form input:disabled {
+  background: #f1f5f9;
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+@media (max-width: 560px) {
+  .profile-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .profile-row .profile-row-narrow {
+    flex: 1;
+  }
+}

@@ -59,6 +59,7 @@ $activePage = 'dashboard';
     <section class="panel">
       <div class="panel-header">
         <h3>My Account</h3>
+        <a class="btn-action edit" href="profile.php">Edit my profile</a>
       </div>
       <div class="account-details">
         <div>

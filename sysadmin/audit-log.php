@@ -5,7 +5,6 @@ require_once __DIR__ . '/../includes/audit-helpers.php';
 
 $activePage = 'audit-log';
 
-$entries = getAuditLog();
 $mailEntries = getMailLog();
 
 $actionLabels = [
@@ -19,6 +18,8 @@ $actionLabels = [
     'news_deleted' => 'News post permanently deleted',
     'citizen_suspended' => 'Citizen account suspended',
     'citizen_unsuspended' => 'Citizen account unsuspended',
+    'citizen_name_changed' => 'Citizen changed their name',
+    'citizen_profile_updated' => 'Citizen updated their profile',
     'schedule_updated' => 'Working schedule updated',
     'holiday_added' => 'Holiday added',
     'holidays_synced' => 'Holidays synced',
@@ -33,6 +34,32 @@ $actionLabels = [
     'queue_office_changed' => 'Queue turned on or off for an office',
     'holiday_deleted' => 'Holiday removed',
 ];
+
+$perPage = 25;
+$filters = [
+    'q' => trim((string) ($_GET['q'] ?? '')),
+    'action' => (string) ($_GET['action'] ?? ''),
+];
+// The dropdown lists only the actions that have happened at least once.
+$actionCounts = auditActionCounts();
+$actionChoices = [];
+foreach (array_keys($actionCounts) as $key) {
+    $actionChoices[$key] = $actionLabels[$key] ?? $key;
+}
+asort($actionChoices);
+if ($filters['action'] !== '' && !isset($actionChoices[$filters['action']])) {
+    $filters['action'] = ''; // an action that never happened shows nothing, so ignore it
+}
+$page = max(1, (int) ($_GET['page'] ?? 1));
+$result = searchAuditLog($filters, $page, $perPage);
+$pages = max(1, (int) ceil($result['total'] / $perPage));
+if ($page > $pages) {
+    $page = $pages;
+    $result = searchAuditLog($filters, $page, $perPage);
+}
+$entries = $result['rows'];
+$filtered = $filters['q'] !== '' || $filters['action'] !== '';
+$pageLink = fn(int $n) => '?' . http_build_query(array_filter($filters + ['page' => $n > 1 ? $n : null], fn($v) => $v !== '' && $v !== null));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -43,6 +70,7 @@ $actionLabels = [
   <title>Activity Log - LGU Norzagaray System Admin</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha384-/o6I2CkkWC//PSjvWC/eYN7l3xM3tJm8ZzVkCOfp//W05QcE3mlGskpoHB6XqI+B" crossorigin="anonymous">
   <link rel="stylesheet" href="/LGU-Link/assets/css/style.css">
+  <link rel="stylesheet" href="/LGU-Link/assets/css/audit-log.css">
 </head>
 
 <body>
@@ -54,11 +82,24 @@ $actionLabels = [
     <div class="page-title-row">
       <div>
         <h1>Activity Log</h1>
-        <p>Who created, reset, suspended or deleted which office account. Shows the latest 200 actions.</p>
+        <p>Who did what to which account, and other important changes, newest first. Use the filters to find a particular person or action.</p>
       </div>
     </div>
 
     <section class="panel">
+      <form class="toolbar audit-filters" method="get" action="audit-log.php">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" name="q" value="<?= htmlspecialchars($filters['q']) ?>" placeholder="Search a name or details..." maxlength="100">
+        </div>
+        <select name="action" aria-label="Action">
+          <option value="">All actions</option>
+          <?php foreach ($actionChoices as $key => $label): ?>
+            <option value="<?= htmlspecialchars($key) ?>" <?= $filters['action'] === $key ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </form>
+
       <div class="table-container">
         <table>
           <thead>
@@ -73,7 +114,7 @@ $actionLabels = [
           <tbody>
             <?php if (empty($entries)): ?>
               <tr>
-                <td colspan="5" class="row-note">Nothing recorded yet.</td>
+                <td colspan="5" class="row-note"><?= $filtered ? 'Nothing matches these filters.' : 'Nothing recorded yet.' ?></td>
               </tr>
             <?php endif; ?>
             <?php foreach ($entries as $entry): ?>
@@ -88,6 +129,16 @@ $actionLabels = [
           </tbody>
         </table>
       </div>
+
+      <?php if ($pages > 1): ?>
+        <div class="audit-paging">
+          <span class="row-note"><?= number_format($result['total']) ?> entries - page <?= $page ?> of <?= $pages ?></span>
+          <div>
+            <?php if ($page > 1): ?><a class="btn-modal btn-cancel" href="<?= htmlspecialchars($pageLink($page - 1)) ?>">Previous</a><?php endif; ?>
+            <?php if ($page < $pages): ?><a class="btn-modal btn-cancel" href="<?= htmlspecialchars($pageLink($page + 1)) ?>">Next</a><?php endif; ?>
+          </div>
+        </div>
+      <?php endif; ?>
     </section>
 
     <div class="page-title-row" style="margin-top: 32px;">
@@ -135,6 +186,12 @@ $actionLabels = [
   <?php require __DIR__ . '/../includes/confirm-modal.php'; ?>
 
   <script src="/LGU-Link/assets/js/main.js"></script>
+  <script>
+    // Picking an action applies the filter straight away (the search applies when you press Enter).
+    document.querySelectorAll('.audit-filters select').forEach((el) => {
+      el.addEventListener('change', () => el.form.requestSubmit());
+    });
+  </script>
 </body>
 
 </html>

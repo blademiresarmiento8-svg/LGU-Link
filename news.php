@@ -65,7 +65,7 @@ function newsPageUrl(array $changes): string
 
 <body>
 
-  <?php require __DIR__ . '/includes/' . ($loggedInCitizen ? 'user-header.php' : 'public-header.php'); ?>
+  <?php require __DIR__ . '/includes/site-header.php'; ?>
 
   <main class="main public-main">
 
@@ -191,6 +191,11 @@ function newsPageUrl(array $changes): string
     <?php require __DIR__ . '/includes/toast.php'; ?>
     <?php require __DIR__ . '/includes/confirm-modal.php'; ?>
     <?php require __DIR__ . '/includes/chatbot-widget.php'; ?>
+  <?php endif; ?>
+
+  <?php if ($loggedInStaff): ?>
+    <?php require __DIR__ . '/includes/toast.php'; ?>
+    <?php require __DIR__ . '/includes/confirm-modal.php'; ?>
   <?php endif; ?>
 
   <script src="/LGU-Link/assets/js/main.js"></script>

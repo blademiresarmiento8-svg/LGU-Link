@@ -49,8 +49,10 @@ function openCitizenDetails(userId, goBack) {
       if (r.rejected) parts.push(`${r.rejected} rejected`);
       if (r.cancelled) parts.push(`${r.cancelled} cancelled`);
 
+      const earlier = (data.earlier_names || []).map((h) => `${h.name} (until ${h.changed_on})`).join('; ');
       const rows = [
         ['Full name', name],
+        ...(earlier ? [['Earlier names', earlier]] : []),
         ['Email', data.email],
         ['Mobile number', data.mobile || 'Not given'],
         ['Organization', data.organization || '-'],

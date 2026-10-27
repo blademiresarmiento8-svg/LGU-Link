@@ -10,6 +10,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('admin');
 require_once __DIR__ . '/../includes/audit-helpers.php';
+require_once __DIR__ . '/../includes/citizen-profile.php';
 
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
@@ -59,6 +60,7 @@ echo json_encode([
     'suspended_note' => $citizen['status'] === 'suspended'
         ? 'since ' . $date($citizen['suspended_at']) . ($citizen['suspended_reason'] ? ': ' . $citizen['suspended_reason'] : '')
         : null,
+    'earlier_names' => array_map(fn($h) => ['name' => $h['from'], 'changed_on' => $date($h['at'])], citizenNameHistory((int) $citizen['id'])),
     'registered' => $date($citizen['created_at']),
     'privacy_agreed' => $date($citizen['privacy_consent_at']),
     'requests' => [

@@ -159,19 +159,17 @@ function normalizePhilippineMobile(string $mobile): ?string
 }
 
 /**
- * Validates the details form.
+ * Checks the name and mobile number a citizen gives (on the sign-up form and on their profile page).
  *
- * @return array{errors: string[], data: array<string, ?string>}
+ * @return array{errors: string[], first: string, middle: string, last: string, suffix: string, mobile: string, full_name: string}
  */
-function validateRegistrationDetails(array $input, string $email): array
+function validateCitizenIdentity(array $input): array
 {
     $clean = fn(string $key) => trim(preg_replace('/\s+/', ' ', (string) ($input[$key] ?? '')));
     $first = $clean('first_name');
     $middle = $clean('middle_name');
     $last = $clean('last_name');
     $suffix = $clean('suffix');
-    $password = (string) ($input['password'] ?? '');
-    $confirm = (string) ($input['confirm_password'] ?? '');
     $mobile = normalizePhilippineMobile((string) ($input['mobile'] ?? ''));
 
     // Letters (including accented ones), spaces, . ' - and digits are allowed (a few real names
@@ -197,6 +195,30 @@ function validateRegistrationDetails(array $input, string $email): array
     if ($mobile === null) {
         $errors[] = 'Please enter a valid mobile number, like 09123456789.';
     }
+
+    return [
+        'errors' => $errors,
+        'first' => $first,
+        'middle' => $middle,
+        'last' => $last,
+        'suffix' => $suffix,
+        'mobile' => (string) $mobile,
+        'full_name' => trim(implode(' ', array_filter([$first, $middle, $last, $suffix], fn($v) => $v !== ''))),
+    ];
+}
+
+/**
+ * Validates the details form.
+ *
+ * @return array{errors: string[], data: array<string, ?string>}
+ */
+function validateRegistrationDetails(array $input, string $email): array
+{
+    $identity = validateCitizenIdentity($input);
+    $password = (string) ($input['password'] ?? '');
+    $confirm = (string) ($input['confirm_password'] ?? '');
+
+    $errors = $identity['errors'];
     if (($problem = passwordProblem($password)) !== null) {
         $errors[] = $problem;
     } elseif ($password !== $confirm) {
@@ -209,11 +231,9 @@ function validateRegistrationDetails(array $input, string $email): array
     $organization = validateOrganizationFields($input);
     $errors = array_merge($errors, $organization['errors']);
 
-    $fullName = trim(implode(' ', array_filter([$first, $middle, $last, $suffix], fn($v) => $v !== '')));
-
     return [
         'errors' => $errors,
-        'data' => ['first' => $first, 'middle' => $middle, 'last' => $last, 'suffix' => $suffix, 'mobile' => (string) $mobile, 'full_name' => $fullName, 'password' => $password, 'organization' => $organization['organization'], 'position_title' => $organization['position_title']],
+        'data' => ['first' => $identity['first'], 'middle' => $identity['middle'], 'last' => $identity['last'], 'suffix' => $identity['suffix'], 'mobile' => $identity['mobile'], 'full_name' => $identity['full_name'], 'password' => $password, 'organization' => $organization['organization'], 'position_title' => $organization['position_title']],
     ];
 }
 

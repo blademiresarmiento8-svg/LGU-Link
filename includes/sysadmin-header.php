@@ -10,14 +10,14 @@ $admin = currentUser();
 
 $navItems = [
     'home'              => ['label' => 'Home',               'icon' => 'fa-house',           'href' => '/LGU-Link/index.php?site=1'],
-    'dashboard'         => ['label' => 'Dashboard',          'icon' => 'fa-chart-pie',       'href' => 'dashboard.php'],
-    'departments'       => ['label' => 'Departments',        'icon' => 'fa-building-columns', 'href' => 'departments.php'],
-    'office-accounts'   => ['label' => 'Office Accounts',    'icon' => 'fa-building-user',   'href' => 'office-accounts.php'],
-    'schedule'          => ['label' => 'Work Schedule',      'icon' => 'fa-calendar-days',   'href' => 'work-schedule.php'],
-    'news-options' => ['label' => 'News Options',     'icon' => 'fa-tags',            'href' => 'news-options.php'],
-    'news-emails'  => ['label' => 'News Emails',      'icon' => 'fa-envelope-open-text', 'href' => 'news-emails.php'],
-    'queue-offices' => ['label' => 'Queue',            'icon' => 'fa-list-ol',         'href' => 'queue-offices.php'],
-    'audit-log'         => ['label' => 'Activity Log',       'icon' => 'fa-clipboard-list',  'href' => 'audit-log.php'],
+    'dashboard'         => ['label' => 'Dashboard',          'icon' => 'fa-chart-pie',       'href' => '/LGU-Link/sysadmin/dashboard.php'],
+    'departments'       => ['label' => 'Departments',        'icon' => 'fa-building-columns', 'href' => '/LGU-Link/sysadmin/departments.php'],
+    'office-accounts'   => ['label' => 'Office Accounts',    'icon' => 'fa-building-user',   'href' => '/LGU-Link/sysadmin/office-accounts.php'],
+    'schedule'          => ['label' => 'Work Schedule',      'icon' => 'fa-calendar-days',   'href' => '/LGU-Link/sysadmin/work-schedule.php'],
+    'news-options' => ['label' => 'News Options',     'icon' => 'fa-tags',            'href' => '/LGU-Link/sysadmin/news-options.php'],
+    'news-emails'  => ['label' => 'News Emails',      'icon' => 'fa-envelope-open-text', 'href' => '/LGU-Link/sysadmin/news-emails.php'],
+    'queue-offices' => ['label' => 'Queue',            'icon' => 'fa-list-ol',         'href' => '/LGU-Link/sysadmin/queue-offices.php'],
+    'audit-log'         => ['label' => 'Activity Log',       'icon' => 'fa-clipboard-list',  'href' => '/LGU-Link/sysadmin/audit-log.php'],
 ];
 ?>
   <header class="top-header nav-many">

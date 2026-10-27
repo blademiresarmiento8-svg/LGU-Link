@@ -39,8 +39,7 @@ $navItems = [
 
     <div class="header-user">
       <?php require __DIR__ . '/notification-bell.php'; ?>
-      <i class="fa-solid fa-circle-user" style="color: #60a5fa; font-size: 16px;"></i>
-      <span><?= htmlspecialchars($citizen['full_name']) ?></span>
+      <a href="/LGU-Link/user/profile.php" class="header-profile-link" title="My profile"><i class="fa-solid fa-circle-user" style="color: #60a5fa; font-size: 16px;"></i><span><?= htmlspecialchars($citizen['full_name']) ?></span></a>
       <a href="/LGU-Link/auth/logout.php" class="logout-link" title="Log out" onclick="event.preventDefault(); confirmLogout();"><i class="fa-solid fa-right-from-bracket"></i></a>
     </div>
 

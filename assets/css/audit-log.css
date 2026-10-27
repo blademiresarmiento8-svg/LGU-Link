@@ -1,0 +1,34 @@
+/* Activity Log filters and paging. */
+
+.audit-filters {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.audit-filters select {
+  padding: 9px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  background: white;
+}
+
+.audit-paging {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.audit-paging div {
+  display: flex;
+  gap: 8px;
+}
+
+.audit-paging a {
+  text-decoration: none;
+}

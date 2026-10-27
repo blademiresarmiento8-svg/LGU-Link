@@ -6,7 +6,7 @@ if (isLoggedIn() && isAdminRole($_SESSION['role'])) {
     exit;
 }
 
-$loggedInCitizen = isLoggedIn() && $_SESSION['role'] === 'user'; // staff accounts get the public header, with a way back to their dashboard
+$loggedInCitizen = isLoggedIn() && $_SESSION['role'] === 'user';
 require_once __DIR__ . '/../includes/charter-helpers.php';
 $activePage = 'charter';
 
@@ -32,7 +32,7 @@ usort($allServices, fn($a, $b) => strcasecmp($a['title'], $b['title']));
 
 <body>
 
-  <?php require __DIR__ . '/../includes/' . ($loggedInCitizen ? 'user-header.php' : 'public-header.php'); ?>
+  <?php require __DIR__ . '/../includes/site-header.php'; ?>
 
   <main class="main">
 
@@ -83,6 +83,11 @@ usort($allServices, fn($a, $b) => strcasecmp($a['title'], $b['title']));
     <?php require __DIR__ . '/../includes/toast.php'; ?>
     <?php require __DIR__ . '/../includes/confirm-modal.php'; ?>
     <?php require __DIR__ . '/../includes/chatbot-widget.php'; ?>
+  <?php endif; ?>
+
+  <?php if ($loggedInStaff): ?>
+    <?php require __DIR__ . '/../includes/toast.php'; ?>
+    <?php require __DIR__ . '/../includes/confirm-modal.php'; ?>
   <?php endif; ?>
 
   <script src="/LGU-Link/assets/js/main.js"></script>

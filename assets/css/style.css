@@ -163,6 +163,18 @@ body {
   position: relative;
 }
 
+.header-user .header-profile-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.header-user .header-profile-link:hover span {
+  text-decoration: underline;
+}
+
 .header-user .logout-link {
   color: #fca5a5;
   text-decoration: none;
@@ -892,6 +904,7 @@ tr.live-new { animation: live-new 4s ease-out; }
   .top-header { padding: 10px 14px; }
   .header-user { padding: 6px 10px; gap: 8px; }
   .header-user > span { display: none; }
+  .header-user .header-profile-link span { display: none; }
   .public-login-link span { display: inline; }
 }
 
