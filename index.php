@@ -17,7 +17,7 @@ if (isLoggedIn() && isAdminRole($_SESSION['role'])) {
     exit;
 }
 
-$loggedInCitizen = isLoggedIn();
+$loggedInCitizen = isLoggedIn() && $_SESSION['role'] === 'user'; // staff accounts get the public header, with a way back to their dashboard
 $activePage = 'home';
 
 require_once __DIR__ . '/includes/news-helpers.php';
