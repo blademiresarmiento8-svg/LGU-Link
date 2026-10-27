@@ -11,6 +11,7 @@
  */
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/meeting-helpers.php';
 
 const ANALYTICS_RANGES = [
     '30' => ['Last 30 days', 30],
@@ -165,6 +166,7 @@ function analyticsQueue(array $f): array
 /** @return array<string, mixed> */
 function analyticsMeetings(array $f): array
 {
+    closeFinishedMeetings(); // finished meetings count as completed
     [$w, $a] = analyticsWhere($f, 'm.created_at', 'm.requester_department_id', 'm.is_demo');
     $from = 'FROM meetings m JOIN departments d ON d.id = m.requester_department_id WHERE 1=1' . $w;
 

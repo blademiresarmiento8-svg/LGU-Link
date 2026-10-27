@@ -16,7 +16,6 @@ $doneMessages = [
     'approved' => 'Meeting approved. The requesting office and the invited offices were notified.',
     'rejected' => 'Meeting rejected. The requesting office was notified.',
     'cancelled' => 'Meeting cancelled.',
-    'completed' => 'Meeting marked as completed.',
 ];
 $flashDone = $doneMessages[$_GET['done'] ?? ''] ?? '';
 $flashError = trim((string) ($_GET['error'] ?? ''));
@@ -35,6 +34,7 @@ function adminMeetingJson(array $m): string
         'requester_name' => $m['requester_name'],
         'admin_notes' => $m['admin_notes'],
         'rejection_reason' => $m['rejection_reason'],
+        'approve_problem' => $m['status'] === 'pending_approval' ? meetingApprovalProblem($m) : null,
         'invitees' => array_map(fn($i) => [
             'name' => $i['department_name'],
             'response' => $i['response'],
@@ -80,7 +80,7 @@ function adminMeetingJson(array $m): string
 
       <div class="stat-card">
         <div>
-          <p>Approved</p>
+          <p>Upcoming</p>
           <h2><?= $counts['approved'] ?></h2>
         </div>
         <div class="stat-icon ic-green"><i class="fa-solid fa-calendar-check"></i></div>
@@ -119,7 +119,7 @@ function adminMeetingJson(array $m): string
               </tr>
             <?php endif; ?>
             <?php foreach ($pending as $m): ?>
-              <?php $clashes = findMeetingClashes($m); ?>
+              <?php $clashes = findMeetingClashes($m); $problem = meetingApprovalProblem($m); ?>
               <tr>
                 <td><strong><?= htmlspecialchars($m['title']) ?></strong></td>
                 <td><?= htmlspecialchars($m['requester_department_name']) ?></td>
@@ -137,11 +137,21 @@ function adminMeetingJson(array $m): string
                     </div>
                   <?php endif; ?>
                 </td>
-                <td><span class="row-note"><?= htmlspecialchars(implode(', ', array_map(fn($i) => $i['department_name'], $m['invitees']))) ?></span></td>
+                <td>
+                  <span class="row-note"><?= htmlspecialchars(implode(', ', array_map(fn($i) => $i['department_name'], $m['invitees']))) ?></span>
+                  <?php if ($problem !== null): ?>
+                    <div class="clash-warning">
+                      <strong><i class="fa-solid fa-triangle-exclamation"></i> Cannot be approved yet</strong>
+                      <ul><li><?= htmlspecialchars($problem) ?></li></ul>
+                    </div>
+                  <?php endif; ?>
+                </td>
                 <td>
                   <div class="action-btns">
                     <button class="btn-action edit" data-meeting="<?= htmlspecialchars(adminMeetingJson($m), ENT_QUOTES) ?>" onclick="openMeetingDetailModal(this)">View</button>
-                    <button class="btn-action approve" onclick="openApproveModal(<?= (int) $m['id'] ?>, <?= htmlspecialchars(json_encode($m['title']), ENT_QUOTES) ?>)">Approve</button>
+                    <?php if ($problem === null): ?>
+                      <button class="btn-action approve" onclick="openApproveModal(<?= (int) $m['id'] ?>, <?= htmlspecialchars(json_encode($m['title']), ENT_QUOTES) ?>)">Approve</button>
+                    <?php endif; ?>
                     <button class="btn-action reject" onclick="openRejectModal(<?= (int) $m['id'] ?>, <?= htmlspecialchars(json_encode($m['title']), ENT_QUOTES) ?>)">Reject</button>
                   </div>
                 </td>
@@ -197,7 +207,6 @@ function adminMeetingJson(array $m): string
                   <div class="action-btns">
                     <button class="btn-action edit" data-meeting="<?= htmlspecialchars(adminMeetingJson($m), ENT_QUOTES) ?>" onclick="openMeetingDetailModal(this)">View</button>
                     <?php if ($m['status'] === 'approved'): ?>
-                      <button class="btn-action approve" onclick="confirmMeetingAction('complete', <?= (int) $m['id'] ?>, <?= htmlspecialchars(json_encode($m['title']), ENT_QUOTES) ?>)">Mark Completed</button>
                       <button class="btn-action reject" onclick="confirmMeetingAction('cancel', <?= (int) $m['id'] ?>, <?= htmlspecialchars(json_encode($m['title']), ENT_QUOTES) ?>)">Cancel</button>
                     <?php endif; ?>
                   </div>
@@ -279,7 +288,7 @@ function adminMeetingJson(array $m): string
     </div>
   </div>
 
-  <!-- Hidden form for cancel / complete -- submitted after the shared confirm modal is accepted -->
+  <!-- Hidden form for cancel -- submitted after the shared confirm modal is accepted -->
   <form id="meetingActionForm" action="meetings-status.php" method="post" style="display:none;">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
     <input type="hidden" name="action" id="meetingActionName" value="">

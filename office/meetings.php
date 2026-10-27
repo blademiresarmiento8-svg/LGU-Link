@@ -12,8 +12,8 @@ $departmentId = (int) $officeUser['department_id'];
 $requested = getMeetingsRequestedBy($departmentId);
 $invitations = getMeetingInvitationsFor($departmentId);
 
-// Offices that can be invited: every office with a login except this one.
-$invitable = array_values(array_filter(getDepartmentsWithOfficeAccount(), fn($d) => (int) $d['id'] !== $departmentId));
+// Offices that can be invited: every office with an active login except this one.
+$invitable = array_values(array_filter(getDepartmentsWithActiveOfficeAccount(), fn($d) => (int) $d['id'] !== $departmentId));
 
 $pendingCount = count(array_filter($requested, fn($m) => $m['status'] === 'pending_approval'));
 $upcomingCount = count(array_filter($requested, fn($m) => $m['status'] === 'approved'));
@@ -23,7 +23,6 @@ $doneMessages = [
     'requested' => 'Meeting requested. The Municipal Administrator will review it.',
     'updated' => 'Meeting updated and sent back for approval.',
     'cancelled' => 'Meeting cancelled.',
-    'completed' => 'Meeting marked as completed.',
     'acknowledged' => 'Thank you. The office that called the meeting has been told you acknowledged it.',
 ];
 $flashDone = $doneMessages[$_GET['done'] ?? ''] ?? '';
@@ -116,7 +115,7 @@ function inviteeSummary(array $invitees, string $status): string
 
       <div class="stat-card">
         <div>
-          <p>Your Approved Meetings</p>
+          <p>Your Upcoming Meetings</p>
           <h2><?= $upcomingCount ?></h2>
         </div>
         <div class="stat-icon ic-green"><i class="fa-solid fa-calendar-check"></i></div>
@@ -159,8 +158,13 @@ function inviteeSummary(array $invitees, string $status): string
                 <td>
                   <?php
                   $replyClass = $m['my_response'] === 'acknowledged' ? 'bg-approved' : 'bg-pending';
+                  $replyText = meetingResponseLabel($m['my_response']);
+                  if ($m['my_response'] !== 'acknowledged' && in_array($m['status'], ['completed', 'cancelled'], true)) {
+                      $replyClass = 'bg-completed'; // it is over, so there is nothing left to acknowledge
+                      $replyText = 'Not acknowledged';
+                  }
                   ?>
-                  <span class="badge <?= $replyClass ?>"><?= htmlspecialchars(meetingResponseLabel($m['my_response'])) ?></span>
+                  <span class="badge <?= $replyClass ?>"><?= htmlspecialchars($replyText) ?></span>
                 </td>
                 <td>
                   <div class="action-btns">
@@ -212,9 +216,6 @@ function inviteeSummary(array $invitees, string $status): string
                     <button class="btn-action edit" data-meeting="<?= htmlspecialchars(officeMeetingJson($m), ENT_QUOTES) ?>" onclick="openMeetingDetailModal(this)">View</button>
                     <?php if (in_array($m['status'], ['pending_approval', 'approved', 'rejected'], true)): ?>
                       <button class="btn-action toggle" data-meeting="<?= htmlspecialchars(officeMeetingJson($m), ENT_QUOTES) ?>" onclick="openEditMeetingModal(this)">Edit</button>
-                    <?php endif; ?>
-                    <?php if ($m['status'] === 'approved'): ?>
-                      <button class="btn-action approve" onclick="confirmMeetingAction('complete', <?= (int) $m['id'] ?>, <?= htmlspecialchars(json_encode($m['title']), ENT_QUOTES) ?>)">Mark Completed</button>
                     <?php endif; ?>
                     <?php if (in_array($m['status'], ['pending_approval', 'approved'], true)): ?>
                       <button class="btn-action reject" onclick="confirmMeetingAction('cancel', <?= (int) $m['id'] ?>, <?= htmlspecialchars(json_encode($m['title']), ENT_QUOTES) ?>)">Cancel</button>
@@ -340,7 +341,7 @@ function inviteeSummary(array $invitees, string $status): string
     </div>
   </div>
 
-  <!-- Hidden form for cancel / complete -- submitted after the shared confirm modal is accepted -->
+  <!-- Hidden form for cancel -- submitted after the shared confirm modal is accepted -->
   <form id="meetingActionForm" action="meetings-save.php" method="post" style="display:none;">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
     <input type="hidden" name="action" id="meetingActionName" value="">

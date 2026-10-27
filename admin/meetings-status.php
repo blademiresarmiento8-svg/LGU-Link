@@ -1,7 +1,7 @@
 <?php
 /**
  * Municipal Administrator meeting actions: approve or reject a requested
- * meeting, or cancel / mark completed an approved one. Plain POST + redirect.
+ * meeting, or cancel an approved one. Plain POST + redirect.
  */
 
 // Answer the browser first; emails and the live signal go out afterwards (includes/deferred.php).
@@ -35,10 +35,6 @@ switch ($action) {
     case 'cancel':
         $result = cancelMeeting($id, null);
         $done = 'cancelled';
-        break;
-    case 'complete':
-        $result = completeMeeting($id, null);
-        $done = 'completed';
         break;
     default:
         $result = ['success' => false, 'errors' => ['Unknown action.']];

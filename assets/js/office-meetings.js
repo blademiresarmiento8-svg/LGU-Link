@@ -1,5 +1,5 @@
 // Office Meetings page logic - request/edit a meeting, view details, acknowledge
-// an invitation, cancel/complete. Every action is a real form submission to
+// an invitation, cancel. Every action is a real form submission to
 // meetings-save.php (server persists to the DB), not a DOM-only mockup.
 
 /**
@@ -163,9 +163,6 @@ function openMeetingDetailModal(btn) {
     if (['pending_approval', 'approved'].includes(m.status)) {
       actions.push({ label: 'Cancel Meeting', className: 'btn-danger', run: () => confirmMeetingAction('cancel', m.id, m.title) });
     }
-    if (m.status === 'approved') {
-      actions.push({ label: 'Mark Completed', className: 'btn-submit', run: () => confirmMeetingAction('complete', m.id, m.title) });
-    }
   } else if (m.status === 'approved' && m.my_response === 'pending') {
     actions.push({ label: 'Acknowledge', className: 'btn-submit', run: () => openRespondModal(m.id, m.title) });
   }
@@ -181,14 +178,11 @@ function openRespondModal(id, title) {
 }
 
 function confirmMeetingAction(action, id, title) {
-  const isCancel = action === 'cancel';
   confirmAction({
-    title: isCancel ? 'Cancel Meeting' : 'Mark Meeting Completed',
-    message: isCancel
-      ? `Cancel "${title}"? Any invited offices will be told it was cancelled.`
-      : `Mark "${title}" as completed?`,
-    confirmLabel: isCancel ? 'Cancel Meeting' : 'Mark Completed',
-    danger: isCancel,
+    title: 'Cancel Meeting',
+    message: `Cancel "${title}"? Any invited offices will be told it was cancelled.`,
+    confirmLabel: 'Cancel Meeting',
+    danger: true,
     onConfirm: () => {
       document.getElementById('meetingActionName').value = action;
       document.getElementById('meetingActionId').value = id;
@@ -196,3 +190,17 @@ function confirmMeetingAction(action, id, title) {
     },
   });
 }
+
+// A second click on a form's button must not send the action twice (the second one would show a confusing "no longer" error).
+// Done after the browser has read the form, so the clicked button's own value is still sent.
+document.addEventListener('submit', (event) => {
+  const form = event.target;
+  setTimeout(() => {
+    if (event.defaultPrevented) return;
+    form.querySelectorAll('button[type="submit"]').forEach((button) => { button.disabled = true; });
+  }, 0);
+});
+// Coming back with the browser's Back button must not leave the buttons switched off.
+window.addEventListener('pageshow', () => {
+  document.querySelectorAll('form button[type="submit"]').forEach((button) => { button.disabled = false; });
+});

@@ -77,6 +77,17 @@ function getSuspendedDepartmentIds(): array
 }
 
 /** Departments that have an office account, ordered by name — the only ones a concern can be forwarded to. */
+/** Offices that can actually be reached: at least one office account that is not suspended. */
+function getDepartmentsWithActiveOfficeAccount(): array
+{
+    return getDbConnection()->query(
+        "SELECT DISTINCT departments.*
+         FROM departments
+         JOIN users ON users.department_id = departments.id AND users.role = 'office' AND users.status = 'active'
+         ORDER BY departments.name ASC"
+    )->fetchAll();
+}
+
 function getDepartmentsWithOfficeAccount(): array
 {
     return getDbConnection()->query(

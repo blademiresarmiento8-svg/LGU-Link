@@ -1,6 +1,6 @@
 <?php
 /**
- * Office meeting actions: request / edit / cancel / complete a meeting the
+ * Office meeting actions: request / edit / cancel a meeting the
  * office requested, or acknowledge a meeting it was called to. Plain POST + redirect,
  * same pattern as every other handler. Always scoped to the acting office
  * account's own department_id from the session, never trusted from the request.
@@ -38,10 +38,6 @@ switch ($action) {
     case 'cancel':
         $result = cancelMeeting($id, $departmentId);
         $done = 'cancelled';
-        break;
-    case 'complete':
-        $result = completeMeeting($id, $departmentId);
-        $done = 'completed';
         break;
     case 'acknowledge':
         $result = acknowledgeMeeting($id, $departmentId, (string) ($_POST['response_note'] ?? ''));

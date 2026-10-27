@@ -1,10 +1,13 @@
 <?php
 /**
- * Read-only helpers for department-to-department meetings. A meeting is
- * requested by an office account, must be approved by the Municipal
- * Administrator, and only then are the invited departments notified and asked
- * to acknowledge it (an approved meeting is mandatory: there is no decline).
- * Writes live in includes/meeting-admin.php.
+ * Helpers for department-to-department meetings. A meeting is requested by an
+ * office account, must be approved by the Municipal Administrator, and only then
+ * are the invited departments notified and asked to acknowledge it (an approved
+ * meeting is mandatory: there is no decline). Writes live in includes/meeting-admin.php.
+ *
+ * An approved meeting closes by itself: once its end time has passed it becomes
+ * "completed" (closeFinishedMeetings(), run whenever meetings are read), so nobody has
+ * to remember to mark it and the "approved" figures always mean upcoming or happening now.
  */
 
 require_once __DIR__ . '/../config/database.php';
@@ -23,6 +26,76 @@ function getMeetingStatusMeta(string $status): array
     ];
 
     return $meta[$status] ?? ['label' => ucfirst($status), 'badgeClass' => 'bg-pending'];
+}
+
+/**
+ * Marks every approved meeting whose end time has passed as completed. Meetings without an end
+ * time are assumed to last MEETING_DEFAULT_MINUTES. Cheap and safe to repeat; it runs at most once per request.
+ */
+function closeFinishedMeetings(): void
+{
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+
+    getDbConnection()->prepare(
+        "UPDATE meetings SET status = 'completed'
+         WHERE status = 'approved'
+           AND TIMESTAMP(meeting_date, IFNULL(end_time, ADDTIME(start_time, SEC_TO_TIME(" . MEETING_DEFAULT_MINUTES . " * 60)))) <= :now"
+    )->execute(['now' => date('Y-m-d H:i:s')]);
+}
+
+/** Has the meeting's start time already passed? */
+function meetingHasStarted(array $meeting): bool
+{
+    return $meeting['meeting_date'] . ' ' . substr($meeting['start_time'], 0, 8) <= date('Y-m-d H:i:s');
+}
+
+/**
+ * Names of the invited offices that have no active office account, so nobody there could be told
+ * about the meeting or acknowledge it.
+ *
+ * @return string[]
+ */
+function meetingUnreachableInvitees(array $meeting): array
+{
+    $ids = array_map(fn($i) => (int) $i['department_id'], $meeting['invitees'] ?? []);
+    if (empty($ids)) {
+        return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = getDbConnection()->prepare(
+        "SELECT DISTINCT department_id FROM users WHERE role = 'office' AND status = 'active' AND department_id IN ($placeholders)"
+    );
+    $stmt->execute($ids);
+    $reachable = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+
+    $names = [];
+    foreach ($meeting['invitees'] as $invitee) {
+        if (!in_array((int) $invitee['department_id'], $reachable, true)) {
+            $names[] = $invitee['department_name'];
+        }
+    }
+
+    return $names;
+}
+
+/** Why the Municipal Administrator cannot approve this pending meeting yet, or null when it can be approved. */
+function meetingApprovalProblem(array $meeting): ?string
+{
+    if (meetingHasStarted($meeting)) {
+        return 'The start time of this meeting has already passed. Reject it so the office can request a new time.';
+    }
+    $unreachable = meetingUnreachableInvitees($meeting);
+    if ($unreachable) {
+        return 'These offices have no active account, so they could not be told: ' . implode(', ', $unreachable)
+            . '. Ask the system administrator to reactivate the account, or reject this meeting so the office can change the invitations.';
+    }
+
+    return null;
 }
 
 /** How an invited office's response reads: 'pending' or 'acknowledged'. */
@@ -79,6 +152,7 @@ const MEETING_SELECT =
 
 function findMeetingById(int $id): ?array
 {
+    closeFinishedMeetings();
     $stmt = getDbConnection()->prepare(MEETING_SELECT . ' WHERE meetings.id = :id LIMIT 1');
     $stmt->execute(['id' => $id]);
     $row = $stmt->fetch();
@@ -89,6 +163,7 @@ function findMeetingById(int $id): ?array
 /** Meetings requested by one department, newest meeting date first. */
 function getMeetingsRequestedBy(int $departmentId): array
 {
+    closeFinishedMeetings();
     $stmt = getDbConnection()->prepare(
         MEETING_SELECT . ' WHERE meetings.requester_department_id = :dept ORDER BY meetings.meeting_date DESC, meetings.start_time DESC'
     );
@@ -97,13 +172,18 @@ function getMeetingsRequestedBy(int $departmentId): array
     return attachInvitees($stmt->fetchAll());
 }
 
-/** Approved (or later) meetings a department is invited to — pending/rejected ones are never shown to invitees. */
+/**
+ * Meetings a department is invited to: approved and finished ones, and ones cancelled after they were approved.
+ * Pending, rejected and never-approved meetings are never shown to invitees (an approval stamps reviewed_at,
+ * a rejection cannot be cancelled, and editing a meeting clears it).
+ */
 function getMeetingInvitationsFor(int $departmentId): array
 {
+    closeFinishedMeetings();
     $stmt = getDbConnection()->prepare(
         MEETING_SELECT . "
          JOIN meeting_invitees ON meeting_invitees.meeting_id = meetings.id AND meeting_invitees.department_id = :dept
-         WHERE meetings.status IN ('approved', 'completed', 'cancelled')
+         WHERE (meetings.status IN ('approved', 'completed') OR (meetings.status = 'cancelled' AND meetings.reviewed_at IS NOT NULL))
          ORDER BY meetings.meeting_date DESC, meetings.start_time DESC"
     );
     $stmt->execute(['dept' => $departmentId]);
@@ -124,6 +204,7 @@ function getMeetingInvitationsFor(int $departmentId): array
 /** Every meeting, for the Municipal Administrator — pending first, then by date. */
 function getAllMeetings(): array
 {
+    closeFinishedMeetings();
     $rows = getDbConnection()->query(
         MEETING_SELECT . " ORDER BY (meetings.status = 'pending_approval') DESC, meetings.meeting_date DESC, meetings.start_time DESC"
     )->fetchAll();
@@ -133,6 +214,7 @@ function getAllMeetings(): array
 
 function countMeetingsByStatus(): array
 {
+    closeFinishedMeetings();
     $counts = ['pending_approval' => 0, 'approved' => 0, 'rejected' => 0, 'cancelled' => 0, 'completed' => 0];
     foreach (getDbConnection()->query('SELECT status, COUNT(*) AS n FROM meetings GROUP BY status')->fetchAll() as $row) {
         $counts[$row['status']] = (int) $row['n'];

@@ -73,6 +73,7 @@ function adminDashboardWaiting(int $limit = 6): array
  */
 function adminDashboardUpcoming(int $limit = 10): array
 {
+    closeFinishedMeetings();
     $stmt = getDbConnection()->prepare(
         "(SELECT 'appointment' AS kind, a.id, a.title, COALESCE(d.name, 'Municipal Hall') AS who, a.scheduled_date AS d, a.scheduled_time AS t
             FROM appointments a LEFT JOIN departments d ON d.id = a.department_id
@@ -100,11 +101,12 @@ function adminDashboardUpcoming(int $limit = 10): array
 /** How many appointments and meetings are on today's calendar. */
 function adminDashboardTodayCounts(): array
 {
+    closeFinishedMeetings();
     $pdo = getDbConnection();
 
     return [
         'appointments' => (int) $pdo->query("SELECT COUNT(*) FROM appointments WHERE status = 'scheduled' AND scheduled_date = CURDATE()")->fetchColumn(),
-        'meetings' => (int) $pdo->query("SELECT COUNT(*) FROM meetings WHERE status = 'approved' AND meeting_date = CURDATE()")->fetchColumn(),
+        'meetings' => (int) $pdo->query("SELECT COUNT(*) FROM meetings WHERE status IN ('approved', 'completed') AND meeting_date = CURDATE()")->fetchColumn(),
     ];
 }
 

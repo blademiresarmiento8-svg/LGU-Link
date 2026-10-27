@@ -1,4 +1,4 @@
-// Admin Meetings page logic - view a meeting, approve/reject, cancel/complete.
+// Admin Meetings page logic - view a meeting, approve/reject, cancel.
 // Every action is a real form submission to meetings-status.php (server
 // persists to the DB), not a DOM-only mockup.
 
@@ -56,6 +56,9 @@ function openMeetingDetailModal(btn) {
   if (m.rejection_reason) {
     rows.push(['Reason for rejection', escapeHtml(m.rejection_reason)]);
   }
+  if (m.approve_problem) {
+    rows.push(['Cannot be approved yet', escapeHtml(m.approve_problem)]);
+  }
 
   // Acknowledgements only mean something once the meeting is approved.
   const showReplies = ['approved', 'completed'].includes(m.status);
@@ -81,10 +84,11 @@ function openMeetingDetailModal(btn) {
   const actions = [];
   if (m.status === 'pending_approval') {
     actions.push({ label: 'Reject', className: 'btn-danger', run: () => openRejectModal(m.id, m.title) });
-    actions.push({ label: 'Approve', className: 'btn-submit', run: () => openApproveModal(m.id, m.title) });
+    if (!m.approve_problem) {
+      actions.push({ label: 'Approve', className: 'btn-submit', run: () => openApproveModal(m.id, m.title) });
+    }
   } else if (m.status === 'approved') {
     actions.push({ label: 'Cancel Meeting', className: 'btn-danger', run: () => confirmMeetingAction('cancel', m.id, m.title) });
-    actions.push({ label: 'Mark Completed', className: 'btn-submit', run: () => confirmMeetingAction('complete', m.id, m.title) });
   }
   setDetailActions('meetingDetailActions', 'meetingDetailModal', actions);
 
@@ -104,14 +108,11 @@ function openRejectModal(id, title) {
 }
 
 function confirmMeetingAction(action, id, title) {
-  const isCancel = action === 'cancel';
   confirmAction({
-    title: isCancel ? 'Cancel Meeting' : 'Mark Meeting Completed',
-    message: isCancel
-      ? `Cancel "${title}"? The requesting office and every invited office will be told.`
-      : `Mark "${title}" as completed?`,
-    confirmLabel: isCancel ? 'Cancel Meeting' : 'Mark Completed',
-    danger: isCancel,
+    title: 'Cancel Meeting',
+    message: `Cancel "${title}"? The requesting office and every invited office will be told.`,
+    confirmLabel: 'Cancel Meeting',
+    danger: true,
     onConfirm: () => {
       document.getElementById('meetingActionName').value = action;
       document.getElementById('meetingActionId').value = id;
@@ -132,4 +133,18 @@ document.addEventListener('DOMContentLoaded', function () {
   params.delete('open');
   const rest = params.toString();
   history.replaceState(null, '', window.location.pathname + (rest ? '?' + rest : ''));
+});
+
+// A second click on a form's button must not send the action twice (the second one would show a confusing "no longer" error).
+// Done after the browser has read the form, so the clicked button's own value is still sent.
+document.addEventListener('submit', (event) => {
+  const form = event.target;
+  setTimeout(() => {
+    if (event.defaultPrevented) return;
+    form.querySelectorAll('button[type="submit"]').forEach((button) => { button.disabled = true; });
+  }, 0);
+});
+// Coming back with the browser's Back button must not leave the buttons switched off.
+window.addEventListener('pageshow', () => {
+  document.querySelectorAll('form button[type="submit"]').forEach((button) => { button.disabled = false; });
 });

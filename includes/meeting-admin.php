@@ -5,7 +5,7 @@
  * department-helpers.php and notification-helpers.php to already be loaded.
  *
  * Lifecycle:  pending_approval --(administrator)--> approved | rejected
- *             approved --> completed | cancelled
+ *             approved --> completed (by itself, once the meeting has ended; see closeFinishedMeetings()) | cancelled
  *             any edit to a non-final meeting sends it back to pending_approval,
  *             so the administrator always approves what actually happens.
  * Invited departments are only told about a meeting once it is approved.
@@ -54,11 +54,13 @@ function validateMeetingInput(array $input, int $requesterDepartmentId): array
         $errors[] = 'Please choose a valid meeting date.';
     }
 
-    $startOk = (bool) preg_match('/^\d{2}:\d{2}$/', $start);
+    // A real clock time: 00:00 to 23:59 (a value like 09:75 would be stored as midnight).
+    $clock = '/^([01]\d|2[0-3]):[0-5]\d$/';
+    $startOk = (bool) preg_match($clock, $start);
     if (!$startOk) {
         $errors[] = 'Please choose a start time.';
     }
-    $endOk = (bool) preg_match('/^\d{2}:\d{2}$/', $end);
+    $endOk = (bool) preg_match($clock, $end);
     if (!$endOk) {
         $errors[] = 'Please choose an end time.';
     } elseif ($startOk && $end <= $start) {
@@ -70,7 +72,7 @@ function validateMeetingInput(array $input, int $requesterDepartmentId): array
         $errors = array_merge($errors, validateBookingDateTime($date, $start, $end));
     }
 
-    $allowed = array_map(fn($d) => (int) $d['id'], getDepartmentsWithOfficeAccount());
+    $allowed = array_map(fn($d) => (int) $d['id'], getDepartmentsWithActiveOfficeAccount());
     if (empty($inviteeIds)) {
         $errors[] = 'Invite at least one department.';
     }
@@ -80,7 +82,7 @@ function validateMeetingInput(array $input, int $requesterDepartmentId): array
             break;
         }
         if (!in_array($id, $allowed, true)) {
-            $errors[] = 'One of the invited departments cannot be invited.';
+            $errors[] = 'One of the invited offices cannot be invited right now (it has no active account).';
             break;
         }
     }
@@ -99,12 +101,27 @@ function validateMeetingInput(array $input, int $requesterDepartmentId): array
     ];
 }
 
-function replaceMeetingInvitees(PDO $pdo, int $meetingId, array $departmentIds): void
+/**
+ * Makes the invited offices exactly $departmentIds: offices taken off the list are removed, new ones added,
+ * and the ones that stay keep their acknowledgement unless $resetResponses (the date or time changed).
+ */
+function syncMeetingInvitees(PDO $pdo, int $meetingId, array $departmentIds, bool $resetResponses = false): void
 {
-    $pdo->prepare('DELETE FROM meeting_invitees WHERE meeting_id = :id')->execute(['id' => $meetingId]);
+    $stmt = $pdo->prepare('SELECT department_id FROM meeting_invitees WHERE meeting_id = :id');
+    $stmt->execute(['id' => $meetingId]);
+    $current = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+
+    $delete = $pdo->prepare('DELETE FROM meeting_invitees WHERE meeting_id = :meeting AND department_id = :dept');
+    foreach (array_diff($current, $departmentIds) as $deptId) {
+        $delete->execute(['meeting' => $meetingId, 'dept' => $deptId]);
+    }
     $insert = $pdo->prepare('INSERT INTO meeting_invitees (meeting_id, department_id) VALUES (:meeting, :dept)');
-    foreach ($departmentIds as $deptId) {
+    foreach (array_diff($departmentIds, $current) as $deptId) {
         $insert->execute(['meeting' => $meetingId, 'dept' => $deptId]);
+    }
+    if ($resetResponses) {
+        $pdo->prepare("UPDATE meeting_invitees SET response = 'pending', response_note = NULL, responded_at = NULL WHERE meeting_id = :id")
+            ->execute(['id' => $meetingId]);
     }
 }
 
@@ -127,7 +144,7 @@ function createMeeting(int $userId, int $departmentId, array $input): array
         'venue' => $data['venue'], 'date' => $data['meeting_date'], 'start' => $data['start_time'], 'end' => $data['end_time'],
     ]);
     $meetingId = (int) $pdo->lastInsertId();
-    replaceMeetingInvitees($pdo, $meetingId, $data['invitees']);
+    syncMeetingInvitees($pdo, $meetingId, $data['invitees']);
     $pdo->commit();
 
     $department = findDepartmentById($departmentId)['name'] ?? 'An office';
@@ -160,6 +177,11 @@ function updateMeeting(int $meetingId, int $departmentId, array $input): array
     }
     $data = $checked['data'];
 
+    // A new date or time means every office has to acknowledge again; other changes keep their answers.
+    $scheduleChanged = $data['meeting_date'] !== $meeting['meeting_date']
+        || $data['start_time'] !== substr($meeting['start_time'], 0, 5)
+        || $data['end_time'] !== substr((string) $meeting['end_time'], 0, 5);
+
     $pdo = getDbConnection();
     $pdo->beginTransaction();
     $pdo->prepare(
@@ -171,16 +193,25 @@ function updateMeeting(int $meetingId, int $departmentId, array $input): array
         'title' => $data['title'], 'agenda' => $data['agenda'], 'venue' => $data['venue'], 'date' => $data['meeting_date'],
         'start' => $data['start_time'], 'end' => $data['end_time'], 'id' => $meetingId,
     ]);
-    replaceMeetingInvitees($pdo, $meetingId, $data['invitees']);
+    syncMeetingInvitees($pdo, $meetingId, $data['invitees'], $scheduleChanged);
     $pdo->commit();
 
     $department = $meeting['requester_department_name'];
     notifyRole('admin', $department . ' updated a meeting and needs it approved again: ' . $data['title'], MEETING_ADMIN_LINK);
 
-    // Departments that had already been invited to the approved version should know it changed.
+    // Departments that had already been invited to the approved version should know it changed (or that they were taken off it).
     if ($meeting['status'] === 'approved') {
         foreach ($meeting['invitees'] as $invitee) {
-            notifyDepartment((int) $invitee['department_id'], $department . ' changed the meeting "' . $meeting['title'] . '". It is awaiting approval again; you will be notified once it is approved.', MEETING_OFFICE_LINK);
+            $deptId = (int) $invitee['department_id'];
+            if (!in_array($deptId, $data['invitees'], true)) {
+                notifyDepartment($deptId, $department . ' changed the invitations for the meeting "' . $meeting['title'] . '" on ' . meetingWhenText($meeting) . '. Your office is no longer required to attend.', MEETING_OFFICE_LINK);
+                continue;
+            }
+            $acknowledged = $invitee['response'] === 'acknowledged';
+            $reply = !$acknowledged ? '' : ($scheduleChanged
+                ? ' Because the date or time changed, your office will need to acknowledge it again.'
+                : ' Your earlier acknowledgement still stands.');
+            notifyDepartment($deptId, $department . ' changed the meeting "' . $meeting['title'] . '". It is awaiting approval again; you will be notified once it is approved.' . $reply, MEETING_OFFICE_LINK);
         }
     }
 
@@ -195,6 +226,9 @@ function approveMeeting(int $meetingId, string $adminNotes, int $reviewerUserId)
     if ($meeting === null || $meeting['status'] !== 'pending_approval') {
         return ['success' => false, 'errors' => ['That meeting is no longer waiting for approval.']];
     }
+    if (($problem = meetingApprovalProblem($meeting)) !== null) {
+        return ['success' => false, 'errors' => [$problem]];
+    }
 
     $adminNotes = trim($adminNotes);
     getDbConnection()->prepare(
@@ -203,7 +237,10 @@ function approveMeeting(int $meetingId, string $adminNotes, int $reviewerUserId)
 
     notifyDepartment((int) $meeting['requester_department_id'], 'Your meeting "' . $meeting['title'] . '" was approved for ' . meetingWhenText($meeting) . '.', MEETING_OFFICE_LINK);
     foreach ($meeting['invitees'] as $invitee) {
-        notifyDepartment((int) $invitee['department_id'], $meeting['requester_department_name'] . ' has called a meeting that your office is required to attend: ' . $meeting['title'] . ' (' . meetingWhenText($meeting) . '). Please acknowledge it.', MEETING_OFFICE_LINK);
+        $text = $invitee['response'] === 'acknowledged'
+            ? $meeting['requester_department_name'] . ' confirmed the changes to the meeting "' . $meeting['title'] . '" (' . meetingWhenText($meeting) . '). Your earlier acknowledgement still stands.'
+            : $meeting['requester_department_name'] . ' has called a meeting that your office is required to attend: ' . $meeting['title'] . ' (' . meetingWhenText($meeting) . '). Please acknowledge it.';
+        notifyDepartment((int) $invitee['department_id'], $text, MEETING_OFFICE_LINK);
     }
 
     return ['success' => true, 'errors' => []];
@@ -256,28 +293,6 @@ function cancelMeeting(int $meetingId, ?int $departmentId): array
         notifyDepartment((int) $meeting['requester_department_id'], 'The Municipal Administrator cancelled your meeting "' . $meeting['title'] . '".', MEETING_OFFICE_LINK);
     } elseif ($meeting['status'] === 'approved') {
         notifyRole('admin', $meeting['requester_department_name'] . ' cancelled the approved meeting: ' . $meeting['title'], MEETING_ADMIN_LINK);
-    }
-
-    return ['success' => true, 'errors' => []];
-}
-
-function completeMeeting(int $meetingId, ?int $departmentId): array
-{
-    $meeting = findMeetingById($meetingId);
-    if ($meeting === null || ($departmentId !== null && !ownsMeeting($meeting, $departmentId))) {
-        return ['success' => false, 'errors' => ['That meeting no longer exists.']];
-    }
-    if ($meeting['status'] !== 'approved') {
-        return ['success' => false, 'errors' => ['Only an approved meeting can be marked completed.']];
-    }
-
-    getDbConnection()->prepare("UPDATE meetings SET status = 'completed' WHERE id = :id")->execute(['id' => $meetingId]);
-
-    // Nobody gets a bell entry for this, but every open list involved is now stale.
-    signalRole('admin', 'meetings');
-    signalDepartment((int) $meeting['requester_department_id'], 'meetings');
-    foreach ($meeting['invitees'] as $invitee) {
-        signalDepartment((int) $invitee['department_id'], 'meetings');
     }
 
     return ['success' => true, 'errors' => []];
