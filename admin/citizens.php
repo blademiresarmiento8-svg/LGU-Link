@@ -1,13 +1,17 @@
 <?php
 /**
- * Every citizen account, for the Municipal Administrator. Read only: the list shows the basics, and the
- * name opens the full details popup (admin/citizen-details.php), which records each look in the Activity Log.
+ * Every citizen account, for the Municipal Administrator. The list shows the basics, the name
+ * opens the full details popup (admin/citizen-details.php, each look is recorded in the Activity Log),
+ * and an account can be suspended or unsuspended (admin/citizens-suspend.php).
  */
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('admin');
 require_once __DIR__ . '/../config/database.php';
 
 $activePage = 'citizens';
+$flashSuspended = isset($_GET['suspended']);
+$flashUnsuspended = isset($_GET['unsuspended']);
+$flashError = trim((string) ($_GET['error'] ?? ''));
 $perPage = 25;
 $search = trim((string) ($_GET['q'] ?? ''));
 $page = max(1, (int) ($_GET['page'] ?? 1));
@@ -30,7 +34,7 @@ $pages = max(1, (int) ceil($total / $perPage));
 $page = min($page, $pages);
 
 $stmt = $pdo->prepare(
-    "SELECT u.id, u.full_name, u.email, u.mobile, u.organization, u.status, u.created_at,
+    "SELECT u.id, u.full_name, u.email, u.mobile, u.organization, u.status, u.suspended_reason, u.created_at,
             (SELECT COUNT(*) FROM appointments a WHERE a.user_id = u.id) AS requests
      FROM users u
      WHERE $where
@@ -94,25 +98,35 @@ $pageLink = fn(int $n) => '?' . http_build_query(array_filter(['q' => $search, '
               <th>Organization</th>
               <th>Registered</th>
               <th>Requests</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <?php if (empty($citizens)): ?>
               <tr>
-                <td colspan="6" class="row-note"><?= $search !== '' ? 'No citizen matches your search.' : 'No citizens have registered yet.' ?></td>
+                <td colspan="7" class="row-note"><?= $search !== '' ? 'No citizen matches your search.' : 'No citizens have registered yet.' ?></td>
               </tr>
             <?php endif; ?>
             <?php foreach ($citizens as $c): ?>
               <tr>
                 <td>
                   <button type="button" class="citizen-link" title="View this citizen's details" onclick="openCitizenDetails(<?= (int) $c['id'] ?>)"><?= htmlspecialchars($c['full_name']) ?></button>
-                  <?php if ($c['status'] === 'suspended'): ?><span class="badge bg-inactive">Suspended</span><?php endif; ?>
+                  <?php if ($c['status'] === 'suspended'): ?><span class="badge bg-inactive" title="<?= htmlspecialchars((string) $c['suspended_reason']) ?>">Suspended</span><?php endif; ?>
                 </td>
                 <td><?= htmlspecialchars($c['email']) ?></td>
                 <td><?= $c['mobile'] ? htmlspecialchars($c['mobile']) : '<span class="row-note">—</span>' ?></td>
                 <td><?= $c['organization'] ? htmlspecialchars($c['organization']) : '<span class="row-note">—</span>' ?></td>
                 <td><?= htmlspecialchars(date('M j, Y', strtotime($c['created_at']))) ?></td>
                 <td><?= (int) $c['requests'] ?></td>
+                <td>
+                  <div class="action-btns">
+                    <?php if ($c['status'] === 'suspended'): ?>
+                      <button class="btn-action approve" onclick="confirmUnsuspendCitizen(<?= (int) $c['id'] ?>, <?= htmlspecialchars(json_encode($c['full_name']), ENT_QUOTES) ?>)">Unsuspend</button>
+                    <?php else: ?>
+                      <button class="btn-action toggle" onclick="openCitizenSuspendModal(<?= (int) $c['id'] ?>, <?= htmlspecialchars(json_encode($c['full_name']), ENT_QUOTES) ?>)">Suspend</button>
+                    <?php endif; ?>
+                  </div>
+                </td>
               </tr>
             <?php endforeach; ?>
           </tbody>
@@ -145,11 +159,58 @@ $pageLink = fn(int $n) => '?' . http_build_query(array_filter(['q' => $search, '
     </div>
   </div>
 
+  <!-- SUSPEND MODAL -->
+  <div class="modal-overlay" id="citizenSuspendModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Suspend Account</h3>
+        <i class="fa-solid fa-xmark close-btn" onclick="closeModal('citizenSuspendModal')"></i>
+      </div>
+      <form action="citizens-suspend.php" method="post">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
+        <input type="hidden" name="id" id="citizenSuspendId" value="">
+        <input type="hidden" name="action" value="suspend">
+        <input type="hidden" name="q" value="<?= htmlspecialchars($search) ?>">
+        <input type="hidden" name="page" value="<?= $page ?>">
+
+        <p id="citizenSuspendMessage" class="row-note" style="margin-bottom: 14px;"></p>
+
+        <div class="form-group">
+          <label>Reason <span class="row-note">— optional, the citizen sees it when they try to log in</span></label>
+          <input type="text" name="reason" maxlength="255" placeholder="e.g. Repeated fake requests">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-modal btn-cancel" onclick="closeModal('citizenSuspendModal')">Cancel</button>
+          <button type="submit" class="btn-modal btn-submit">Suspend</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Hidden unsuspend form, submitted after the shared confirm modal is accepted -->
+  <form id="citizenUnsuspendForm" action="citizens-suspend.php" method="post" style="display:none;">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
+    <input type="hidden" name="action" value="unsuspend">
+    <input type="hidden" name="id" id="citizenUnsuspendId" value="">
+    <input type="hidden" name="q" value="<?= htmlspecialchars($search) ?>">
+    <input type="hidden" name="page" value="<?= $page ?>">
+  </form>
+
   <?php require __DIR__ . '/../includes/toast.php'; ?>
   <?php require __DIR__ . '/../includes/confirm-modal.php'; ?>
 
   <script src="/LGU-Link/assets/js/main.js"></script>
   <script src="/LGU-Link/assets/js/citizen-details.js"></script>
+  <script src="/LGU-Link/assets/js/admin-citizens.js"></script>
+
+  <?php if ($flashSuspended): ?>
+    <script>document.addEventListener('DOMContentLoaded', () => showToast('Account suspended.'));</script>
+  <?php elseif ($flashUnsuspended): ?>
+    <script>document.addEventListener('DOMContentLoaded', () => showToast('Account unsuspended.'));</script>
+  <?php elseif ($flashError !== ''): ?>
+    <script>document.addEventListener('DOMContentLoaded', () => showToast(<?= json_encode($flashError) ?>, true));</script>
+  <?php endif; ?>
 </body>
 
 </html>

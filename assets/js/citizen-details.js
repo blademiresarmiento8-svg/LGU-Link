@@ -56,7 +56,7 @@ function openCitizenDetails(userId, goBack) {
         ['Organization', data.organization || '-'],
         ['Position', data.position || '-'],
         ['Registered on', data.registered || '-'],
-        ['Account', data.account_status],
+        ['Account', data.account_status + (data.suspended_note ? ' (' + data.suspended_note + ')' : '')],
         ['Privacy Notice', data.privacy_agreed ? `Agreed on ${data.privacy_agreed}` : 'No record'],
         ['Appointment requests', `${r.total} in all` + (parts.length ? ` (${parts.join(', ')})` : '') + (r.last ? `. Latest: ${r.last}` : '')],
       ];

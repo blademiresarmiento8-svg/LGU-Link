@@ -19,7 +19,7 @@ $pdo = getDbConnection();
 
 $stmt = $pdo->prepare(
     "SELECT u.id, u.full_name, u.first_name, u.middle_name, u.last_name, u.suffix, u.email, u.mobile, u.organization, u.position_title,
-            u.status, u.created_at, u.privacy_consent_at
+            u.status, u.suspended_at, u.suspended_reason, u.created_at, u.privacy_consent_at
      FROM users u
      WHERE u.id = :id AND u.role = 'user'"
 );
@@ -56,6 +56,9 @@ echo json_encode([
     'organization' => $citizen['organization'],
     'position' => $citizen['position_title'],
     'account_status' => $citizen['status'] === 'suspended' ? 'Suspended' : 'Active',
+    'suspended_note' => $citizen['status'] === 'suspended'
+        ? 'since ' . $date($citizen['suspended_at']) . ($citizen['suspended_reason'] ? ': ' . $citizen['suspended_reason'] : '')
+        : null,
     'registered' => $date($citizen['created_at']),
     'privacy_agreed' => $date($citizen['privacy_consent_at']),
     'requests' => [

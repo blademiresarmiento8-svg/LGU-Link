@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $stmt = getDbConnection()->prepare(
                 'SELECT users.id, users.full_name, users.email, users.password, users.role,
-                        users.department_id, users.status, departments.name AS department_name
+                        users.department_id, users.status, users.suspended_reason, departments.name AS department_name
                  FROM users
                  LEFT JOIN departments ON departments.id = users.department_id
                  WHERE users.email = ? LIMIT 1'
@@ -38,7 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password']) && $user['status'] === 'suspended') {
-                $error = 'This account has been suspended. Please contact the system administrator.';
+                $error = $user['role'] === 'user'
+                    ? 'This account has been suspended' . ($user['suspended_reason'] ? ': ' . $user['suspended_reason'] . '.' : '.') . ' Please contact the Municipal Administrator.'
+                    : 'This account has been suspended. Please contact the system administrator.';
             } elseif ($user && password_verify($password, $user['password'])) {
                 rateLimitReset($mailKey);
                 session_regenerate_id(true);
