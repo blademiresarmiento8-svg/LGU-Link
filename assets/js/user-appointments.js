@@ -109,3 +109,13 @@ function confirmCancelAppointment(id, title) {
     },
   });
 }
+
+// "Request an appointment" on the dashboard comes here as appointments.php?new=1: open the form straight away.
+document.addEventListener('DOMContentLoaded', function () {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('new')) return;
+  openAppointmentFormModal();
+  params.delete('new');
+  const rest = params.toString();
+  history.replaceState(null, '', window.location.pathname + (rest ? '?' + rest : ''));
+});
