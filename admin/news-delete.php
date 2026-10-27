@@ -1,6 +1,6 @@
 <?php
 /**
- * Deletes a news post and its uploaded image. Plain POST + redirect.
+ * Permanently deletes an archived news post and its uploaded image. Plain POST + redirect.
  */
 
 require_once __DIR__ . '/../includes/auth.php';
@@ -16,8 +16,8 @@ $id = (int) ($_POST['id'] ?? 0);
 $deleted = $id > 0 && adminDeleteLiveNewsPost($id);
 
 if ($deleted) {
-    header('Location: news.php?deleted=1');
+    header('Location: news.php?view=archived&deleted=1');
 } else {
-    header('Location: news.php?error=' . urlencode('That post no longer exists.'));
+    header('Location: news.php?view=archived&error=' . urlencode('That post no longer exists, or it is not archived yet.'));
 }
 exit;

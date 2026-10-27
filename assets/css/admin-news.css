@@ -78,3 +78,54 @@
 .news-featured-label input {
   width: auto;
 }
+
+/* Clickable stat cards and the Posts / Archived tabs */
+.stat-card-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.stat-card-link:hover {
+  border-color: var(--primary, #2563eb);
+}
+
+.stat-card-link.active {
+  border-color: var(--primary, #2563eb);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.news-view-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.news-view-tabs a {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: white;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.news-view-tabs a.active {
+  background: var(--primary, #2563eb);
+  border-color: var(--primary, #2563eb);
+  color: white;
+}
+
+.news-view-tabs a span {
+  margin-left: 4px;
+  opacity: 0.8;
+}
+
+.news-view-tabs a.news-view-clear {
+  border-style: dashed;
+  font-weight: 500;
+}

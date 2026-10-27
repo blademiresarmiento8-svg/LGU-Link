@@ -312,6 +312,7 @@ CREATE TABLE IF NOT EXISTS news_posts (
   requirements TEXT NULL, -- one requirement per line
   contact_info VARCHAR(150) NULL,
   notified_at DATETIME NULL, -- when this post's subscriber emails were queued (NULL = not yet)
+  archived_at DATETIME NULL, -- when the Municipal Administrator archived (took down) this post (NULL = not archived)
   is_demo TINYINT(1) NOT NULL DEFAULT 0, -- 1 = made by the demo-data loader
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

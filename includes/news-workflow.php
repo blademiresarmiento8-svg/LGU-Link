@@ -22,6 +22,7 @@
 require_once __DIR__ . '/news-helpers.php';
 require_once __DIR__ . '/news-admin.php';
 require_once __DIR__ . '/notification-helpers.php';
+require_once __DIR__ . '/audit-helpers.php';
 require_once __DIR__ . '/department-helpers.php';
 
 /** The editable content of a post/submission, in display order. */
@@ -620,6 +621,9 @@ function startNewsChangeProposal(int $postId, array $user): array
     if ($post === null || (int) ($post['department_id'] ?? 0) !== (int) $user['department_id']) {
         return ['success' => false, 'errors' => ['That post is not yours to change.'], 'id' => 0];
     }
+    if (!empty($post['archived_at'])) {
+        return ['success' => false, 'errors' => ['The Municipal Administrator has taken this post down, so it cannot be changed.'], 'id' => 0];
+    }
 
     // Continue an open proposal instead of starting a second one.
     $stmt = getDbConnection()->prepare("SELECT id FROM news_submissions WHERE post_id = :post AND status IN ('draft', 'pending_review', 'awaiting_office', 'rejected') ORDER BY id DESC LIMIT 1");
@@ -632,16 +636,46 @@ function startNewsChangeProposal(int $postId, array $user): array
     return ['success' => true, 'errors' => [], 'id' => createNewsSubmission($user, newsContentOf($post), $postId)];
 }
 
-/** The administrator deletes a live post; the office that wrote it is told. */
+/** The administrator archives a post (hides it from the public, keeps it); the office that wrote it is told. */
+function adminArchiveNewsPost(int $postId): bool
+{
+    $post = findNewsPostById($postId);
+    if ($post === null || !empty($post['archived_at'])) {
+        return false;
+    }
+    getDbConnection()->prepare('UPDATE news_posts SET archived_at = NOW() WHERE id = :id AND archived_at IS NULL')->execute(['id' => $postId]);
+    logAudit('news_archived', null, $post['title']);
+    if ($post['department_id'] !== null) {
+        notifyDepartment((int) $post['department_id'], 'The Municipal Administrator archived your post "' . $post['title'] . '". It is no longer on the website.', '/LGU-Link/office/news.php');
+    }
+
+    return true;
+}
+
+/** The administrator restores an archived post; it shows again according to its own schedule. */
+function adminRestoreNewsPost(int $postId): bool
+{
+    $post = findNewsPostById($postId);
+    if ($post === null || empty($post['archived_at'])) {
+        return false;
+    }
+    getDbConnection()->prepare('UPDATE news_posts SET archived_at = NULL WHERE id = :id')->execute(['id' => $postId]);
+    logAudit('news_restored', null, $post['title']);
+    if ($post['department_id'] !== null) {
+        notifyDepartment((int) $post['department_id'], 'The Municipal Administrator restored your post "' . $post['title'] . '".', '/LGU-Link/news-post.php?id=' . $postId);
+    }
+
+    return true;
+}
+
+/** The administrator permanently deletes a post. Only an archived post can be deleted. */
 function adminDeleteLiveNewsPost(int $postId): bool
 {
     $post = findNewsPostById($postId);
-    if ($post === null || !deleteNewsPost($postId)) {
+    if ($post === null || empty($post['archived_at']) || !deleteNewsPost($postId)) {
         return false;
     }
-    if ($post['department_id'] !== null) {
-        notifyDepartment((int) $post['department_id'], 'The Municipal Administrator removed your post "' . $post['title'] . '" from the website.', '/LGU-Link/office/news.php');
-    }
+    logAudit('news_deleted', null, $post['title']);
 
     return true;
 }
@@ -666,6 +700,7 @@ function newsStateBadge(string $state): array
     return match ($state) {
         'scheduled' => ['Scheduled', 'bg-forwarded'],
         'expired' => ['Expired', 'bg-completed'],
+        'archived' => ['Archived', 'bg-pending'],
         default => ['Live', 'bg-approved'],
     };
 }

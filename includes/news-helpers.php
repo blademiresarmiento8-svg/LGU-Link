@@ -103,7 +103,7 @@ const NEWS_GO_LIVE_SQL = 'COALESCE(n.go_live_at, n.published_at)';
 
 /** Condition for "visible to the public right now". */
 // Demo posts (is_demo = 1, see includes/demo-data.php) never appear on the public site.
-const NEWS_VISIBLE_SQL = '(n.is_demo = 0 AND COALESCE(n.go_live_at, n.published_at) <= NOW() AND (n.show_until IS NULL OR n.show_until > NOW()))';
+const NEWS_VISIBLE_SQL = '(n.is_demo = 0 AND n.archived_at IS NULL AND COALESCE(n.go_live_at, n.published_at) <= NOW() AND (n.show_until IS NULL OR n.show_until > NOW()))';
 
 const NEWS_SELECT = 'SELECT n.*, d.name AS department_name, COALESCE(n.go_live_at, n.published_at) AS display_at
     FROM news_posts n LEFT JOIN departments d ON d.id = n.department_id';
@@ -122,9 +122,12 @@ function findNewsPostById(int $id): ?array
     return $stmt->fetch() ?: null;
 }
 
-/** 'live', 'scheduled' (not visible yet) or 'expired' (show-until passed). */
+/** 'archived' (taken down by the administrator), 'live', 'scheduled' (not visible yet) or 'expired' (show-until passed). */
 function newsPostState(array $post): string
 {
+    if (!empty($post['archived_at'])) {
+        return 'archived';
+    }
     $now = date('Y-m-d H:i:s');
     $goLive = (string) ($post['go_live_at'] ?: $post['published_at'] . ' 00:00:00');
 

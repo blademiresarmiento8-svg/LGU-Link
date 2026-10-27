@@ -1,12 +1,37 @@
-// Admin News & Announcements page logic - delete and search filter.
+// Admin News & Announcements page logic - archive, restore, delete and search filter.
 // Writing and editing posts happens on their own pages (admin/news-edit.php,
-// admin/news-review.php); deleting is a real form submission, not a DOM-only mockup.
+// admin/news-review.php); these are real form submissions, not a DOM-only mockup.
+
+function submitNewsArchiveForm(id, action) {
+  document.getElementById('newsArchiveId').value = id;
+  document.getElementById('newsArchiveAction').value = action;
+  document.getElementById('newsArchiveForm').submit();
+}
+
+function confirmArchiveNewsPost(id, title) {
+  confirmAction({
+    title: 'Archive News Post',
+    message: `Archive "${title}"? It is taken off the public website but kept, and you can restore it any time from the Archived tab. If an office wrote it, the office is told.`,
+    confirmLabel: 'Archive',
+    danger: true,
+    onConfirm: () => submitNewsArchiveForm(id, 'archive'),
+  });
+}
+
+function confirmRestoreNewsPost(id, title) {
+  confirmAction({
+    title: 'Restore News Post',
+    message: `Restore "${title}"? It will show on the public website again according to its own schedule.`,
+    confirmLabel: 'Restore',
+    onConfirm: () => submitNewsArchiveForm(id, 'restore'),
+  });
+}
 
 function confirmDeleteNewsPost(id, title) {
   confirmAction({
-    title: 'Delete News Post',
-    message: `Are you sure you want to delete "${title}"? This cannot be undone and removes it from the public website. If an office wrote it, the office is told.`,
-    confirmLabel: 'Delete',
+    title: 'Delete Permanently',
+    message: `Permanently delete "${title}"? This cannot be undone, and its picture is deleted too.`,
+    confirmLabel: 'Delete Permanently',
     danger: true,
     onConfirm: () => {
       document.getElementById('newsDeleteId').value = id;

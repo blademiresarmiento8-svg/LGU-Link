@@ -61,7 +61,7 @@ if ($post === null) {
         </div>
       <?php else: ?>
         <?php if ($previewing): ?>
-          <div class="news-banner warn"><i class="fa-solid fa-eye"></i><div><strong>Preview.</strong> The public cannot see this post right now (it is scheduled for later, or its time has ended).</div></div>
+          <div class="news-banner warn"><i class="fa-solid fa-eye"></i><div><strong>Preview.</strong> The public cannot see this post right now (it is archived, scheduled for later, or its time has ended).</div></div>
         <?php endif; ?>
         <?php renderNewsPost($post, newsPosterName($post), date('F j, Y, g:i A', strtotime((string) $post['display_at']))); ?>
       <?php endif; ?>
