@@ -19,6 +19,9 @@ $navItems = [
     'queue-offices' => ['label' => 'Queue',            'icon' => 'fa-list-ol',         'href' => '/LGU-Link/sysadmin/queue-offices.php'],
     'audit-log'         => ['label' => 'Activity Log',       'icon' => 'fa-clipboard-list',  'href' => '/LGU-Link/sysadmin/audit-log.php'],
 ];
+if (!NEWS_EMAILS_VISIBLE) {
+    unset($navItems['news-emails']);
+}
 ?>
   <header class="top-header nav-many">
     <div class="header-logo">

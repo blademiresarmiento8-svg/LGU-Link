@@ -6,6 +6,8 @@
 
 define('BASE_PATH', dirname(__DIR__));
 
+require_once __DIR__ . '/../config/features.php'; // which parts of the system are shown
+
 // Everything ("today", working hours, timestamps) runs on Philippine time,
 // whatever the server's own timezone is set to.
 date_default_timezone_set('Asia/Manila');

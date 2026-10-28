@@ -76,7 +76,7 @@ function newsPageUrl(array $changes): string
       </div>
     </div>
 
-    <?php if ($loggedInCitizen && $emailTypes): ?>
+    <?php if (NEWS_EMAILS_VISIBLE && $loggedInCitizen && $emailTypes): ?>
       <details class="news-email-card" id="emailMe">
         <summary>
           <i class="fa-solid fa-envelope-open-text"></i>
@@ -116,7 +116,7 @@ function newsPageUrl(array $changes): string
           <p class="row-note">Each email has an unsubscribe link, and you can change this any time. Leave all boxes empty and press Save to turn emails off.</p>
         </form>
       </details>
-    <?php elseif (!$loggedInCitizen && $emailTypes): ?>
+    <?php elseif (NEWS_EMAILS_VISIBLE && !$loggedInCitizen && $emailTypes): ?>
       <div class="news-email-card news-email-guest">
         <i class="fa-solid fa-envelope-open-text"></i>
         <span class="news-email-title">
@@ -199,7 +199,7 @@ function newsPageUrl(array $changes): string
   <?php endif; ?>
 
   <script src="/LGU-Link/assets/js/main.js"></script>
-  <?php if ($loggedInCitizen && $emailTypes): ?>
+  <?php if (NEWS_EMAILS_VISIBLE && $loggedInCitizen && $emailTypes): ?>
     <script>
       // A link ending in #emailMe (the one in the emails) opens the card; saving never scrolls the page.
       document.addEventListener('DOMContentLoaded', () => {
@@ -208,7 +208,7 @@ function newsPageUrl(array $changes): string
       });
     </script>
   <?php endif; ?>
-  <?php if ($loggedInCitizen && $emailFlash !== ''): ?>
+  <?php if (NEWS_EMAILS_VISIBLE && $loggedInCitizen && $emailFlash !== ''): ?>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
         showToast(<?= json_encode($emailFlash) ?>, <?= ($_GET['email'] ?? '') === 'error' ? 'true' : 'false' ?>);

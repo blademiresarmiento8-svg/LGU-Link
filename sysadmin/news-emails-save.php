@@ -3,6 +3,10 @@
 
 require_once __DIR__ . '/../includes/auth.php';
 requireRole('sysadmin');
+if (!NEWS_EMAILS_VISIBLE) {
+    header('Location: dashboard.php');
+    exit;
+}
 require_once __DIR__ . '/../includes/news-email.php';
 require_once __DIR__ . '/../includes/audit-helpers.php';
 
