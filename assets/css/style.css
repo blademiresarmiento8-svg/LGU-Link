@@ -943,6 +943,35 @@ tr.live-new { animation: live-new 4s ease-out; }
   .top-header.nav-many .header-nav a { padding: 12px 14px; min-height: 44px; font-size: 14px; }
 }
 
+/* The menu folds into the button whenever its links do not fit the window (a long name, a small laptop screen,
+   browser zoom): assets/js/main.js adds .nav-collapsed after measuring, so no fixed width has to be guessed. */
+.top-header.nav-collapsed .nav-toggle { display: flex; }
+.top-header.nav-collapsed .header-logo { margin-right: auto; }
+.top-header.nav-collapsed .btn-create-news-compact { display: flex; }
+.top-header.nav-collapsed .header-nav {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 10px 16px 16px;
+  background: var(--header-bg);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.35);
+  max-height: calc(100vh - 70px);
+  overflow-y: auto;
+}
+.top-header.nav-collapsed .header-nav.open { display: flex; }
+.top-header.nav-collapsed .header-nav a,
+.top-header.nav-collapsed .header-nav button { padding: 12px 14px; min-height: 44px; font-size: 14px; }
+.top-header.nav-collapsed .header-nav .btn-create-news { display: none; }
+.top-header.nav-collapsed .header-search-box { width: 100%; margin: 0 0 6px; padding: 10px 14px; }
+.top-header.nav-collapsed .header-search-box input,
+.top-header.nav-collapsed .header-search-box input:focus { width: 100%; }
+
 /* Touch screens: small buttons and header links get a bigger tap area. */
 @media (pointer: coarse) {
   .btn-action { min-height: 36px; padding: 8px 12px; }

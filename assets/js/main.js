@@ -71,6 +71,49 @@ function wireNavToggle() {
   };
   if (wide.addEventListener) wide.addEventListener('change', onWide);
   else wide.addListener(onWide);
+
+  fitNavToWidth(nav, setOpen);
+}
+
+/**
+ * Folds the menu into the menu button whenever its links do not fit in the bar, however wide the window
+ * is: the room they need depends on the account name, the number of tabs and the browser zoom, so a fixed
+ * width cannot be right for everyone. The bar is measured in its full layout; if the links need more room
+ * than they have, the header gets .nav-collapsed (see "Responsive header" in style.css).
+ */
+function fitNavToWidth(nav, setOpen) {
+  const header = nav.closest('.top-header');
+  if (!header) return;
+  const toggle = header.querySelector('.nav-toggle');
+
+  function fit() {
+    header.classList.remove('nav-collapsed');
+    // Below the fixed widths in style.css the menu button is already on.
+    if (getComputedStyle(toggle).display !== 'none') return;
+
+    const items = Array.from(nav.children).filter(function (el) { return getComputedStyle(el).display !== 'none'; });
+    const gap = parseFloat(getComputedStyle(nav).columnGap) || 0;
+    const needed = items.reduce(function (sum, el) { return sum + el.getBoundingClientRect().width; }, 0) + gap * Math.max(0, items.length - 1);
+    if (needed > nav.clientWidth + 0.5 || header.scrollWidth > header.clientWidth + 1) {
+      header.classList.add('nav-collapsed');
+      setOpen(false);
+    }
+  }
+
+  let queued = false;
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      fit();
+    });
+  }
+
+  fit();
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule); // the real font changes the widths
 }
 
 /* Live Philippine Standard Time clock, targets <strong id="livePST"> */
