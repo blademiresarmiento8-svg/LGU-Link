@@ -11,6 +11,7 @@ $actionLabels = [
     'account_created' => 'Account created',
     'account_deleted' => 'Account deleted',
     'password_reset' => 'Password reset',
+    'password_reset_by_email' => 'Password reset by email code',
     'account_suspended' => 'Account suspended',
     'account_unsuspended' => 'Account unsuspended',
     'department_added' => 'Office added',

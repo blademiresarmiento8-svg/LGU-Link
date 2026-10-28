@@ -407,3 +407,6 @@
 .auth-back:hover { color: var(--primary); }
 .auth-back i { font-size: 12px; transition: transform .15s; }
 .auth-back:hover i { transform: translateX(-3px); }
+
+.auth-forgot-link { display: inline-block; margin-top: 8px; font-size: 13px; color: var(--primary); text-decoration: none; font-weight: 600; }
+.auth-forgot-link:hover { text-decoration: underline; }

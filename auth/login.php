@@ -67,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $registered = isset($_GET['registered']);
+$passwordWasReset = isset($_GET['reset']);
 if ($error === '' && isset($_GET['expired'])) {
     $error = 'You were logged out because you were inactive. Please sign in again.';
 } elseif ($error === '' && isset($_GET['suspended'])) {
@@ -142,6 +143,13 @@ if ($error === '' && isset($_GET['expired'])) {
           </div>
         <?php endif; ?>
 
+        <?php if ($passwordWasReset): ?>
+          <div class="auth-alert auth-alert-success">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Your password was changed. Sign in with the new one.</span>
+          </div>
+        <?php endif; ?>
+
         <?php if ($error): ?>
           <div class="auth-alert auth-alert-error">
             <i class="fa-solid fa-triangle-exclamation"></i>
@@ -165,6 +173,7 @@ if ($error === '' && isset($_GET['expired'])) {
                 <i class="fa-solid fa-eye"></i>
               </button>
             </div>
+            <a href="/LGU-Link/auth/forgot-password.php" class="auth-forgot-link">Forgot your password?</a>
           </div>
 
           <button type="submit" class="btn-modal btn-submit auth-submit">
