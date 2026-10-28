@@ -16,9 +16,18 @@ $savedPosition = (string) ($profile['position_title'] ?? '');
 
 $appointments = getAppointmentsForUser((int) $citizen['id']);
 
+// The soonest scheduled appointment that has not happened yet.
+$today = date('Y-m-d');
+$upcoming = array_values(array_filter($appointments, fn($a) => $a['status'] === 'scheduled' && $a['scheduled_date'] !== null && $a['scheduled_date'] >= $today));
+usort($upcoming, fn($a, $b) => [$a['scheduled_date'], (string) $a['scheduled_time']] <=> [$b['scheduled_date'], (string) $b['scheduled_time']]);
+$next = $upcoming[0] ?? null;
+
 $flashSubmitted = isset($_GET['submitted']);
 $flashCancelled = isset($_GET['cancelled']);
 $flashError = trim((string) ($_GET['error'] ?? ''));
+
+/** The "in progress" group in the status filter. */
+const IN_PROGRESS_STATUSES = ['pending_review', 'forwarded', 'scheduled'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,10 +57,51 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
       <button class="btn-primary" onclick="openAppointmentFormModal()"><i class="fa-solid fa-plus"></i> New Appointment Request</button>
     </div>
 
+    <!-- NEXT APPOINTMENT -->
+    <div data-live-region="upcoming">
+      <?php if ($next): ?>
+        <?php $when = strtotime($next['scheduled_date']); ?>
+        <section class="appt-upcoming">
+          <div class="dash-date">
+            <span><?= date('M', $when) ?></span>
+            <strong><?= date('j', $when) ?></strong>
+            <small><?= date('D', $when) ?></small>
+          </div>
+          <div class="appt-upcoming-text">
+            <small>Your next appointment<?= $next['scheduled_date'] === $today ? ' - today' : '' ?></small>
+            <h3><?= htmlspecialchars($next['title']) ?></h3>
+            <p>
+              <i class="fa-regular fa-clock"></i> <?= $next['scheduled_time'] ? htmlspecialchars(date('g:i A', strtotime($next['scheduled_time']))) : 'Time to be confirmed' ?>
+              &nbsp;<i class="fa-solid fa-building-columns"></i> <?= htmlspecialchars($next['department_name'] ?? 'Municipal Hall') ?>
+            </p>
+          </div>
+        </section>
+      <?php endif; ?>
+    </div>
+
     <section class="panel">
       <div class="panel-header">
         <h3>My Requests</h3>
       </div>
+
+      <?php if (!empty($appointments)): ?>
+        <div class="toolbar">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="apptSearch" placeholder="Search title, category or office..." maxlength="100" oninput="applyAppointmentFilters()">
+          </div>
+          <select id="apptStatusFilter" onchange="applyAppointmentFilters()" aria-label="Status">
+            <option value="">All requests</option>
+            <option value="active">In progress</option>
+            <option value="pending_review">Pending review</option>
+            <option value="forwarded">Forwarded to office</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="completed">Completed</option>
+            <option value="rejected">Rejected</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      <?php endif; ?>
 
       <div class="table-container" data-live-region="table-1">
         <table id="appointmentTable">
@@ -69,13 +119,22 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
           <tbody>
             <?php if (empty($appointments)): ?>
               <tr>
-                <td colspan="7" class="row-note">You haven't submitted any appointment requests yet.</td>
+                <td colspan="7">
+                  <div class="dash-empty">
+                    <i class="fa-solid fa-inbox"></i>
+                    <p>You haven't sent any appointment request yet.</p>
+                    <button class="btn-action approve" onclick="openAppointmentFormModal()">Send your first request</button>
+                  </div>
+                </td>
               </tr>
             <?php endif; ?>
             <?php foreach ($appointments as $appt): ?>
               <?php
               $statusMeta = getAppointmentStatusMeta($appt['status']);
               $canCancel = in_array($appt['status'], ['pending_review', 'forwarded'], true);
+              $canSendAgain = in_array($appt['status'], ['rejected', 'cancelled', 'completed'], true);
+              $progress = appointmentProgress($appt);
+              $nextStep = appointmentNextStep($appt);
 
               if (in_array($appt['status'], ['scheduled', 'completed'], true) && $appt['scheduled_date']) {
                   $scheduleText = date('M j, Y', strtotime($appt['scheduled_date']));
@@ -100,6 +159,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
                   'preferred_date' => $appt['preferred_date'],
                   'preferred_time' => $appt['preferred_time'],
                   'department_name' => $appt['department_name'],
+                  'status' => $appt['status'],
                   'status_label' => $statusMeta['label'],
                   'scheduled_date' => $appt['scheduled_date'],
                   'scheduled_time' => $appt['scheduled_time'],
@@ -107,13 +167,25 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
                   'rejection_reason' => $appt['rejection_reason'],
                   'attachment_path' => $appt['attachment_path'],
                   'attachment_original_name' => $appt['attachment_original_name'],
+                  'progress' => $progress,
+                  'next_step' => $nextStep,
+                  'can_send_again' => $canSendAgain,
+                  'can_cancel' => $canCancel,
               ]);
+              $searchText = strtolower($appt['title'] . ' ' . $appt['category'] . ' ' . ($appt['department_name'] ?? ''));
               ?>
-              <tr>
+              <tr data-status="<?= htmlspecialchars($appt['status']) ?>" data-active="<?= in_array($appt['status'], IN_PROGRESS_STATUSES, true) ? '1' : '0' ?>" data-search="<?= htmlspecialchars($searchText, ENT_QUOTES) ?>">
                 <td><?= htmlspecialchars(date('M j, Y', strtotime($appt['created_at']))) ?></td>
                 <td><?= htmlspecialchars($appt['category']) ?></td>
                 <td><strong><?= htmlspecialchars($appt['title']) ?></strong></td>
-                <td><span class="badge <?= htmlspecialchars($statusMeta['badgeClass']) ?>"><?= htmlspecialchars($statusMeta['label']) ?></span></td>
+                <td>
+                  <span class="badge <?= htmlspecialchars($statusMeta['badgeClass']) ?>"><?= htmlspecialchars($statusMeta['label']) ?></span>
+                  <div class="progress-dots" title="<?= htmlspecialchars($nextStep, ENT_QUOTES) ?>" aria-label="<?= htmlspecialchars($nextStep, ENT_QUOTES) ?>">
+                    <?php foreach ($progress as $step): ?>
+                      <span class="progress-dot <?= htmlspecialchars($step['state']) ?>"></span>
+                    <?php endforeach; ?>
+                  </div>
+                </td>
                 <td><?= $appt['department_name'] !== null ? htmlspecialchars($appt['department_name']) : '<span class="row-note">—</span>' ?></td>
                 <td><?= htmlspecialchars($scheduleText) ?></td>
                 <td>
@@ -122,10 +194,16 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
                     <?php if ($canCancel): ?>
                       <button class="btn-action reject" onclick="confirmCancelAppointment(<?= (int) $appt['id'] ?>, <?= htmlspecialchars(json_encode($appt['title']), ENT_QUOTES) ?>)">Cancel</button>
                     <?php endif; ?>
+                    <?php if ($canSendAgain): ?>
+                      <button class="btn-action toggle" data-appointment="<?= htmlspecialchars($apptJson, ENT_QUOTES) ?>" onclick="sendAppointmentAgain(this)">Send again</button>
+                    <?php endif; ?>
                   </div>
                 </td>
               </tr>
             <?php endforeach; ?>
+            <tr id="apptNoMatch" hidden>
+              <td colspan="7" class="row-note">No request matches your search.</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -143,6 +221,8 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
       <form id="appointmentForm" action="appointments-save.php" method="post" enctype="multipart/form-data" data-schedule-rules>
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
 
+        <h4 class="form-section">About your concern</h4>
+
         <div class="form-group">
           <label>Category of Concern</label>
           <select name="category" required>
@@ -155,18 +235,15 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <div class="form-group">
           <label>Title</label>
-          <input type="text" name="title" maxlength="200" placeholder="Short summary of your concern" required>
+          <input type="text" name="title" maxlength="200" data-counter placeholder="Short summary of your concern" required>
         </div>
 
         <div class="form-group">
           <label>Description</label>
-          <textarea name="description" rows="4" maxlength="5000" required placeholder="Describe your concern, proposal, or meeting request in detail"></textarea>
+          <textarea name="description" rows="4" maxlength="5000" data-counter required placeholder="Describe your concern, proposal, or meeting request in detail"></textarea>
         </div>
 
-        <div class="form-group">
-          <label>Attachment <span class="row-note">— optional, image or PDF, max 8MB</span></label>
-          <input type="file" name="attachment" accept="image/*,application/pdf">
-        </div>
+        <h4 class="form-section">Your contact details</h4>
 
         <div class="form-group">
           <label>Contact Number</label>
@@ -178,23 +255,30 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
           <input type="email" name="email" maxlength="150" value="<?= htmlspecialchars($citizen['email']) ?>" required>
         </div>
 
+        <h4 class="form-section">Optional</h4>
+
         <div class="form-group">
-          <label>Organization <span class="row-note">— optional, if you are making this request for a company, agency or group</span></label>
+          <label>Attachment <span class="row-note">— image or PDF, max 8MB</span></label>
+          <input type="file" name="attachment" accept="image/*,application/pdf">
+        </div>
+
+        <div class="form-group">
+          <label>Organization <span class="row-note">— if you are making this request for a company, agency or group</span></label>
           <input type="text" name="organization" maxlength="100" placeholder="e.g. ABC Trading, DPWH, a barangay association" value="<?= htmlspecialchars($savedOrganization) ?>">
         </div>
 
         <div class="form-group">
-          <label>Position <span class="row-note">— optional</span></label>
+          <label>Position</label>
           <input type="text" name="position_title" maxlength="100" placeholder="Your role in that organization" value="<?= htmlspecialchars($savedPosition) ?>">
         </div>
 
         <div class="form-group">
-          <label>Preferred Date <span class="row-note">— optional</span></label>
+          <label>Preferred Date</label>
           <input type="date" name="preferred_date" data-rule="date">
         </div>
 
         <div class="form-group">
-          <label>Preferred Time <span class="row-note">— optional</span></label>
+          <label>Preferred Time</label>
           <input type="time" name="preferred_time" data-rule="time" data-blank="No preferred time">
         </div>
 
@@ -214,7 +298,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
         <i class="fa-solid fa-xmark close-btn" onclick="closeModal('appointmentDetailModal')"></i>
       </div>
       <div id="appointmentDetailBody" class="appointment-detail-body"></div>
-      <div class="modal-actions">
+      <div class="modal-actions" id="appointmentDetailActions">
         <button type="button" class="btn-modal btn-cancel" onclick="closeModal('appointmentDetailModal')">Close</button>
       </div>
     </div>

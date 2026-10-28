@@ -190,3 +190,63 @@ button.clash-clickable:hover {
 /* A citizen's name in the administrator's table: click to see their details. */
 .citizen-link { background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--primary); cursor: pointer; text-align: left; }
 .citizen-link:hover { text-decoration: underline; }
+
+/* ---------- Citizen: next appointment, progress, messages, form sections ---------- */
+.appt-upcoming {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 1px solid #bfdbfe;
+}
+
+.appt-upcoming .dash-date { flex-shrink: 0; }
+.appt-upcoming-text { flex: 1; min-width: 0; }
+.appt-upcoming-text small { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #1d4ed8; }
+.appt-upcoming-text h3 { margin: 2px 0 4px; font-size: 17px; overflow-wrap: anywhere; }
+.appt-upcoming-text p { margin: 0; font-size: 13px; color: #334155; }
+.appt-upcoming-text p i { color: var(--primary); }
+@media (max-width: 640px) { .appt-upcoming { flex-wrap: wrap; } }
+
+.dash-date { width: 64px; text-align: center; border-radius: 12px; background: white; color: #1d4ed8; padding: 8px 0; }
+.dash-date span { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.dash-date strong { display: block; font-size: 26px; line-height: 1.1; }
+.dash-date small { font-size: 11px; opacity: 0.8; }
+
+.dash-empty { text-align: center; padding: 18px 8px; color: var(--text-muted); }
+.dash-empty i { font-size: 30px; color: #cbd5e1; margin-bottom: 8px; }
+.dash-empty p { margin: 0 0 12px; font-size: 13px; line-height: 1.5; }
+
+/* A small progress line under each status badge. */
+.progress-dots { display: flex; gap: 4px; margin-top: 7px; }
+.progress-dot { width: 14px; height: 5px; border-radius: 3px; background: #e2e8f0; }
+.progress-dot.done { background: #22c55e; }
+.progress-dot.current { background: #f59e0b; }
+.progress-dot.failed { background: #ef4444; }
+
+/* The full progress line in the details popup. */
+.progress-steps { display: flex; list-style: none; margin: 4px 0 8px; padding: 0; }
+.progress-steps li { flex: 1; position: relative; text-align: center; font-size: 11px; color: var(--text-muted); }
+.progress-steps li::before { content: ''; position: absolute; top: 8px; left: -50%; right: 50%; height: 3px; background: #e2e8f0; z-index: 0; }
+.progress-steps li:first-child::before { display: none; }
+.progress-steps li.done::before, .progress-steps li.current::before, .progress-steps li.failed::before { background: #22c55e; }
+.progress-step-dot { position: relative; z-index: 1; display: block; width: 18px; height: 18px; margin: 0 auto 4px; border-radius: 50%; background: #e2e8f0; border: 3px solid white; box-shadow: 0 0 0 1px #cbd5e1; }
+.progress-steps li.done .progress-step-dot { background: #22c55e; box-shadow: 0 0 0 1px #16a34a; }
+.progress-steps li.current .progress-step-dot { background: #f59e0b; box-shadow: 0 0 0 1px #d97706; }
+.progress-steps li.failed .progress-step-dot { background: #ef4444; box-shadow: 0 0 0 1px #dc2626; }
+.progress-steps li.done, .progress-steps li.current { color: var(--text-main); font-weight: 600; }
+.progress-steps li.failed { color: #b91c1c; font-weight: 700; }
+.next-step { margin: 6px 0 0; font-size: 13px; line-height: 1.5; color: #334155; white-space: normal; }
+
+/* Notes from the offices. A change the office made (moved, cancelled) stands out. */
+.office-message { margin-top: 6px; padding: 8px 10px; border-radius: 8px; background: #f1f5f9; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+.office-message:first-child { margin-top: 0; }
+.office-message-change { background: #fef3c7; border-left: 3px solid #f59e0b; color: #78350f; }
+
+.form-section { margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--primary); }
+.form-section:first-of-type { margin-top: 0; }
+.char-count { align-self: flex-end; font-size: 11px; color: var(--text-muted); }
+.char-count-near { color: #b45309; font-weight: 700; }

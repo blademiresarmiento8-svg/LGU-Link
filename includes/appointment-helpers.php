@@ -169,3 +169,66 @@ function getAppointmentStatusCounts(): array
 
     return $counts;
 }
+
+/**
+ * The steps a request goes through, for the progress line the citizen sees: Sent, Reviewed, Forwarded, Scheduled, Completed.
+ * Each step is 'done', 'current' (the one it is waiting at), 'todo', or 'failed' (where a rejected or cancelled request stopped).
+ *
+ * @return array<int, array{label: string, state: string}>
+ */
+function appointmentProgress(array $appt): array
+{
+    $labels = ['Sent', 'Reviewed', 'Forwarded', 'Scheduled', 'Completed'];
+    $states = array_fill(0, 5, 'todo');
+
+    switch ($appt['status']) {
+        case 'pending_review':
+            $states = ['done', 'current', 'todo', 'todo', 'todo'];
+            break;
+        case 'forwarded':
+            $states = ['done', 'done', 'done', 'current', 'todo'];
+            break;
+        case 'scheduled':
+            $states = ['done', 'done', 'done', 'done', 'current'];
+            break;
+        case 'completed':
+            $states = array_fill(0, 5, 'done');
+            break;
+        case 'rejected':
+            $states = ['done', 'failed', 'todo', 'todo', 'todo'];
+            $labels[1] = 'Not approved';
+            break;
+        case 'cancelled':
+            // It stopped at the step it had reached: a date was set, an office had it, or it was still waiting for review.
+            $stopped = !empty($appt['scheduled_date']) ? 4 : (!empty($appt['department_id']) ? 3 : 1);
+            for ($i = 0; $i < 5; $i++) {
+                $states[$i] = $i < $stopped ? 'done' : ($i === $stopped ? 'failed' : 'todo');
+            }
+            $labels[$stopped] = 'Cancelled';
+            break;
+    }
+
+    $steps = [];
+    foreach ($labels as $i => $label) {
+        $steps[] = ['label' => $label, 'state' => $states[$i]];
+    }
+
+    return $steps;
+}
+
+/** One plain sentence for the citizen about what happens next with this request. */
+function appointmentNextStep(array $appt): string
+{
+    $office = $appt['department_name'] ?? null;
+
+    return match ($appt['status']) {
+        'pending_review' => 'The Municipal Administrator is reviewing your request. We will email you when it moves on.',
+        'forwarded' => 'Your request was sent to ' . ($office ?? 'the office') . '. They will set a date and time for you, and we will email you.',
+        'scheduled' => 'Your appointment is on ' . (!empty($appt['scheduled_date']) ? appointmentWhenText($appt['scheduled_date'], $appt['scheduled_time'] ?? null) : 'a date to be confirmed')
+            . ' at ' . ($office ?? 'the Municipal Hall') . '. Please arrive a few minutes early.',
+        'completed' => 'This appointment is done. Thank you for using the portal.',
+        'rejected' => 'This request was not approved. The reason is shown below. You can send a new request.',
+        'cancelled' => 'This request was cancelled. You can send a new one at any time.',
+        default => '',
+    };
+}
