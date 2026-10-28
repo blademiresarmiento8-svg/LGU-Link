@@ -77,6 +77,25 @@ function findAppointmentById(int $id): ?array
     return $row === false ? null : $row;
 }
 
+/** "October 28, 2026, 9:00 AM" for a stored date and time. */
+function appointmentWhenText(string $date, ?string $time): string
+{
+    return date('F j, Y', strtotime($date)) . ($time ? ', ' . date('g:i A', strtotime($time)) : '');
+}
+
+/**
+ * After how many days a forwarded request without a schedule counts as waiting too long. It is the same
+ * setting the system admin's Analytics page uses (analytics_schedule_days, 5 days unless changed).
+ */
+function appointmentScheduleAlertDays(): int
+{
+    $stmt = getDbConnection()->prepare("SELECT setting_value FROM settings WHERE setting_key = 'analytics_schedule_days'");
+    $stmt->execute();
+    $value = $stmt->fetchColumn();
+
+    return $value === false ? 5 : max(1, (int) $value);
+}
+
 /** Every appointment forwarded to one department, newest first — for the office dashboard. */
 function getAppointmentsForDepartment(int $departmentId): array
 {

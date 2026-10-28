@@ -1,5 +1,5 @@
-// Office Dashboard page logic - view detail, set schedule, mark completed.
-// Schedule/complete are real form submissions to appointments-status.php
+// Office Dashboard page logic - view detail, set schedule, reschedule, cancel, mark completed.
+// All of these are real form submissions to appointments-status.php
 // (server persists to the DB), not DOM-only mockups.
 
 /**
@@ -102,14 +102,17 @@ function openAppointmentDetailModal(btn) {
     )
     .join('');
 
-  // A request waiting for a schedule can be scheduled straight from here.
-  setDetailActions(
-    'appointmentDetailActions',
-    'appointmentDetailModal',
-    appt.status === 'forwarded'
-      ? [{ label: 'Set Schedule', className: 'btn-submit', run: () => openScheduleModal(appt.id, appt.title, appt.preferred_date, appt.preferred_time) }]
-      : []
-  );
+  // Act on the request straight from here: a waiting one can be scheduled, a scheduled one closed, moved or cancelled.
+  const actions = [];
+  if (appt.status === 'forwarded') {
+    actions.push({ label: 'Set Schedule', className: 'btn-submit', run: () => openScheduleModal(appt.id, appt.title, appt.preferred_date, appt.preferred_time) });
+  } else if (appt.status === 'scheduled') {
+    const when = formatDateTime(appt.scheduled_date, appt.scheduled_time);
+    actions.push({ label: 'Cancel Appointment', className: 'btn-danger', run: () => openCancelAppointmentModal(appt.id, appt.title) });
+    actions.push({ label: 'Reschedule', className: 'btn-cancel', run: () => openRescheduleModal(appt.id, appt.title, when) });
+    actions.push({ label: 'Mark Completed', className: 'btn-submit', run: () => confirmMarkCompleted(appt.id, appt.title) });
+  }
+  setDetailActions('appointmentDetailActions', 'appointmentDetailModal', actions);
 
   openModal('appointmentDetailModal');
 }
@@ -133,6 +136,23 @@ function openScheduleModal(id, title, preferredDate, preferredTime) {
   openModal('scheduleModal');
 }
 
+/** Moves a scheduled appointment: the office picks a new date and time and tells the citizen why. */
+function openRescheduleModal(id, title, currentWhen) {
+  const form = document.querySelector('#rescheduleModal form');
+  form.reset();
+  document.getElementById('rescheduleAppointmentId').value = id;
+  document.getElementById('rescheduleAppointmentTitle').textContent = `Appointment: "${title}"`;
+  document.getElementById('rescheduleCurrent').textContent = `Now scheduled for ${currentWhen}.`;
+  openModal('rescheduleModal');
+}
+
+function openCancelAppointmentModal(id, title) {
+  document.querySelector('#cancelAppointmentModal form').reset();
+  document.getElementById('cancelAppointmentId').value = id;
+  document.getElementById('cancelAppointmentTitle').textContent = `Appointment: "${title}"`;
+  openModal('cancelAppointmentModal');
+}
+
 function confirmMarkCompleted(id, title) {
   confirmAction({
     title: 'Mark as Completed',
@@ -145,3 +165,15 @@ function confirmMarkCompleted(id, title) {
     },
   });
 }
+
+// A second click on a form's button must not send the action twice. Done after the browser has read the form.
+document.addEventListener('submit', (event) => {
+  const form = event.target;
+  setTimeout(() => {
+    if (event.defaultPrevented) return;
+    form.querySelectorAll('button[type="submit"]').forEach((button) => { button.disabled = true; });
+  }, 0);
+});
+window.addEventListener('pageshow', () => {
+  document.querySelectorAll('form button[type="submit"]').forEach((button) => { button.disabled = false; });
+});

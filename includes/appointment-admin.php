@@ -273,6 +273,106 @@ function scheduleAppointment(int $appointmentId, int $departmentId, string $sche
 }
 
 /**
+ * Office action: moves an already scheduled appointment to a new date and time. The same working-day,
+ * working-hour and holiday rules as scheduling apply, and the citizen is given a reason. The old and new
+ * times are kept in the appointment's notes. Scoped to $departmentId like scheduleAppointment().
+ *
+ * @return array{success: bool, errors: string[], previous?: array{date: string, time: ?string}}
+ */
+function rescheduleAppointment(int $appointmentId, int $departmentId, string $scheduledDate, string $scheduledTime, string $reason, int $byUserId): array
+{
+    $errors = [];
+
+    $parsedDate = \DateTime::createFromFormat('Y-m-d', $scheduledDate);
+    if ($parsedDate === false || $parsedDate->format('Y-m-d') !== $scheduledDate) {
+        $errors[] = 'Enter a valid new date.';
+    }
+    $parsedTime = \DateTime::createFromFormat('H:i', $scheduledTime);
+    if ($parsedTime === false || $parsedTime->format('H:i') !== $scheduledTime) {
+        $errors[] = 'Enter a valid new time.';
+    }
+    if (empty($errors)) {
+        $errors = validateBookingDateTime($scheduledDate, $scheduledTime);
+    }
+    $reason = trim($reason);
+    if ($reason === '' || mb_strlen($reason) > 255) {
+        $errors[] = 'Give the citizen a short reason for the change (up to 255 characters).';
+    }
+    if (!empty($errors)) {
+        return ['success' => false, 'errors' => $errors];
+    }
+
+    $appointment = findAppointmentById($appointmentId);
+    if ($appointment === null || (int) $appointment['department_id'] !== $departmentId) {
+        return ['success' => false, 'errors' => ['That request does not belong to your office.']];
+    }
+    if ($appointment['status'] !== 'scheduled') {
+        return ['success' => false, 'errors' => ['Only a scheduled appointment can be moved.']];
+    }
+    if ($appointment['scheduled_date'] === $scheduledDate && substr((string) $appointment['scheduled_time'], 0, 5) === $scheduledTime) {
+        return ['success' => false, 'errors' => ['That is the same date and time as now. Choose a different one.']];
+    }
+
+    $note = 'Rescheduled by the office from ' . appointmentWhenText($appointment['scheduled_date'], $appointment['scheduled_time'])
+        . ' to ' . appointmentWhenText($scheduledDate, $scheduledTime . ':00') . ': ' . $reason;
+    $notes = trim((string) ($appointment['admin_notes'] ?? ''));
+    $notes = $notes !== '' ? $notes . "\n\n" . $note : $note;
+
+    $stmt = getDbConnection()->prepare(
+        "UPDATE appointments
+         SET scheduled_date = :scheduled_date, scheduled_time = :scheduled_time, admin_notes = :admin_notes,
+             scheduled_by = :scheduled_by, scheduled_at = NOW()
+         WHERE id = :id AND department_id = :department_id AND status = 'scheduled'"
+    );
+    $stmt->execute([
+        'scheduled_date' => $scheduledDate,
+        'scheduled_time' => $scheduledTime,
+        'admin_notes' => $notes,
+        'scheduled_by' => $byUserId,
+        'id' => $appointmentId,
+        'department_id' => $departmentId,
+    ]);
+    if ($stmt->rowCount() === 0) {
+        return ['success' => false, 'errors' => ['That appointment is no longer scheduled.']];
+    }
+
+    return ['success' => true, 'errors' => [], 'previous' => ['date' => $appointment['scheduled_date'], 'time' => $appointment['scheduled_time']]];
+}
+
+/**
+ * Office action: cancels a scheduled appointment, with a reason the citizen can read (kept in the notes).
+ *
+ * @return array{success: bool, errors: string[]}
+ */
+function cancelAppointmentByOffice(int $appointmentId, int $departmentId, string $reason): array
+{
+    $reason = trim($reason);
+    if ($reason === '' || mb_strlen($reason) > 255) {
+        return ['success' => false, 'errors' => ['Give the citizen a short reason for the cancellation (up to 255 characters).']];
+    }
+
+    $appointment = findAppointmentById($appointmentId);
+    if ($appointment === null || (int) $appointment['department_id'] !== $departmentId) {
+        return ['success' => false, 'errors' => ['That request does not belong to your office.']];
+    }
+
+    $note = 'Cancelled by the office: ' . $reason;
+    $notes = trim((string) ($appointment['admin_notes'] ?? ''));
+    $notes = $notes !== '' ? $notes . "\n\n" . $note : $note;
+
+    $stmt = getDbConnection()->prepare(
+        "UPDATE appointments SET status = 'cancelled', admin_notes = :admin_notes
+         WHERE id = :id AND department_id = :department_id AND status = 'scheduled'"
+    );
+    $stmt->execute(['admin_notes' => $notes, 'id' => $appointmentId, 'department_id' => $departmentId]);
+    if ($stmt->rowCount() === 0) {
+        return ['success' => false, 'errors' => ['Only a scheduled appointment can be cancelled.']];
+    }
+
+    return ['success' => true, 'errors' => []];
+}
+
+/**
  * Office action: marks a scheduled appointment as completed. Scoped to
  * $departmentId the same way as scheduleAppointment().
  */

@@ -1,7 +1,7 @@
 <?php
 /**
- * Office scheduling actions: set a schedule for a forwarded request, or
- * mark a scheduled one completed. Plain POST + redirect, same pattern as
+ * Office scheduling actions: set a schedule for a forwarded request, move or cancel
+ * a scheduled one (the citizen is told why), or mark it completed. Plain POST + redirect, same pattern as
  * every other handler in this app. Scoped to the acting office account's
  * own department_id (from the session, never trusted from the request) so
  * one office can never touch another office's appointment.
@@ -58,6 +58,68 @@ if ($action === 'schedule') {
     );
 
     redirectAndRunDeferred('dashboard.php?scheduled=1');
+}
+
+if ($action === 'reschedule') {
+    $newDate = trim((string) ($_POST['scheduled_date'] ?? ''));
+    $newTime = trim((string) ($_POST['scheduled_time'] ?? ''));
+    $reason = trim((string) ($_POST['reason'] ?? ''));
+
+    $result = rescheduleAppointment($id, $departmentId, $newDate, $newTime, $reason, (int) $officeUser['id']);
+    if (!$result['success']) {
+        header('Location: dashboard.php?error=' . urlencode(implode(' ', $result['errors'])));
+        exit;
+    }
+
+    $updated = findAppointmentById($id);
+    $was = appointmentWhenText($result['previous']['date'], $result['previous']['time']);
+    $now = appointmentWhenText($updated['scheduled_date'], $updated['scheduled_time']);
+    createNotification((int) $updated['user_id'], 'Your appointment "' . $updated['title'] . '" was moved from ' . $was . ' to ' . $now . '. Reason: ' . $reason, '/LGU-Link/user/appointments.php');
+    queueAppointmentEmail(
+        $updated['email'],
+        'Your appointment was rescheduled',
+        renderAppointmentEmailHtml(
+            'Appointment rescheduled',
+            'The office moved your appointment to a new time. Please see the details below.',
+            [
+                'Title' => $updated['title'],
+                'Office' => $updated['department_name'],
+                'Previously' => $was,
+                'New date and time' => $now,
+                'Reason' => $reason,
+            ]
+        )
+    );
+
+    redirectAndRunDeferred('dashboard.php?rescheduled=1');
+}
+
+if ($action === 'cancel') {
+    $reason = trim((string) ($_POST['reason'] ?? ''));
+    $result = cancelAppointmentByOffice($id, $departmentId, $reason);
+    if (!$result['success']) {
+        header('Location: dashboard.php?error=' . urlencode(implode(' ', $result['errors'])));
+        exit;
+    }
+
+    $cancelled = findAppointmentById($id);
+    createNotification((int) $cancelled['user_id'], 'Your appointment "' . $cancelled['title'] . '" was cancelled by the office. Reason: ' . $reason, '/LGU-Link/user/appointments.php');
+    queueAppointmentEmail(
+        $cancelled['email'],
+        'Your appointment was cancelled',
+        renderAppointmentEmailHtml(
+            'Appointment cancelled',
+            'The office had to cancel your appointment. You are welcome to send a new request.',
+            [
+                'Title' => $cancelled['title'],
+                'Office' => $cancelled['department_name'],
+                'Was scheduled for' => appointmentWhenText($cancelled['scheduled_date'], $cancelled['scheduled_time']),
+                'Reason' => $reason,
+            ]
+        )
+    );
+
+    redirectAndRunDeferred('dashboard.php?cancelled=1');
 }
 
 if ($action === 'complete') {

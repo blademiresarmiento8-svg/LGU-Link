@@ -152,6 +152,41 @@ button.clash-clickable:hover {
   background: #eff6ff;
 }
 
+/* The office dashboard: number cards that jump to their table, and the Today / Tomorrow agenda. */
+.stat-card-link { color: inherit; text-decoration: none; cursor: pointer; }
+.stat-card-link:hover { border-color: var(--primary); }
+.stat-sub { display: block; margin-top: 4px; font-size: 12px; color: var(--text-muted); }
+.stat-sub-alert { color: #b91c1c; font-weight: 700; }
+.panel[id] { scroll-margin-top: 90px; }
+.office-dash > .panel { margin-bottom: 24px; }
+
+.agenda-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.agenda-day h4 { margin: 0 0 8px; font-size: 14px; }
+.agenda-day h4 .row-note { font-weight: 500; margin-left: 6px; }
+.agenda-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.agenda-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--primary);
+  border-radius: 8px;
+  background: white;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.agenda-item:hover { background: #f8fafc; }
+.agenda-item-past { border-left-color: #dc2626; }
+.agenda-time { flex-shrink: 0; min-width: 68px; font-size: 13px; font-weight: 700; color: var(--primary); }
+.agenda-item-past .agenda-time { color: #dc2626; }
+.agenda-text { min-width: 0; }
+.agenda-text strong { display: block; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agenda-text small { color: var(--text-muted); font-size: 12px; }
+@media (max-width: 760px) { .agenda-grid { grid-template-columns: 1fr; gap: 16px; } }
+
 /* A citizen's name in the administrator's table: click to see their details. */
 .citizen-link { background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--primary); cursor: pointer; text-align: left; }
 .citizen-link:hover { text-decoration: underline; }
