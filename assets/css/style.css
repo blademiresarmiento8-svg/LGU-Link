@@ -492,6 +492,13 @@ td {
   border-bottom: 1px solid var(--border-color);
 }
 
+/* A long title with no spaces wraps inside its cell instead of stretching the whole table. Only the titles
+   (and the citizen's name link) may break anywhere, so buttons, dates and badges keep their normal shape. */
+td strong,
+td .citizen-link {
+  overflow-wrap: anywhere;
+}
+
 tr:last-child td {
   border-bottom: none;
 }
@@ -566,6 +573,7 @@ tr:last-child td {
 }
 
 .modal-box {
+  overflow-wrap: anywhere; /* anything typed by a person (a title, a reason) wraps inside the box */
   background: white;
   border-radius: 16px;
   width: 500px;
@@ -579,19 +587,24 @@ tr:last-child td {
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
 .modal-header h3 {
   margin: 0;
   font-size: 18px;
+  min-width: 0;
+  /* A long title wraps onto the next line instead of pushing the close button out of the box. */
+  overflow-wrap: anywhere;
 }
 
 .modal-header .close-btn {
   cursor: pointer;
   font-size: 18px;
   color: var(--text-main);
+  flex-shrink: 0;
 }
 
 .form-group {

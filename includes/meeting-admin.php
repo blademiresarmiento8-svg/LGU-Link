@@ -13,6 +13,7 @@
  * Every function returns array{success: bool, errors: string[]}.
  */
 
+require_once __DIR__ . '/input-limits.php';
 require_once __DIR__ . '/schedule-helpers.php';
 
 const MEETING_OFFICE_LINK = '/LGU-Link/office/meetings.php';
@@ -44,6 +45,8 @@ function validateMeetingInput(array $input, int $requesterDepartmentId): array
     }
     if ($agenda === '') {
         $errors[] = 'Please describe what the meeting is about.';
+    } elseif (($tooLong = tooLongMessage('The description of the meeting', $agenda, LONG_TEXT_MAX_LENGTH)) !== null) {
+        $errors[] = $tooLong;
     }
     if ($venue === '' || mb_strlen($venue) > 150) {
         $errors[] = 'A venue (up to 150 characters) is required.';
@@ -231,6 +234,9 @@ function approveMeeting(int $meetingId, string $adminNotes, int $reviewerUserId)
     }
 
     $adminNotes = trim($adminNotes);
+    if (($tooLong = tooLongMessage('The note', $adminNotes, NOTE_MAX_LENGTH)) !== null) {
+        return ['success' => false, 'errors' => [$tooLong]];
+    }
     getDbConnection()->prepare(
         "UPDATE meetings SET status = 'approved', admin_notes = :notes, rejection_reason = NULL, reviewed_by = :reviewer, reviewed_at = NOW() WHERE id = :id"
     )->execute(['notes' => $adminNotes === '' ? null : $adminNotes, 'reviewer' => $reviewerUserId, 'id' => $meetingId]);
@@ -256,6 +262,9 @@ function rejectMeeting(int $meetingId, string $reason, int $reviewerUserId): arr
     $reason = trim($reason);
     if ($reason === '') {
         return ['success' => false, 'errors' => ['Please give a reason so the office knows what to change.']];
+    }
+    if (($tooLong = tooLongMessage('The reason', $reason, NOTE_MAX_LENGTH)) !== null) {
+        return ['success' => false, 'errors' => [$tooLong]];
     }
 
     getDbConnection()->prepare(

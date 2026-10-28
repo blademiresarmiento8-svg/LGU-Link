@@ -156,7 +156,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <div class="form-group">
           <label>Service / Document Title</label>
-          <input type="text" name="title" id="charterTitle" placeholder="e.g. Community Tax Certificate (Cedula)" required>
+          <input type="text" name="title" id="charterTitle" maxlength="200" placeholder="e.g. Community Tax Certificate (Cedula)" required>
         </div>
 
         <div class="form-group">
@@ -166,27 +166,27 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <div class="form-group">
           <label>Keywords <span class="row-note">— one phrase per line; phrases citizens might type. Used by search and the chatbot.</span></label>
-          <textarea name="keywords" id="charterKeywords" rows="3" placeholder="cedula&#10;community tax certificate&#10;ctc"></textarea>
+          <textarea name="keywords" id="charterKeywords" rows="3" maxlength="10000" placeholder="cedula&#10;community tax certificate&#10;ctc"></textarea>
         </div>
 
         <div class="form-group">
           <label>Requirements <span class="row-note">— one requirement per line</span></label>
-          <textarea name="requirements" id="charterRequirements" rows="5" required placeholder="Valid government-issued ID&#10;Previous Official Receipt"></textarea>
+          <textarea name="requirements" id="charterRequirements" rows="5" maxlength="10000" required placeholder="Valid government-issued ID&#10;Previous Official Receipt"></textarea>
         </div>
 
         <div class="form-group">
           <label>Steps <span class="row-note">— optional; how to apply, one step per line, in order (the citizen sees them numbered)</span></label>
-          <textarea name="steps" id="charterSteps" rows="6" placeholder="Submit the complete documents&#10;Pay the fee at the Treasurer's Office&#10;Claim your document"></textarea>
+          <textarea name="steps" id="charterSteps" rows="6" maxlength="10000" placeholder="Submit the complete documents&#10;Pay the fee at the Treasurer's Office&#10;Claim your document"></textarea>
         </div>
 
         <div class="form-group">
           <label>Fee</label>
-          <input type="text" name="fee" id="charterFee" placeholder="e.g. &#8369;75 for individuals" required>
+          <input type="text" name="fee" id="charterFee" maxlength="255" placeholder="e.g. &#8369;75 for individuals" required>
         </div>
 
         <div class="form-group">
           <label>Processing Time</label>
-          <input type="text" name="processing_time" id="charterProcessingTime" placeholder="e.g. About 15 minutes" required>
+          <input type="text" name="processing_time" id="charterProcessingTime" maxlength="255" placeholder="e.g. About 15 minutes" required>
         </div>
 
         <div class="modal-actions">

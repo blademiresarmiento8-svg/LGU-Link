@@ -148,12 +148,12 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <div class="form-group">
           <label>Full Name</label>
-          <input type="text" name="full_name" id="officeAccountFullName" placeholder="e.g. Engr. Ramon Mercado" required>
+          <input type="text" name="full_name" id="officeAccountFullName" maxlength="150" placeholder="e.g. Engr. Ramon Mercado" required>
         </div>
 
         <div class="form-group">
           <label>Email Address</label>
-          <input type="email" name="email" id="officeAccountEmail" placeholder="office@norzagaray.gov.ph" required>
+          <input type="email" name="email" id="officeAccountEmail" maxlength="150" placeholder="office@norzagaray.gov.ph" required>
         </div>
 
         <div class="form-group">

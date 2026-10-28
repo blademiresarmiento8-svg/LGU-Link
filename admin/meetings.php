@@ -268,7 +268,7 @@ function adminMeetingJson(array $m): string
 
         <div class="form-group">
           <label>Note <span class="row-note">— optional, the requesting office will see it</span></label>
-          <textarea name="admin_notes" rows="3" placeholder="e.g. Please keep it to one hour"></textarea>
+          <textarea name="admin_notes" rows="3" maxlength="1000" placeholder="e.g. Please keep it to one hour"></textarea>
         </div>
 
         <div class="modal-actions">
@@ -295,7 +295,7 @@ function adminMeetingJson(array $m): string
 
         <div class="form-group">
           <label>Reason</label>
-          <textarea name="rejection_reason" rows="3" required placeholder="Tell the office what to change (e.g. clashes with another meeting, please pick a new date)"></textarea>
+          <textarea name="rejection_reason" rows="3" maxlength="1000" required placeholder="Tell the office what to change (e.g. clashes with another meeting, please pick a new date)"></textarea>
         </div>
 
         <div class="modal-actions">

@@ -252,7 +252,7 @@ function inviteeSummary(array $invitees, string $status): string
 
         <div class="form-group">
           <label>What is it about?</label>
-          <textarea name="agenda" id="meetingAgenda" rows="3" required placeholder="Agenda or purpose of the meeting"></textarea>
+          <textarea name="agenda" id="meetingAgenda" rows="3" maxlength="5000" required placeholder="Agenda or purpose of the meeting"></textarea>
         </div>
 
         <div class="form-group">

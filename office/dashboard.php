@@ -364,7 +364,7 @@ function officeClock(?string $time): string
 
         <div class="form-group">
           <label>Note to the citizen <span class="row-note">— optional</span></label>
-          <textarea name="office_note" rows="3" placeholder="e.g. what to bring, where to go"></textarea>
+          <textarea name="office_note" rows="3" maxlength="1000" placeholder="e.g. what to bring, where to go"></textarea>
         </div>
 
         <div class="modal-actions">

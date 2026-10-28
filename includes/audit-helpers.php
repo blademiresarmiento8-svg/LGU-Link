@@ -12,16 +12,20 @@ function logAudit(string $action, ?int $targetUserId, ?string $targetName, ?stri
     // Pages always load includes/auth.php first; scripts run without a login simply log as "System".
     $actor = function_exists('currentUser') ? currentUser() : null;
 
+    // The entries are put together by the system (a name, a dash, a reason someone typed...), so their length
+    // is not under the writer's control: shorten them to fit the columns rather than let a long one crash the page.
+    $fit = fn(?string $text, int $max) => $text === null ? null : (mb_strlen($text) > $max ? mb_substr($text, 0, $max - 1) . '…' : $text);
+
     getDbConnection()->prepare(
         'INSERT INTO audit_log (actor_user_id, actor_name, action, target_user_id, target_name, details)
          VALUES (:actor_id, :actor_name, :action, :target_id, :target_name, :details)'
     )->execute([
         'actor_id' => $actor['id'] ?? null,
-        'actor_name' => $actor['full_name'] ?? 'System',
-        'action' => $action,
+        'actor_name' => $fit($actor['full_name'] ?? 'System', 150),
+        'action' => $fit($action, 50),
         'target_id' => $targetUserId,
-        'target_name' => $targetName,
-        'details' => $details,
+        'target_name' => $fit($targetName, 150),
+        'details' => $fit($details, 255),
     ]);
 }
 

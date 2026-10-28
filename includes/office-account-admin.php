@@ -7,6 +7,7 @@
  * there is no self-service signup for them.
  */
 
+require_once __DIR__ . '/input-limits.php';
 require_once __DIR__ . '/audit-helpers.php';
 
 /**
@@ -29,8 +30,10 @@ function saveOfficeAccount(array $data): array
     $errors = [];
     if ($fullName === '') {
         $errors[] = 'Full name is required.';
+    } elseif (($tooLong = tooLongMessage('The full name', $fullName, 150)) !== null) {
+        $errors[] = $tooLong;
     }
-    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if ($email === '' || strlen($email) > 150 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'A valid email address is required.';
     }
     if (strlen($password) < 8) {

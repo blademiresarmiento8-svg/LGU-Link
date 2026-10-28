@@ -19,6 +19,7 @@
  * Requires includes/news-helpers.php, news-admin.php (image upload), notification-helpers.php.
  */
 
+require_once __DIR__ . '/input-limits.php';
 require_once __DIR__ . '/news-helpers.php';
 require_once __DIR__ . '/news-admin.php';
 require_once __DIR__ . '/notification-helpers.php';
@@ -386,6 +387,9 @@ function ownsNewsSubmission(?array $submission, array $user): bool
  */
 function officeSaveNewsSubmission(int $id, array $user, array $content, bool $send, ?string $note): array
 {
+    if (($tooLong = tooLongMessage('The note', trim((string) $note), NOTE_MAX_LENGTH)) !== null) {
+        return ['success' => false, 'errors' => [$tooLong]];
+    }
     $submission = findNewsSubmission($id);
     if (!ownsNewsSubmission($submission, $user)) {
         return ['success' => false, 'errors' => ['That post no longer exists.']];
@@ -424,6 +428,9 @@ function officeSaveNewsSubmission(int $id, array $user, array $content, bool $se
 /** The office agrees with the administrator's edits as they are. */
 function officeAcceptNewsEdits(int $id, array $user, ?string $note): array
 {
+    if (($tooLong = tooLongMessage('The note', trim((string) $note), NOTE_MAX_LENGTH)) !== null) {
+        return ['success' => false, 'errors' => [$tooLong]];
+    }
     $submission = findNewsSubmission($id);
     if (!ownsNewsSubmission($submission, $user) || $submission['status'] !== 'awaiting_office') {
         return ['success' => false, 'errors' => ['There is nothing to accept on this post.']];
@@ -460,6 +467,9 @@ function officeWithdrawNewsSubmission(int $id, array $user): array
  */
 function adminEditNewsSubmission(int $id, array $admin, ?array $content, string $note): array
 {
+    if (($tooLong = tooLongMessage('The note', trim($note), NOTE_MAX_LENGTH)) !== null) {
+        return ['success' => false, 'errors' => [$tooLong]];
+    }
     $submission = findNewsSubmission($id);
     if ($submission === null || !in_array($submission['status'], ['pending_review', 'awaiting_office'], true)) {
         return ['success' => false, 'errors' => ['That post is not in review.']];
@@ -494,6 +504,9 @@ function adminEditNewsSubmission(int $id, array $admin, ?array $content, string 
  */
 function adminApproveNewsSubmission(int $id, array $admin, string $note, bool $featured, bool $override = false): array
 {
+    if (($tooLong = tooLongMessage('The note', trim($note), NOTE_MAX_LENGTH)) !== null) {
+        return ['success' => false, 'errors' => [$tooLong]];
+    }
     $submission = findNewsSubmission($id);
     if ($submission === null) {
         return ['success' => false, 'errors' => ['That post no longer exists.']];
@@ -530,6 +543,9 @@ function adminRejectNewsSubmission(int $id, array $admin, string $reason): array
     $reason = trim($reason);
     if ($reason === '') {
         return ['success' => false, 'errors' => ['Please tell the office why it was not approved.']];
+    }
+    if (($tooLong = tooLongMessage('The reason', $reason, NOTE_MAX_LENGTH)) !== null) {
+        return ['success' => false, 'errors' => [$tooLong]];
     }
 
     setNewsSubmissionStatus($id, 'rejected', $reason, true);

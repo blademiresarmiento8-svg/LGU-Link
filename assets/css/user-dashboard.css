@@ -241,6 +241,11 @@
   opacity: 0.8;
 }
 
+.dash-next-body > div:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere; /* a long title wraps instead of widening the page */
+}
+
 .dash-next-body h4 {
   margin: 0 0 6px;
   font-size: 15px;

@@ -6,6 +6,7 @@
  * to already be loaded.
  */
 
+require_once __DIR__ . '/input-limits.php';
 require_once __DIR__ . '/department-helpers.php';
 
 /**
@@ -36,12 +37,23 @@ function saveCharterService(?int $id, array $data): array
     }
     if ($title === '') {
         $errors[] = 'Title is required.';
+    } elseif (($tooLong = tooLongMessage('The title', $title, 200)) !== null) {
+        $errors[] = $tooLong;
     }
     if ($fee === '') {
         $errors[] = 'Fee is required.';
+    } elseif (($tooLong = tooLongMessage('The fee', $fee, 255)) !== null) {
+        $errors[] = $tooLong;
     }
     if ($processingTime === '') {
         $errors[] = 'Processing time is required.';
+    } elseif (($tooLong = tooLongMessage('The processing time', $processingTime, 255)) !== null) {
+        $errors[] = $tooLong;
+    }
+    foreach (['The keywords' => $keywordLines, 'The requirements' => $requirementLines, 'The steps' => $stepLines] as $label => $lines) {
+        if (($tooLong = tooLongMessage($label, implode("\n", $lines), LIST_TEXT_MAX_LENGTH)) !== null) {
+            $errors[] = $tooLong;
+        }
     }
     if (empty($requirementLines)) {
         $errors[] = 'At least one requirement is required.';

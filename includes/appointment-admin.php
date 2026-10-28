@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/input-limits.php';
 require_once __DIR__ . '/schedule-helpers.php';
 require_once __DIR__ . '/organization-fields.php';
 require_once __DIR__ . '/registration-helpers.php';
@@ -38,9 +39,13 @@ function insertAppointment(int $userId, array $data, array $file): array
     }
     if ($title === '') {
         $errors[] = 'Title is required.';
+    } elseif (($tooLong = tooLongMessage('The title', $title, 200)) !== null) {
+        $errors[] = $tooLong;
     }
     if ($description === '') {
         $errors[] = 'Description is required.';
+    } elseif (($tooLong = tooLongMessage('The description', $description, LONG_TEXT_MAX_LENGTH)) !== null) {
+        $errors[] = $tooLong;
     }
     // Stored the same way as at sign-up: 09XXXXXXXXX.
     if ($contactNumber === '') {
@@ -50,7 +55,7 @@ function insertAppointment(int $userId, array $data, array $file): array
     } else {
         $contactNumber = $mobile;
     }
-    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if ($email === '' || strlen($email) > 150 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'A valid email address is required.';
     }
 
@@ -107,7 +112,7 @@ function insertAppointment(int $userId, array $data, array $file): array
         'title' => $title,
         'description' => $description,
         'attachment_path' => $upload['path'],
-        'attachment_original_name' => $upload['path'] !== null ? ($file['name'] ?? null) : null,
+        'attachment_original_name' => $upload['path'] !== null && isset($file['name']) ? shortenFileName((string) $file['name']) : null,
         'contact_number' => $contactNumber,
         'email' => $email,
         'organization' => $organization['organization'],
@@ -146,6 +151,9 @@ function cancelAppointmentByCitizen(int $appointmentId, int $userId): bool
  */
 function forwardAppointmentToDepartment(int $appointmentId, int $departmentId, string $adminNotes, int $reviewerUserId): array
 {
+    if (($tooLong = tooLongMessage('The note', trim($adminNotes), NOTE_MAX_LENGTH)) !== null) {
+        return ['success' => false, 'errors' => [$tooLong]];
+    }
     if (findDepartmentById($departmentId) === null) {
         return ['success' => false, 'errors' => ['Choose a valid department.']];
     }
@@ -187,6 +195,9 @@ function rejectAppointment(int $appointmentId, string $reason, int $reviewerUser
     $reason = trim($reason);
     if ($reason === '') {
         return ['success' => false, 'errors' => ['A rejection reason is required.']];
+    }
+    if (($tooLong = tooLongMessage('The reason', $reason, NOTE_MAX_LENGTH)) !== null) {
+        return ['success' => false, 'errors' => [$tooLong]];
     }
 
     $pdo = getDbConnection();
@@ -232,6 +243,9 @@ function scheduleAppointment(int $appointmentId, int $departmentId, string $sche
 
     if (empty($errors)) {
         $errors = validateBookingDateTime($scheduledDate, $scheduledTime);
+    }
+    if (($tooLong = tooLongMessage('The note', trim($officeNote), NOTE_MAX_LENGTH)) !== null) {
+        $errors[] = $tooLong;
     }
 
     if (!empty($errors)) {

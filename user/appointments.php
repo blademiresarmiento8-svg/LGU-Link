@@ -155,12 +155,12 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <div class="form-group">
           <label>Title</label>
-          <input type="text" name="title" placeholder="Short summary of your concern" required>
+          <input type="text" name="title" maxlength="200" placeholder="Short summary of your concern" required>
         </div>
 
         <div class="form-group">
           <label>Description</label>
-          <textarea name="description" rows="4" required placeholder="Describe your concern, proposal, or meeting request in detail"></textarea>
+          <textarea name="description" rows="4" maxlength="5000" required placeholder="Describe your concern, proposal, or meeting request in detail"></textarea>
         </div>
 
         <div class="form-group">
@@ -175,7 +175,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <div class="form-group">
           <label>Email Address <span class="row-note">— we'll notify you here; change it if you'd like updates elsewhere</span></label>
-          <input type="email" name="email" value="<?= htmlspecialchars($citizen['email']) ?>" required>
+          <input type="email" name="email" maxlength="150" value="<?= htmlspecialchars($citizen['email']) ?>" required>
         </div>
 
         <div class="form-group">

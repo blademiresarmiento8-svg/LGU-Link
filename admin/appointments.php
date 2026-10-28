@@ -247,7 +247,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <div class="form-group">
           <label>Note to the office <span class="row-note">— optional</span></label>
-          <textarea name="admin_notes" rows="3" placeholder="Any context the office should know before scheduling"></textarea>
+          <textarea name="admin_notes" rows="3" maxlength="1000" placeholder="Any context the office should know before scheduling"></textarea>
         </div>
 
         <div class="modal-actions">
@@ -274,7 +274,7 @@ $flashError = trim((string) ($_GET['error'] ?? ''));
 
         <div class="form-group">
           <label>Reason for Rejection</label>
-          <textarea name="rejection_reason" rows="3" required placeholder="The citizen will see this reason"></textarea>
+          <textarea name="rejection_reason" rows="3" maxlength="1000" required placeholder="The citizen will see this reason"></textarea>
         </div>
 
         <div class="modal-actions">
