@@ -95,6 +95,21 @@ function openMeetingDetailModal(btn) {
   openModal('meetingDetailModal');
 }
 
+/** Opens the full list of what a pending meeting clashes with (the row only shows a short summary). */
+function openClashModal(btn) {
+  const groups = JSON.parse(btn.getAttribute('data-clashes'));
+  document.getElementById('clashModalTitle').textContent = `Meeting: "${btn.getAttribute('data-title')}"`;
+  document.getElementById('clashModalBody').innerHTML = groups
+    .map((g) => `
+      <div class="clash-detail-item">
+        <strong>${escapeHtml(g.kind)}: &ldquo;${escapeHtml(g.title)}&rdquo;</strong>
+        <span class="row-note">${escapeHtml(g.when)} &middot; ${g.departments.length === 1 ? '1 office' : g.departments.length + ' offices'} affected</span>
+        <ul>${g.departments.map((d) => `<li>${escapeHtml(d)}</li>`).join('')}</ul>
+      </div>`)
+    .join('');
+  openModal('clashModal');
+}
+
 function openApproveModal(id, title) {
   document.getElementById('approveMeetingId').value = id;
   document.getElementById('approveMeetingTitle').textContent = `Meeting: "${title}"`;

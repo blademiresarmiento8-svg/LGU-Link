@@ -292,3 +292,22 @@ function findMeetingClashes(array $meeting): array
 
     return $clashes;
 }
+
+/**
+ * Groups clashes by what they clash with, so one meeting that many offices attend is one entry
+ * listing the offices instead of one line per office.
+ *
+ * @param array<int, array{department: string, kind: string, title: string, when: string}> $clashes
+ * @return array<int, array{kind: string, title: string, when: string, departments: string[]}>
+ */
+function groupMeetingClashes(array $clashes): array
+{
+    $groups = [];
+    foreach ($clashes as $c) {
+        $key = $c['kind'] . '|' . $c['title'] . '|' . $c['when'];
+        $groups[$key] ??= ['kind' => $c['kind'], 'title' => $c['title'], 'when' => $c['when'], 'departments' => []];
+        $groups[$key]['departments'][] = $c['department'];
+    }
+
+    return array_values($groups);
+}

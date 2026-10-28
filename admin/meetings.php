@@ -119,28 +119,31 @@ function adminMeetingJson(array $m): string
               </tr>
             <?php endif; ?>
             <?php foreach ($pending as $m): ?>
-              <?php $clashes = findMeetingClashes($m); $problem = meetingApprovalProblem($m); ?>
+              <?php $clashGroups = groupMeetingClashes(findMeetingClashes($m)); $problem = meetingApprovalProblem($m); ?>
               <tr>
                 <td><strong><?= htmlspecialchars($m['title']) ?></strong></td>
                 <td><?= htmlspecialchars($m['requester_department_name']) ?></td>
                 <td>
                   <?= htmlspecialchars(date('M j, Y', strtotime($m['meeting_date']))) ?><br>
                   <span class="row-note"><?= htmlspecialchars(formatMeetingTimeRange($m)) ?></span>
-                  <?php if (!empty($clashes)): ?>
-                    <div class="clash-warning">
-                      <strong><i class="fa-solid fa-triangle-exclamation"></i> Possible clash</strong>
+                  <?php if (!empty($clashGroups)): ?>
+                    <?php $shownGroups = array_slice($clashGroups, 0, 3); ?>
+                    <button type="button" class="clash-warning clash-clickable" data-title="<?= htmlspecialchars($m['title'], ENT_QUOTES) ?>" data-clashes="<?= htmlspecialchars(json_encode($clashGroups), ENT_QUOTES) ?>" onclick="openClashModal(this)">
+                      <strong><i class="fa-solid fa-triangle-exclamation"></i> Possible clash (<?= count($clashGroups) ?>)</strong>
                       <ul>
-                        <?php foreach ($clashes as $c): ?>
-                          <li><?= htmlspecialchars($c['department']) ?> already has a <?= htmlspecialchars(strtolower($c['kind'])) ?>: &ldquo;<?= htmlspecialchars($c['title']) ?>&rdquo; at <?= htmlspecialchars($c['when']) ?></li>
+                        <?php foreach ($shownGroups as $g): ?>
+                          <li><?= htmlspecialchars($g['kind']) ?> &ldquo;<?= htmlspecialchars($g['title']) ?>&rdquo; at <?= htmlspecialchars($g['when']) ?> <span class="clash-who">(<?= count($g['departments']) === 1 ? htmlspecialchars($g['departments'][0]) : count($g['departments']) . ' offices' ?>)</span></li>
                         <?php endforeach; ?>
                       </ul>
-                    </div>
+                      <span class="clash-more"><?= count($clashGroups) > 3 ? 'and ' . (count($clashGroups) - 3) . ' more - ' : '' ?>click to see details</span>
+                    </button>
                   <?php endif; ?>
                 </td>
                 <td>
-                  <span class="row-note"><?= htmlspecialchars(implode(', ', array_map(fn($i) => $i['department_name'], $m['invitees']))) ?></span>
+                  <?php $inviteeNames = array_map(fn($i) => $i['department_name'], $m['invitees']); ?>
+                  <span class="row-note" title="<?= htmlspecialchars(implode(', ', $inviteeNames), ENT_QUOTES) ?>"><?= htmlspecialchars(implode(', ', array_slice($inviteeNames, 0, 2))) ?><?= count($inviteeNames) > 2 ? ' and ' . (count($inviteeNames) - 2) . ' more' : '' ?></span>
                   <?php if ($problem !== null): ?>
-                    <div class="clash-warning">
+                    <div class="clash-warning clash-problem">
                       <strong><i class="fa-solid fa-triangle-exclamation"></i> Cannot be approved yet</strong>
                       <ul><li><?= htmlspecialchars($problem) ?></li></ul>
                     </div>
@@ -230,6 +233,21 @@ function adminMeetingJson(array $m): string
       <div id="meetingDetailBody" class="appointment-detail-body"></div>
       <div class="modal-actions" id="meetingDetailActions">
         <button type="button" class="btn-modal btn-cancel" onclick="closeModal('meetingDetailModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSSIBLE CLASHES MODAL -->
+  <div class="modal-overlay" id="clashModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Possible clashes</h3>
+        <i class="fa-solid fa-xmark close-btn" onclick="closeModal('clashModal')"></i>
+      </div>
+      <p id="clashModalTitle" class="row-note" style="margin-bottom: 12px;"></p>
+      <div id="clashModalBody" class="clash-detail-body"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-modal btn-cancel" onclick="closeModal('clashModal')">Close</button>
       </div>
     </div>
   </div>
