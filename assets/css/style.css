@@ -572,6 +572,12 @@ tr:last-child td {
   z-index: 2000;
 }
 
+/* The page behind an open popup does not scroll (see lockPageScrollWhilePopupOpen in main.js). */
+body.modal-open {
+  overflow: hidden;
+  padding-right: var(--scrollbar-comp, 0);
+}
+
 .modal-box {
   overflow-wrap: anywhere; /* anything typed by a person (a title, a reason) wraps inside the box */
   background: white;

@@ -25,6 +25,39 @@
   }
 })();
 
+/**
+ * While a popup is open the page behind it must not scroll. Every popup (the ones opened with openModal(), the
+ * confirm dialogs, any added later) is a .modal-overlay shown by setting its display, so watching those is enough.
+ * The width of the page's scrollbar is kept as padding while it is hidden, so the page does not jump sideways.
+ */
+(function lockPageScrollWhilePopupOpen() {
+  function update() {
+    const open = Array.from(document.querySelectorAll('.modal-overlay')).some(function (el) {
+      return getComputedStyle(el).display !== 'none';
+    });
+    const locked = document.body.classList.contains('modal-open');
+    if (open === locked) return;
+    if (open) {
+      const bar = window.innerWidth - document.documentElement.clientWidth;
+      document.documentElement.style.setProperty('--scrollbar-comp', bar + 'px');
+    }
+    document.body.classList.toggle('modal-open', open);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    new MutationObserver(function (mutations) {
+      for (const m of mutations) {
+        const el = m.target;
+        if (m.type === 'childList' || (el.classList && el.classList.contains('modal-overlay'))) {
+          update();
+          return;
+        }
+      }
+    }).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['style', 'class'] });
+    update();
+  });
+})();
+
 document.addEventListener('DOMContentLoaded', function () {
   startPSTClock();
   wireConfirmModal();
